@@ -42,6 +42,27 @@ public class Zuggenerator {
     private int idx(int r, int c) {
         return r * 9 + c;
     }
+    public void printBoard(){
+        StringBuilder sb = new StringBuilder(9*9);
+        for (int i = 0; i<81; i++){
+            long helpTop = (i < 64) ? (1L << i ) :0;
+            long helpBottom = (i >= 64) ? (1L << (i - 64)) :0;
+
+            char c ='_';
+            if ((i < 64 && (helpTop & blackTop) != 0)
+                    || (i>= 64 && (helpBottom & blackBottom) != 0)) c = 'B';
+            else if ((i < 64 && (helpTop & whiteTop) != 0)
+                    || (i>= 64 && (helpBottom & whiteBottom) != 0)) c = 'W';
+            else if ((i < 64 && (helpTop & whiteKingTop) != 0)
+                    || (i>= 64 && (helpBottom & whiteKingBottom) != 0)) c = 'K';
+            else if ((i < 64 && (helpTop & restrictedFieldsTop) != 0)
+                    || (i>= 64 && (helpBottom & restrictedFieldsBottom) != 0)) c = 'X';
+            sb.append(c);
+            sb.append(' ');
+            if ((i+1) % 9 == 0) sb.append('\n');
+        }
+        System.out.println(sb);
+    }
 
     public Zuggenerator() {
 
