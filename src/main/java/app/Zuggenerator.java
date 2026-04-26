@@ -43,8 +43,16 @@ public class Zuggenerator {
         return r * 9 + c;
     }
     public void printBoard(){
+
         StringBuilder sb = new StringBuilder(9*9);
+
+        sb.append(' ');
+        for (char c = 'A'; c <= 'I'; c++) sb.append(' ').append(c);
+        sb.append('\n');
+        int r = 9;
+
         for (int i = 0; i<81; i++){
+            if (i%9 == 0) sb.append(r--).append(' ');
             long helpTop = (i < 64) ? (1L << i ) :0;
             long helpBottom = (i >= 64) ? (1L << (i - 64)) :0;
 
