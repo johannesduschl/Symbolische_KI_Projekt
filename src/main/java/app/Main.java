@@ -15,5 +15,9 @@ public class Main {
         }
         Zuggenerator zuggenerator = new Zuggenerator();
         zuggenerator.printBoard();
+        ArrayZuggenerator arrayZuggenerator = new ArrayZuggenerator();
+        arrayZuggenerator.printBoard();
+        arrayZuggenerator.board = ArrayZuggenerator.move(arrayZuggenerator.board,"a1a2");
+        arrayZuggenerator.printBoard();
     }
 }
