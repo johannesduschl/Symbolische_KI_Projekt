@@ -13,8 +13,6 @@ public class Main {
             // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
             System.out.println("i = " + i);
         }
-        Zuggenerator zuggenerator = new Zuggenerator();
-        zuggenerator.printBoard();
         ArrayZuggenerator arrayZuggenerator = new ArrayZuggenerator();
         arrayZuggenerator.printBoard();
         arrayZuggenerator.board = ArrayZuggenerator.move(arrayZuggenerator.board,"a1a2");
