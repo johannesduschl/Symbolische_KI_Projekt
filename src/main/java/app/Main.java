@@ -10,8 +10,9 @@ public class Main {
         Spiel spiel = new Spiel();
         Zuggenerator zuggenerator = new Zuggenerator();
 
+
         spiel.printBoard();
-        spiel.move("a1a2");
-        spiel.printBoard();
+        System.out.println(zuggenerator.getAllLegalMoves(spiel.board.board));
+
     }
 }
