@@ -13,5 +13,7 @@ public class Main {
         spiel.printBoard();
         spiel.move("a1a2");
         spiel.printBoard();
+
+        System.out.println(zuggenerator.move(spiel.board.board,8,3));
     }
 }
