@@ -5,57 +5,64 @@ import java.util.List;
 
 public class Zuggenerator {
 
-    public String[] getAllLegalMoves(char[][] board){
-        return null;
+    public List<Zug> getAllLegalMoves(char[][] board, boolean isWhiteToMove){
+
+        List<Zug> possibleMoves = new ArrayList<>();
+
+        for (int i = 0; i < board.length; i++){
+            for (int y = 0; y < board[i].length; y++){
+
+                char piece = board[i][y];
+                // only calculate possible moves for relevant pieces:
+                if (isWhiteToMove && (piece == 'w' || piece == 'k')) {
+                    possibleMoves.addAll(getPossibleMoves(board, i, y));
+                }
+                if (!isWhiteToMove && piece == 's') {
+                    possibleMoves.addAll(getPossibleMoves(board, i, y));
+                }
+            }
+        }
+        return possibleMoves;
     }
 
-    /**
-     * Berechnet für übergebene Koordinaten auf dem Board alle möglichen Züge des dort liegenden Steins
-     * @param board aktuelles Spielbrett
-     * @param x x Koordinate des Spielsteins
-     * @param y y Koordinate des Spielsteins
-     * @return Liste aller Züge
-     */
-    public List<String> move(char [][] board, int x, int y){
-        List<String> moves = new ArrayList<>();
-        System.out.println(board[x][y]);
+    public List<Zug> getPossibleMoves(char [][] board, int x, int y){
+        List<Zug> moves = new ArrayList<>();
+        char piece = board[x][y];
 
-        //Bedingung das King in die Ecken kann
-        if(board[x][y] == 'k'){
-            board[0][0] = '-';
-            board[0][8] = '-';
-            board[8][0] = '-';
-            board[8][8] = '-';
-        }
+        int size = board.length;
+        int throneX = 4;
+        int throneY = 4;
 
-        int helpx = x+1;
-        int helpy = y;
-        //für x++
-        while(helpx<=8&& board[helpx][helpy] == '-'){
-            moves.add(helpx+""+helpy);
-            helpx++;
-        }
-        //für x--
-        helpx = x-1;
-        System.out.println(board[helpx][helpy]);
-        while(helpx >=0 && board[helpx][helpy] == '-'){
-            moves.add(helpx+""+helpy);
-            helpx--;
-        }
-        //für y++
-        helpy = y+1;
-        helpx = x;
-        while(helpy<=8 && board[helpx][helpy] == '-'){
-            moves.add(helpx+""+helpy);
-            helpy++;
-        }
-        //für x++
-        helpy = y-1;
-        while(helpy>=0 && board[helpx][helpy] == '-'){
-            moves.add(helpx+""+helpy);
-            helpy--;
+        int[][] directions = {
+                {1,0}, {-1,0}, {0,1}, {0,-1}
+        };
+
+        for (int[] dir : directions) {
+            int runningX = x + dir[0];
+            int runningY = y + dir[1];
+
+            while (runningX >= 0 && runningX < size && runningY >= 0 && runningY < size){
+
+                char target = board[runningX][runningY];
+                if (target == 's' || target == 'w' || target == 'k') break;
+                if (target == 'x' && piece != 'k') break;
+
+                if (runningX == throneX && runningY == throneY) {
+                    runningX += dir[0];
+                    runningY += dir[1];
+                    continue;
+                }
+
+                moves.add(new Zug(
+                        (char)('a' + y),
+                        (char)('1' + (size - 1 - x)),
+                        (char)('a' + runningY),
+                        (char)('1' + (size - 1 - runningX))
+                ));
+                runningX += dir[0];
+                runningY += dir[1];
+            }
         }
         return moves;
     }
-
 }
