@@ -12,7 +12,7 @@ public class Main {
 
 
         spiel.printBoard();
-        System.out.println(zuggenerator.getAllLegalMoves(spiel.board.board));
+        System.out.println(zuggenerator.getAllLegalMoves(spiel.board.board, false));
 
     }
 }

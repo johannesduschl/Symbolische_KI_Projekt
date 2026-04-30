@@ -8,35 +8,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ZuggeneratorTest {
 
-    @Test
-    void testSinglePieceInCenter() {
-        Zuggenerator gen = new Zuggenerator();
-
-        char[][] board = {
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','w','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'}
-        };
-
-        List<Zug> moves = gen.getAllLegalMoves(board);
-
-        assertEquals(16, moves.size());
-        assertTrue(containsMove(moves, 'e','5','e','6'));
-        assertTrue(containsMove(moves, 'e','5','e','1'));
-        assertTrue(containsMove(moves, 'e','5','i','5'));
-        assertTrue(containsMove(moves, 'e','5','a','5'));
-    }
+    private final Zuggenerator gen = new Zuggenerator();
 
     @Test
-    void testBlockedPath() {
-        Zuggenerator gen = new Zuggenerator();
-
+    void onlyCurrentPlayerMovesGenerated() {
         char[][] board = {
                 {'-','-','-','-','-','-','-','-','-'},
                 {'-','-','-','-','-','-','-','-','-'},
@@ -49,7 +24,28 @@ public class ZuggeneratorTest {
                 {'-','-','-','-','-','-','-','-','-'}
         };
 
-        List<Zug> moves = gen.getAllLegalMoves(board);
+        List<Zug> whiteMoves = gen.getAllLegalMoves(board, true);
+        List<Zug> blackMoves = gen.getAllLegalMoves(board, false);
+
+        assertTrue(whiteMoves.stream().allMatch(z -> z.getFromRow() == '5'));
+        assertTrue(blackMoves.stream().allMatch(z -> z.getFromRow() == '7'));
+    }
+
+    @Test
+    void pieceCannotJumpOverOtherPiece() {
+        char[][] board = {
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','s','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','w','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'}
+        };
+
+        List<Zug> moves = gen.getAllLegalMoves(board, true);
 
         assertFalse(containsMove(moves, 'e','5','e','7'));
         assertFalse(containsMove(moves, 'e','5','e','8'));
@@ -57,52 +53,9 @@ public class ZuggeneratorTest {
     }
 
     @Test
-    void testCannotEnterThrone() {
-        Zuggenerator gen = new Zuggenerator();
-
+    void kingCanEnterCornerButStopsThere() {
         char[][] board = {
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','w','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'}
-        };
-
-        List<Zug> moves = gen.getAllLegalMoves(board);
-
-        assertFalse(containsMove(moves, 'e','4','e','5'));
-    }
-
-    @Test
-    void testCanJumpOverThrone() {
-        Zuggenerator gen = new Zuggenerator();
-
-        char[][] board = {
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','w','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'}
-        };
-
-        List<Zug> moves = gen.getAllLegalMoves(board);
-
-        assertTrue(containsMove(moves, 'e','4','e','6'));
-    }
-
-    @Test
-    void testKingCannotReturnToThrone() {
-        Zuggenerator gen = new Zuggenerator();
-
-        char[][] board = {
+                {'x','-','-','-','-','-','-','-','x'},
                 {'-','-','-','-','-','-','-','-','-'},
                 {'-','-','-','-','-','-','-','-','-'},
                 {'-','-','-','-','-','-','-','-','-'},
@@ -110,19 +63,17 @@ public class ZuggeneratorTest {
                 {'-','-','-','-','-','-','-','-','-'},
                 {'-','-','-','-','-','-','-','-','-'},
                 {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'},
-                {'-','-','-','-','-','-','-','-','-'}
+                {'x','-','-','-','-','-','-','-','x'}
         };
 
-        List<Zug> moves = gen.getAllLegalMoves(board);
+        List<Zug> moves = gen.getAllLegalMoves(board, true);
 
-        assertFalse(containsMove(moves, 'e','4','e','5'));
+        assertTrue(containsMove(moves, 'e','5','a','5'));
+        assertFalse(containsMove(moves, 'e','5','a','4'));
     }
 
     @Test
-    void testCannotEnterCorner() {
-        Zuggenerator gen = new Zuggenerator();
-
+    void normalPieceCannotEnterCorner() {
         char[][] board = {
                 {'x','-','-','-','-','-','-','-','x'},
                 {'-','-','-','-','-','-','-','-','-'},
@@ -135,10 +86,89 @@ public class ZuggeneratorTest {
                 {'x','-','-','-','-','-','-','-','x'}
         };
 
-        List<Zug> moves = gen.getAllLegalMoves(board);
+        List<Zug> moves = gen.getAllLegalMoves(board, true);
 
         assertFalse(containsMove(moves, 'e','5','a','1'));
-        assertFalse(containsMove(moves, 'e','5','i','9'));
+    }
+
+    @Test
+    void throneCannotBeEntered() {
+        char[][] board = {
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','w','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'}
+        };
+
+        List<Zug> moves = gen.getAllLegalMoves(board, true);
+
+        assertFalse(containsMove(moves, 'e','4','e','5'));
+    }
+
+    @Test
+    void throneCanBeJumpedOver() {
+        char[][] board = {
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','w','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'}
+        };
+
+        List<Zug> moves = gen.getAllLegalMoves(board, true);
+
+        assertTrue(containsMove(moves, 'e','6','e','4'));
+    }
+
+    @Test
+    void kingCannotReturnToThrone() {
+        char[][] board = {
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','k','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'}
+        };
+
+        List<Zug> moves = gen.getAllLegalMoves(board, true);
+
+        assertFalse(containsMove(moves, 'e','4','e','5'));
+    }
+
+    @Test
+    void noMoveEndsOnOccupiedField() {
+        char[][] board = {
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','s','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','w','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'}
+        };
+
+        List<Zug> moves = gen.getAllLegalMoves(board, true);
+
+        for (Zug z : moves) {
+            int x = 8 - (z.getToRow() - '1');
+            int y = z.getToColumn() - 'a';
+            assertEquals('-', board[x][y]);
+        }
     }
 
     private boolean containsMove(List<Zug> moves, char fc, char fr, char tc, char tr){

@@ -5,23 +5,27 @@ import java.util.List;
 
 public class Zuggenerator {
 
-    public List<Zug> getAllLegalMoves(char[][] board){
+    public List<Zug> getAllLegalMoves(char[][] board, boolean isWhiteToMove){
 
         List<Zug> possibleMoves = new ArrayList<>();
 
         for (int i = 0; i < board.length; i++){
-            for (int j = 0; j < board[i].length; j++){
+            for (int y = 0; y < board[i].length; y++){
 
-                char figure = board[i][j];
-                if (figure == '-' || figure == 'x') continue;
-                possibleMoves.addAll(move(board, i, j));
-
+                char piece = board[i][y];
+                // only calculate possible moves for relevant pieces:
+                if (isWhiteToMove && (piece == 'w' || piece == 'k')) {
+                    possibleMoves.addAll(getPossibleMoves(board, i, y));
+                }
+                if (!isWhiteToMove && piece == 's') {
+                    possibleMoves.addAll(getPossibleMoves(board, i, y));
+                }
             }
         }
         return possibleMoves;
     }
 
-    public List<Zug> move(char [][] board, int x, int y){
+    public List<Zug> getPossibleMoves(char [][] board, int x, int y){
         List<Zug> moves = new ArrayList<>();
         char piece = board[x][y];
 
@@ -41,12 +45,9 @@ public class Zuggenerator {
 
                 char target = board[runningX][runningY];
                 if (target == 's' || target == 'w' || target == 'k') break;
-                if (target == 'x') break;
+                if (target == 'x' && piece != 'k') break;
 
                 if (runningX == throneX && runningY == throneY) {
-                    if (piece == 'k' && !(x == throneX && y == throneY)) {
-                        break;
-                    }
                     runningX += dir[0];
                     runningY += dir[1];
                     continue;
