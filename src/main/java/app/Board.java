@@ -14,7 +14,7 @@ public class Board {
      * 'x' = Eckfeld
      * '-' = leer
      */
-    char[][] board = new char[][]{
+    public char[][] board = new char[][]{
             { 'x','-','-','s','s','s','-','-','x' },
             { '-','-','-','-','s','-','-','-','-' },
             { '-','-','-','-','w','-','-','-','-' },

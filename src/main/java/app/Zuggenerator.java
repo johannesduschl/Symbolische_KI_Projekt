@@ -55,9 +55,10 @@ public class Zuggenerator {
 
                 moves.add(new Zug(
                         (char)('a' + y),
-                        (char)('1' + (size - 1 - x)),
+                        (1 + (size - 1 - x)),
                         (char)('a' + runningY),
-                        (char)('1' + (size - 1 - runningX))
+                        1 + (size - 1 - runningX),
+                        piece
                 ));
                 runningX += dir[0];
                 runningY += dir[1];
