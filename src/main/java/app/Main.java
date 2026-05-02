@@ -6,13 +6,8 @@ public class Main {
 
         System.out.println("Hello and welcome!");
 
-        //Init game
         Spiel spiel = new Spiel();
-        Zuggenerator zuggenerator = new Zuggenerator();
-
-
-        spiel.printBoard();
-        System.out.println("Anzahl Zuege: " + zuggenerator.getAllLegalMoves(spiel.board.board, false).size());
+        spiel.startGame();
 
     }
 }

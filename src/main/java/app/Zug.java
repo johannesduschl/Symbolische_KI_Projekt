@@ -8,7 +8,8 @@ import lombok.Getter;
 public class Zug {
 
     char fromColumn;
-    char fromRow;
+    int fromRow;
     char toColumn;
-    char toRow;
+    int toRow;
+    char piece;
 }
