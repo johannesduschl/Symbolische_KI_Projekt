@@ -6,7 +6,6 @@ import java.util.List;
 public class BenchmarkRunner {
 
     public static void main(String[] args) {
-
         ZuggeneratorBenchmark bench = new ZuggeneratorBenchmark();
         List<BenchmarkResult> results = new ArrayList<>();
 
@@ -22,10 +21,11 @@ public class BenchmarkRunner {
 
         for (BenchmarkResult r : results) {
             System.out.printf(
-                    "%s -> %.2f ms | %d runs | total moves: %d%n",
+                    "%s -> %.2f ms | %.2f pos/s | Ø moves: %.2f | total moves: %d%n",
                     r.positionName,
                     r.timeMs,
-                    r.iterations,
+                    r.positionsPerSecond,
+                    r.avgMovesPerPosition,
                     r.totalMovesGenerated
             );
         }
