@@ -12,4 +12,9 @@ public class Zug {
     char toColumn;
     int toRow;
     char piece;
+
+    @Override
+    public String toString() {
+        return "" + fromColumn + fromRow + " -> " + toColumn + toRow;
+    }
 }
