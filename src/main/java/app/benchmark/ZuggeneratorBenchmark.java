@@ -13,7 +13,7 @@ public class ZuggeneratorBenchmark {
             generator.getAllLegalMoves(board, whiteToMove);
         }
 
-        int iterations = 10_000;
+        int iterations = 10000;
 
         long start = System.nanoTime();
 

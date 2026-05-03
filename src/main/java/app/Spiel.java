@@ -25,7 +25,7 @@ public class Spiel {
             }
 
             Zug chosenMove = possibleMoves.get(random.nextInt(possibleMoves.size()));
-            System.out.println("Move: " + chosenMove);
+            System.out.println("Random move for dummy KI: " + chosenMove);
             isGameOver = move(chosenMove);
 
             if (isGameOver) {

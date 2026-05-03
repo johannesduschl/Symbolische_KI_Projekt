@@ -9,6 +9,59 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ZuggeneratorTest {
 
     private final Zuggenerator gen = new Zuggenerator();
+    @Test
+    void test_tub_cloud_row_1() {
+        char[][] board = {
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','s','-','-','-','-','-'},
+                {'-','k','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'}
+        };
+
+        List<Zug> moves = gen.getAllLegalMoves(board, true);
+
+        assertEquals(16, moves.size());
+    }
+    @Test
+    void test_tub_cloud_row_13() {
+        char[][] board = {
+                {'-','s','-','-','-','-','-','k','-'},
+                {'-','-','w','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'}
+        };
+
+        List<Zug> moves = gen.getAllLegalMoves(board, true);
+        assertEquals(30, moves.size());
+    }
+    @Test
+    void test_tub_cloud_row_23() {
+        char[][] board = {
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','s','-','-','-','-'},
+                {'-','-','-','s','-','s','-','-','-'},
+                {'-','-','-','-','k','-','-','-','-'},
+                {'-','-','-','w','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'}
+        };
+
+        List<Zug> moves = gen.getAllLegalMoves(board, true);
+
+        assertEquals(25, moves.size());
+    }
 
     @Test
     void onlyCurrentPlayerMovesGenerated() {
@@ -27,8 +80,8 @@ public class ZuggeneratorTest {
         List<Zug> whiteMoves = gen.getAllLegalMoves(board, true);
         List<Zug> blackMoves = gen.getAllLegalMoves(board, false);
 
-        assertTrue(whiteMoves.stream().allMatch(z -> z.getFromRow() == '5'));
-        assertTrue(blackMoves.stream().allMatch(z -> z.getFromRow() == '7'));
+        assertTrue(whiteMoves.stream().allMatch(z -> z.getFromRow() == 5));
+        assertTrue(blackMoves.stream().allMatch(z -> z.getFromRow() == 7));
     }
 
     @Test
@@ -47,9 +100,9 @@ public class ZuggeneratorTest {
 
         List<Zug> moves = gen.getAllLegalMoves(board, true);
 
-        assertFalse(containsMove(moves, 'e','5','e','7'));
-        assertFalse(containsMove(moves, 'e','5','e','8'));
-        assertTrue(containsMove(moves, 'e','5','e','6'));
+        assertFalse(containsMove(moves, 'e',5,'e',7));
+        assertFalse(containsMove(moves, 'e',5,'e',8));
+        assertTrue(containsMove(moves, 'e',5,'e',6));
     }
 
     @Test
@@ -68,8 +121,8 @@ public class ZuggeneratorTest {
 
         List<Zug> moves = gen.getAllLegalMoves(board, true);
 
-        assertTrue(containsMove(moves, 'e','5','a','5'));
-        assertFalse(containsMove(moves, 'e','5','a','4'));
+        assertTrue(containsMove(moves, 'e',5,'a',5));
+        assertFalse(containsMove(moves, 'e',5,'a',4));
     }
 
     @Test
@@ -88,7 +141,7 @@ public class ZuggeneratorTest {
 
         List<Zug> moves = gen.getAllLegalMoves(board, true);
 
-        assertFalse(containsMove(moves, 'e','5','a','1'));
+        assertFalse(containsMove(moves, 'e',5,'a',1));
     }
 
     @Test
@@ -107,7 +160,7 @@ public class ZuggeneratorTest {
 
         List<Zug> moves = gen.getAllLegalMoves(board, true);
 
-        assertFalse(containsMove(moves, 'e','4','e','5'));
+        assertFalse(containsMove(moves, 'e',4,'e',5));
     }
 
     @Test
@@ -126,7 +179,7 @@ public class ZuggeneratorTest {
 
         List<Zug> moves = gen.getAllLegalMoves(board, true);
 
-        assertTrue(containsMove(moves, 'e','6','e','4'));
+        assertTrue(containsMove(moves, 'e',6,'e',4));
     }
 
     @Test
@@ -145,7 +198,7 @@ public class ZuggeneratorTest {
 
         List<Zug> moves = gen.getAllLegalMoves(board, true);
 
-        assertFalse(containsMove(moves, 'e','4','e','5'));
+        assertFalse(containsMove(moves, 'e',4,'e',5));
     }
 
     @Test
@@ -165,13 +218,13 @@ public class ZuggeneratorTest {
         List<Zug> moves = gen.getAllLegalMoves(board, true);
 
         for (Zug z : moves) {
-            int x = 8 - (z.getToRow() - '1');
+            int x = 8 - (z.getToRow() - 1);
             int y = z.getToColumn() - 'a';
             assertEquals('-', board[x][y]);
         }
     }
 
-    private boolean containsMove(List<Zug> moves, char fc, char fr, char tc, char tr){
+    private boolean containsMove(List<Zug> moves, char fc, int fr, char tc, int tr){
         return moves.stream().anyMatch(z ->
                 z.getFromColumn() == fc &&
                         z.getFromRow() == fr &&
