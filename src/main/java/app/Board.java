@@ -35,7 +35,7 @@ public class Board {
 
         for(int y=0; y < board.length; y++){
             sb.append('\n');
-            sb.append(y+1);
+            sb.append(9-y);
             sb.append(' ');
             for(int x = 0; x < board[0].length; x++){
                 sb.append(board[y][x]);

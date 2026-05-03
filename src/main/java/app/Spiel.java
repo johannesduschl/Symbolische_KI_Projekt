@@ -1,7 +1,6 @@
 package app;
 
 import java.util.List;
-import java.util.Random;
 
 public class Spiel {
 
@@ -12,30 +11,18 @@ public class Spiel {
 
         boolean isWhiteToMove = false;
         boolean isGameOver = false;
-        Random random = new Random();
 
         while (!isGameOver) {
 
-            List<Zug> possibleMoves =
-                    zuggenerator.getAllLegalMoves(this.board.board, isWhiteToMove);
-
-            if (possibleMoves.isEmpty()) {
-                System.out.println("No legal moves available!");
-                break;
-            }
-
-            Zug chosenMove = possibleMoves.get(random.nextInt(possibleMoves.size()));
-            System.out.println("Move: " + chosenMove);
-            isGameOver = move(chosenMove);
+            //TODO implement Gameserver connectivity
+            List<Zug> possibleMoves = zuggenerator.getAllLegalMoves(this.board.board, isWhiteToMove);
+            isGameOver = move(possibleMoves.getFirst());
 
             if (isGameOver) {
                 this.printBoard();
                 String winner = isWhiteToMove ? "White" : "Black";
                 System.out.printf("Game is over. %s has won.", winner);
-                break;
             }
-
-            this.printBoard();
 
             isWhiteToMove = !isWhiteToMove;
         }
