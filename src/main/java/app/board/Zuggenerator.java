@@ -1,6 +1,7 @@
 package app.board;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Zuggenerator {
@@ -65,5 +66,81 @@ public class Zuggenerator {
             }
         }
         return moves;
+    }
+
+    public int evaluate(Board board, boolean isWhiteToMove){
+        int score = 0;
+        score +=figurenGleichgewicht(board);
+        score += fieldValue(board, isWhiteToMove);
+        return score;
+    }
+
+    /**
+     * 32:32 Gleichgewicht, schwarzer Stein = 2, w=3, K=12
+     * @param board
+     * @return
+     */
+    public int figurenGleichgewicht(Board board){
+    String arrString= Arrays.toString(board.getBoard());
+        int wcount = count('w', arrString) *3;
+        int scount = count('s', arrString) *2;
+        int kcount = arrString.contains("k")?8:0;
+
+        return (wcount + kcount) - scount;
+    }
+
+    /**
+     * hilfsfunktion für berechnung von figurenGleichgewicht, zählt Anzahl Steine in String
+     * @param c
+     * @param s
+     * @return
+     */
+    public int count(char c, String s) {
+        int count = 0;
+        for(int i=0;i<s.length();i++){
+            if(s.charAt(i)=='w') count++;
+        }
+        return count;
+    }
+
+    /**
+     * Berechnet Vorteilhaftigkeit des Spielfelds
+     * @param board
+     * @return
+     */
+    public int fieldValue(Board board,boolean isWhiteToMove){
+        int score = 0;
+        //position des Königs Fortschritt am Board
+        int[][] bewertungsMatrix = {
+                {999,  10,  10,   8,   6,   8,  10,  10, 999},
+                { 10,   8,   8,   5,   4,   5,   8,   8,  10},
+                { 10,   8,   1,   1,   1,   1,   1,   8,  10},
+                {  8,   5,   1,   3,   3,   3,   1,   5,   8},
+                {  6,   4,   1,   3,   5,   3,   1,   4,   6},
+                {  8,   5,   1,   3,   3,   3,   1,   5,   8},
+                { 10,   8,   1,   1,   1,   1,   1,   8,  10},
+                { 10,   8,   8,   5,   4,   5,   8,   8,  10},
+                {999,  10,  10,   8,   6,   8,  10,  10, 999}
+        };
+        int[] kcords= findCharPosition(board.getBoard(), 'k');
+        score += bewertungsMatrix[kcords[0]][kcords[1]];
+        return score;
+    }
+    /**
+     * findet die Koordinaten eines Char auf dem Spielfeld
+     */
+    int[] findCharPosition(char[][] spielfeld, char gesuchterChar){
+        for (int zeile = 0; zeile < spielfeld.length; zeile++) {
+            for (int spalte = 0; spalte < spielfeld[zeile].length; spalte++) {
+
+                // Wenn der aktuelle Char dem gesuchten entspricht
+                if (spielfeld[zeile][spalte] == gesuchterChar) {
+                    // Koordinaten sofort als Array zurückgeben [Zeile, Spalte]
+                    return new int[]{zeile, spalte};
+                }
+
+            }
+        }
+        return null;
     }
 }
