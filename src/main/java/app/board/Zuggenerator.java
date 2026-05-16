@@ -90,7 +90,7 @@ public class Zuggenerator {
     }
 
     /**
-     * hilfsfunktion für berechnung von figurenGleichgewicht, zählt Anzahl Steine in String
+     * hilfsfunktion für Berechnung von figurenGleichgewicht, zählt Anzahl Steine in String
      * @param c
      * @param s
      * @return
@@ -98,7 +98,7 @@ public class Zuggenerator {
     public int count(char c, String s) {
         int count = 0;
         for(int i=0;i<s.length();i++){
-            if(s.charAt(i)=='w') count++;
+            if(s.charAt(i)==c) count++;
         }
         return count;
     }
@@ -124,23 +124,32 @@ public class Zuggenerator {
         };
         int[] kcords= findCharPosition(board.getBoard(), 'k');
         score += bewertungsMatrix[kcords[0]][kcords[1]];
+
+        //Position der weißen Steine am Board
+        int[] wcords= findCharPosition(board.getBoard(), 'w');
         return score;
     }
     /**
      * findet die Koordinaten eines Char auf dem Spielfeld
      */
     int[] findCharPosition(char[][] spielfeld, char gesuchterChar){
+        ArrayList<Integer> koordinaten = new ArrayList<>();
         for (int zeile = 0; zeile < spielfeld.length; zeile++) {
             for (int spalte = 0; spalte < spielfeld[zeile].length; spalte++) {
 
                 // Wenn der aktuelle Char dem gesuchten entspricht
                 if (spielfeld[zeile][spalte] == gesuchterChar) {
                     // Koordinaten sofort als Array zurückgeben [Zeile, Spalte]
-                    return new int[]{zeile, spalte};
+                    koordinaten.add(zeile);
+                    koordinaten.add(spalte);
                 }
 
             }
         }
-        return null;
+        int[] koordinatenArray = new int[koordinaten.size()];
+        for (int i = 0; i < koordinaten.size(); i=2) {
+            koordinatenArray[i] = koordinaten.get(i);
+        }
+        return koordinatenArray;
     }
 }
