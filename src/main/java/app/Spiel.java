@@ -26,8 +26,8 @@ public class Spiel {
                 break;
             }
 
-            Zug chosenMove = ki.findBestMove(this.board, 5, isWhiteToMove);
-            System.out.println("Move for dummy KI: " + chosenMove);
+            Zug chosenMove = ki.findBestMove(this.board, isWhiteToMove);
+            System.out.println("Move for " + (isWhiteToMove ? "White" : "Black") + ": " + chosenMove);
             isGameOver = board.move(chosenMove);
 
             if (isGameOver) {
