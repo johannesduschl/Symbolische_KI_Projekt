@@ -6,7 +6,6 @@ import app.board.Zug;
 import app.board.Zuggenerator;
 
 import java.util.List;
-import java.util.Random;
 
 public class Spiel {
 
@@ -18,7 +17,6 @@ public class Spiel {
 
         boolean isWhiteToMove = false;
         boolean isGameOver = false;
-        Random random = new Random();
 
         while (!isGameOver) {
 
@@ -28,8 +26,8 @@ public class Spiel {
                 break;
             }
 
-            Zug chosenMove = possibleMoves.get(random.nextInt(possibleMoves.size()));
-            System.out.println("Random move for dummy KI: " + chosenMove);
+            Zug chosenMove = ki.findBestMove(this.board, 5, isWhiteToMove);
+            System.out.println("Move for dummy KI: " + chosenMove);
             isGameOver = board.move(chosenMove);
 
             if (isGameOver) {
