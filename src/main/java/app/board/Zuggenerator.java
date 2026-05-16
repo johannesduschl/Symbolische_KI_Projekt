@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static java.lang.Math.abs;
+
 public class Zuggenerator {
 
     public List<Zug> getAllLegalMoves(char[][] board, boolean isWhiteToMove){
@@ -68,9 +70,69 @@ public class Zuggenerator {
         return moves;
     }
 
+    /**
+     * Berechnet Spielfortschritt des Spiels zu einem Index von 0 bis 1
+     * aktuelle Gewichtung:
+     * Abweichgung startfeld 40,5%
+     * KÖnigsfortschritt 40%
+     * FigurenGleichgewicht 25%
+     * @param board
+     * @return
+     */
+    public double spielfortschritt(Board board){
+        double score = 0;
+        char[][] startBoard = new char[][]{
+                { 'x','-','-','s','s','s','-','-','x' },
+                { '-','-','-','-','s','-','-','-','-' },
+                { '-','-','-','-','w','-','-','-','-' },
+                { 's','-','-','-','w','-','-','-','s' },
+                { 's','s','w','w','k','w','w','s','s' },
+                { 's','-','-','-','w','-','-','-','s' },
+                { '-','-','-','-','w','-','-','-','-' },
+                { '-','-','-','-','s','-','-','-','-' },
+                { 'x','-','-','s','s','s','-','-','x' }
+        }; //a1 unten links i9 oben rechts
+
+        //Abweichung von Spielfeld zu Startfeld
+        //max Abweichungen 81
+        int abweichung = 0;
+        for (int i = 0; i < startBoard.length; i++) {
+            for (int j = 0; j < startBoard[i].length; j++) {
+                if (startBoard[i][j] != board.getBoard()[i][j]) {
+                    abweichung++;
+                }
+            }
+        }
+        //Anzahl Figuren
+        //max Figuren 25
+        int figuren = 0;
+        figuren += count('w', Arrays.toString(board.getBoard()));
+        figuren += count('s', Arrays.toString(board.getBoard()));
+        figuren += count('k', Arrays.toString(board.getBoard()));
+
+        //Fortschritt König
+        //max value 8 min value 0
+        int königFortschritt = 0;
+        int[] kcords= findCharPosition(board.getBoard(), 'k');
+        königFortschritt = abs(4-kcords[0]) + abs(4-kcords[1]);
+
+        //
+        score = (abweichung*0.005)+(königFortschritt*0.05)+(0.25-(0.01*figuren));
+        return score;
+    }
+
     public int evaluate(Board board, boolean isWhiteToMove){
         int score = 0;
-        score +=figurenGleichgewicht(board);
+
+        //FigurenGleichgewicht und SteinCounter für SpielfortschrittIndex
+        String arrString= Arrays.toString(board.getBoard());
+        int wcount = count('w', arrString) *3;
+        int scount = count('s', arrString) *2;
+        int kcount = arrString.contains("k")?8:-999;
+
+        int figurenGleichgewicht = (wcount + kcount) - scount;
+
+        score +=figurenGleichgewicht;
         score += fieldValue(board, isWhiteToMove);
         return score;
     }
@@ -80,11 +142,12 @@ public class Zuggenerator {
      * @param board
      * @return
      */
+    @Deprecated
     public int figurenGleichgewicht(Board board){
     String arrString= Arrays.toString(board.getBoard());
         int wcount = count('w', arrString) *3;
         int scount = count('s', arrString) *2;
-        int kcount = arrString.contains("k")?8:0;
+        int kcount = arrString.contains("k")?8:-999;
 
         return (wcount + kcount) - scount;
     }
