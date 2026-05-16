@@ -1,5 +1,5 @@
 import app.Spiel;
-import app.Zug;
+import app.board.Zug;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,9 +14,9 @@ public class SpielMoveTest {
         b[4][4] = 'w';
         b[4][6] = 's';
 
-        spiel.board.board = b;
+        spiel.board.setBoard(b);
 
-        spiel.move(new Zug('g',5,'f',5,'s'));
+        spiel.board.move(new Zug('g',5,'f',5,'s'));
 
         assertEquals('-', b[4][4]);
     }
@@ -30,7 +30,7 @@ public class SpielMoveTest {
         b[4][4] = 'w';
         b[6][4] = 's';
 
-        spiel.board.board = b;
+        spiel.board.setBoard(b);
 
         spiel.move(new Zug('e',3,'e',4,'s'));
 
@@ -46,7 +46,7 @@ public class SpielMoveTest {
         b[0][1] = 'w';
         b[0][3] = 's';
 
-        spiel.board.board = b;
+        spiel.board.setBoard(b);
 
         spiel.move(new Zug('d',9,'c',9,'s'));
 
@@ -62,7 +62,7 @@ public class SpielMoveTest {
         b[4][3] = 'w';
         b[4][1] = 's';
 
-        spiel.board.board = b;
+        spiel.board.setBoard(b);
 
         spiel.move(new Zug('b',5,'c',5,'s'));
 
@@ -82,7 +82,7 @@ public class SpielMoveTest {
         b[4][6] = 's';
         b[2][4] = 's';
 
-        spiel.board.board = b;
+        spiel.board.setBoard(b);
 
         spiel.move(new Zug('e',7,'e',5,'s'));
 
@@ -98,7 +98,7 @@ public class SpielMoveTest {
         b[4][4] = 'w';
         b[4][6] = 's';
 
-        spiel.board.board = b;
+        spiel.board.setBoard(b);
 
         spiel.move(new Zug('g',5,'f',5,'s'));
 
@@ -114,7 +114,7 @@ public class SpielMoveTest {
         b[4][4] = 's';
         b[4][7] = 'w';
 
-        spiel.board.board = b;
+        spiel.board.setBoard(b);
 
         spiel.move(new Zug('h',5,'f',5,'w'));
 

@@ -1,6 +1,6 @@
 package app.benchmark;
 
-import app.Zuggenerator;
+import app.board.Zuggenerator;
 
 public class ZuggeneratorBenchmark {
 

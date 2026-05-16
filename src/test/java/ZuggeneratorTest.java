@@ -1,5 +1,5 @@
-import app.Zug;
-import app.Zuggenerator;
+import app.board.Zug;
+import app.board.Zuggenerator;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
