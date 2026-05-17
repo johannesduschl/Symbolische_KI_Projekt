@@ -35,12 +35,13 @@ public class AlphaBetaKI {
         startTime = System.nanoTime();
         timeLimit = getTimeForMove() * 1_000_000;
 
-        Zug bestMove = allMoves.get(0);
+        Zug bestMove = allMoves.getFirst();
 
         int maxDepth = 5;
 
         for (int depth = 1; depth <= maxDepth; depth++) {
 
+            System.out.println("Searching with depth: "+depth);
             if (timeUp()) break;
 
             Zug currentBestMove = null;
