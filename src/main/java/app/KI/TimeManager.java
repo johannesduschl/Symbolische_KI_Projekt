@@ -2,19 +2,27 @@ package app.KI;
 
 public class TimeManager {
 
-    private long startTime;
-    private long timeLimitNanos;
+    private long endTimeNanos;
+    private boolean unlimited = false;
 
-    public void start(long timeLimitMillis) {
-        this.startTime = System.nanoTime();
-        this.timeLimitNanos = timeLimitMillis * 1_000_000;
+    public void start(long timeLimitMs) {
+
+        if (timeLimitMs <= 0 || timeLimitMs == Long.MAX_VALUE) {
+            unlimited = true;
+            return;
+        }
+
+        unlimited = false;
+        endTimeNanos = System.nanoTime() + timeLimitMs * 1_000_000L;
     }
 
     public boolean isTimeUp() {
-        return (System.nanoTime() - startTime) >= timeLimitNanos;
+        if (unlimited) return false;
+        return System.nanoTime() >= endTimeNanos;
     }
 
-    public long elapsedMillis() {
-        return (System.nanoTime() - startTime) / 1_000_000;
+    public void forceStop() {
+        unlimited = false;
+        endTimeNanos = 0;
     }
 }
