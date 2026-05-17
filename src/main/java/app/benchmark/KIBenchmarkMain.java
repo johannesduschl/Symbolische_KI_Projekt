@@ -10,19 +10,19 @@ public class KIBenchmarkMain {
 
     public static void main(String[] args) {
 
-        //TODO: Implement BF
         AlphaBetaKI ki = new AlphaBetaKI();
         KIBenchmarkRunner runner = new KIBenchmarkRunner(ki);
 
         List<KIBenchmarkResult> results = new ArrayList<>();
 
         // =========================
-        // 1) TIME LIMIT TEST (1s)
+        // TIME TEST (1s)
         // =========================
+
         results.add(runner.run(
                 new Board(TestPositions.startPosition()),
                 true,
-                1000,
+                1000L,
                 10,
                 "START - 1s"
         ));
@@ -30,7 +30,7 @@ public class KIBenchmarkMain {
         results.add(runner.run(
                 new Board(TestPositions.midGame()),
                 true,
-                1000,
+                1000L,
                 10,
                 "MID - 1s"
         ));
@@ -38,18 +38,21 @@ public class KIBenchmarkMain {
         results.add(runner.run(
                 new Board(TestPositions.endGame()),
                 true,
-                1000,
+                1000L,
                 10,
                 "END - 1s"
         ));
 
         // =========================
-        // 2) DEPTH LIMIT TEST (4)
+        // DEPTH TEST (4)
         // =========================
+
+        long NO_LIMIT = Long.MAX_VALUE;
+
         results.add(runner.run(
                 new Board(TestPositions.startPosition()),
                 true,
-                Long.MAX_VALUE,   // kein Zeitlimit effektiv
+                NO_LIMIT,
                 4,
                 "START - depth 4"
         ));
@@ -57,7 +60,7 @@ public class KIBenchmarkMain {
         results.add(runner.run(
                 new Board(TestPositions.midGame()),
                 true,
-                Long.MAX_VALUE,
+                NO_LIMIT,
                 4,
                 "MID - depth 4"
         ));
@@ -65,7 +68,7 @@ public class KIBenchmarkMain {
         results.add(runner.run(
                 new Board(TestPositions.endGame()),
                 true,
-                Long.MAX_VALUE,
+                NO_LIMIT,
                 4,
                 "END - depth 4"
         ));
@@ -73,6 +76,7 @@ public class KIBenchmarkMain {
         // =========================
         // OUTPUT
         // =========================
+
         KIBenchmarkRunner.print(results);
     }
 }

@@ -3,21 +3,25 @@ package app.KI;
 import app.board.Board;
 import app.board.Zug;
 import app.board.Zuggenerator;
+import app.Bewertungsfunktion;
 
 import java.util.List;
 
 public class AlphaBetaKI {
 
-    Bewertungsfunktion bf;
-    Zuggenerator zuggenerator = new Zuggenerator();
-    TimeManager timeManager = new TimeManager();
+    private final Zuggenerator zuggenerator = new Zuggenerator();
+    private final TimeManager timeManager = new TimeManager();
+
     private long nodesSearched = 0;
     private int lastDepthReached = 0;
     private Zug lastBestMove = null;
 
+    private boolean stopped = false;
+
     public long getNodesSearched() {
         return nodesSearched;
     }
+
     public int getLastDepthReached() {
         return lastDepthReached;
     }
@@ -30,85 +34,111 @@ public class AlphaBetaKI {
         nodesSearched = 0;
         lastDepthReached = 0;
         lastBestMove = null;
+        stopped = false;
     }
 
-    public int alphaBetaMax(Board board, int alpha, int beta, int depth){
+    // =========================
+    // MAX
+    // =========================
+    public int alphaBetaMax(Board board, int alpha, int beta, int depth) {
+
+        if (timeManager.isTimeUp()) {
+            stopped = true;
+            return Bewertungsfunktion.evaluate(board.getBoard());
+        }
 
         nodesSearched++;
 
-        if (timeManager.isTimeUp()) {
-            return bf.evaluate(board, false);
+        if (depth == 0 || board.isGameOver()) {
+            return Bewertungsfunktion.evaluate(board.getBoard());
         }
 
-        if (depth == 0 || board.isGameOver()){
-            return bf.evaluate(board, false);
-        }
+        List<Zug> moves = zuggenerator.getAllLegalMoves(board.getBoard(), false);
 
-        List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), false);
-
-        for (Zug move : allMoves){
+        for (Zug move : moves) {
 
             Board child = board.copy();
             child.move(move);
 
-            int score = alphaBetaMin(child, alpha, beta, depth-1);
+            int score = alphaBetaMin(child, alpha, beta, depth - 1);
+
+            if (stopped) return alpha;
+
             if (score >= beta) return beta;
-            if (score > alpha) alpha = score;
+
+            if (score > alpha) {
+                alpha = score;
+            }
         }
 
         return alpha;
     }
 
+    // =========================
+    // MIN
+    // =========================
     public int alphaBetaMin(Board board, int alpha, int beta, int depth) {
+
+        if (timeManager.isTimeUp()) {
+            stopped = true;
+            return Bewertungsfunktion.evaluate(board.getBoard());
+        }
 
         nodesSearched++;
 
-        if (timeManager.isTimeUp()) {
-            return bf.evaluate(board, true);
-        }
-
         if (depth == 0 || board.isGameOver()) {
-            return bf.evaluate(board, true);
+            return Bewertungsfunktion.evaluate(board.getBoard());
         }
 
-        List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), true);
+        List<Zug> moves = zuggenerator.getAllLegalMoves(board.getBoard(), true);
 
-        for (Zug move : allMoves) {
+        for (Zug move : moves) {
 
             Board child = board.copy();
             child.move(move);
 
             int score = alphaBetaMax(child, alpha, beta, depth - 1);
 
+            if (stopped) return alpha;
+
             if (score <= alpha) return alpha;
 
-            if (score < beta) beta = score;
+            if (score < beta) {
+                beta = score;
+            }
         }
 
         return beta;
     }
 
+    // =========================
+    // ITERATIVE DEEPENING
+    // =========================
     public Zug iterativeDeepening(Board root, boolean isWhiteToMove, long timeLimitMs, int maxDepth) {
 
         timeManager.start(timeLimitMs);
-        Zug bestMove = null;
+        resetStats();
 
         for (int depth = 1; depth <= maxDepth; depth++) {
 
             if (timeManager.isTimeUp()) break;
 
+            stopped = false;
+
             Zug currentBest = searchRoot(root, depth, isWhiteToMove);
 
-            if (!timeManager.isTimeUp() && currentBest != null) {
-                bestMove = currentBest;
-                lastDepthReached = depth;
+            if (!stopped && currentBest != null) {
                 lastBestMove = currentBest;
+                lastDepthReached = depth;
             }
         }
 
-        return bestMove;
+        return lastBestMove;
     }
 
+    // =========================
+    // ROOT
+    // =========================
     private Zug searchRoot(Board board, int depth, boolean isWhiteToMove) {
 
         List<Zug> moves = zuggenerator.getAllLegalMoves(board.getBoard(), isWhiteToMove);
@@ -121,9 +151,14 @@ public class AlphaBetaKI {
             Board child = board.copy();
             child.move(move);
 
-            int score = alphaBetaMin(child, Integer.MIN_VALUE + 1, Integer.MAX_VALUE, depth - 1);
+            int score = alphaBetaMin(
+                    child,
+                    Integer.MIN_VALUE + 1,
+                    Integer.MAX_VALUE,
+                    depth - 1
+            );
 
-            if (timeManager.isTimeUp()) break;
+            if (stopped) break;
 
             if (score > bestScore) {
                 bestScore = score;
