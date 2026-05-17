@@ -8,7 +8,7 @@ import java.util.List;
 
 public class AlphaBetaKI {
 
-    Bewertungsfunktion bf = new Bewertungsfunktion() {
+    public Bewertungsfunktion bf = new Bewertungsfunktion() {
         @Override
         public int evaluate(Board board, boolean isWhiteToMove) {
             return (int)(1000 * Math.random());
@@ -18,26 +18,44 @@ public class AlphaBetaKI {
     Zuggenerator zuggenerator = new Zuggenerator();
 
     /**
+     * Counts the moves over the period of a game, to adjust the time limit
      * 0-10 Züge = opening, max 5s pro Zug
      * 11-50 Züge = midgame, max 8s pro Zug
      * 51+ Züge = endgame, max 4s pro Zug
      */
     private int moveCounter = 0;
 
+
     private long startTime;
     private long timeLimit;
+
+    public int maxDepth = 5;
+
+    //Benchmark:
+    public long nodesSearched = 0;
+    public int lastCompletedDepth = 0;
+    public Zug bestMove;
+    public boolean benchmarkMode = false;
+    private long benchmarkTimeLimitMs;
+    private boolean useCustomTimeLimit = false;
+
+    public boolean useAlphaBeta = true;
+
 
     public Zug findBestMove(Board board, boolean isWhiteToMove) {
 
         List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), isWhiteToMove);
         if (allMoves.isEmpty()) return null;
 
+        bestMove = allMoves.getFirst();
+
         startTime = System.nanoTime();
-        timeLimit = getTimeForMove() * 1_000_000;
 
-        Zug bestMove = allMoves.getFirst();
-
-        int maxDepth = 5;
+        if (benchmarkMode && useCustomTimeLimit) {
+            timeLimit = benchmarkTimeLimitMs * 1_000_000;
+        } else {
+            timeLimit = getTimeForMove() * 1_000_000;
+        }
 
         for (int depth = 1; depth <= maxDepth; depth++) {
 
@@ -64,6 +82,7 @@ public class AlphaBetaKI {
 
             if (!timeUp() && currentBestMove != null) {
                 bestMove = currentBestMove;
+                lastCompletedDepth = depth;
             } else {
                 break;
             }
@@ -73,13 +92,16 @@ public class AlphaBetaKI {
         return bestMove;
     }
 
+
     public int alphaBetaMax(Board board, int alpha, int beta, int depth) {
+
+        nodesSearched++;
 
         if (depth == 0 || board.isGameOver()) {
             return bf.evaluate(board, false);
         }
 
-        if (timeUp()) return bf.evaluate(board, false);
+        if (!benchmarkMode && timeUp()) return bf.evaluate(board, false);
 
         List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), false);
 
@@ -90,7 +112,7 @@ public class AlphaBetaKI {
 
             int score = alphaBetaMin(child, alpha, beta, depth - 1);
 
-            if (score >= beta) return beta;
+            if (useAlphaBeta && score >= beta) return beta;
 
             if (score > alpha) alpha = score;
         }
@@ -98,13 +120,16 @@ public class AlphaBetaKI {
         return alpha;
     }
 
+
     public int alphaBetaMin(Board board, int alpha, int beta, int depth) {
+
+        nodesSearched++;
 
         if (depth == 0 || board.isGameOver()) {
             return bf.evaluate(board, true);
         }
 
-        if (timeUp()) return bf.evaluate(board, true);
+        if (!benchmarkMode && timeUp()) return bf.evaluate(board, true);
 
         List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), true);
 
@@ -115,7 +140,7 @@ public class AlphaBetaKI {
 
             int score = alphaBetaMax(child, alpha, beta, depth - 1);
 
-            if (score <= alpha) return alpha;
+            if (useAlphaBeta && score <= alpha) return alpha;
 
             if (score < beta) beta = score;
         }
@@ -123,9 +148,11 @@ public class AlphaBetaKI {
         return beta;
     }
 
+
     private boolean timeUp() {
         return System.nanoTime() - startTime > timeLimit;
     }
+
 
     private long getTimeForMove() {
         if (moveCounter <= 10) {
@@ -134,5 +161,24 @@ public class AlphaBetaKI {
             return 8000;
         }
         return 4000;
+    }
+
+
+    public void configBenchmark(long timeLimitMs, int maxDepth, boolean useAlphaBeta) {
+
+        benchmarkMode = true;
+
+        this.benchmarkTimeLimitMs = timeLimitMs;
+        this.maxDepth = maxDepth;
+        this.useAlphaBeta = useAlphaBeta;
+
+        useCustomTimeLimit = true;
+    }
+
+
+    public void resetStatsForBenchmark() {
+        nodesSearched = 0;
+        lastCompletedDepth = 0;
+        bestMove = null;
     }
 }
