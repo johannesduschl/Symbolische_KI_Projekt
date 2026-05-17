@@ -1,4 +1,4 @@
-package app.benchmark;
+package app.benchmark.zuggenerator;
 
 import java.util.ArrayList;
 import java.util.List;

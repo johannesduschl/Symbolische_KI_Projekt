@@ -1,4 +1,4 @@
-package app.benchmark;
+package app.benchmark.zuggenerator;
 
 public class BenchmarkResult {
 

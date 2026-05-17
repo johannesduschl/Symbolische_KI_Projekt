@@ -8,44 +8,56 @@ import java.util.List;
 
 public class AlphaBetaKI {
 
-    Bewertungsfunktion bf = new Bewertungsfunktion() {
-        @Override
-        public int evaluate(Board board, boolean isWhiteToMove) {
-            return (int)(1000 * Math.random());
-        }
-    };
+    public Bewertungsfunktion bf = new BewertungsfunktionImpl();
 
     Zuggenerator zuggenerator = new Zuggenerator();
 
     /**
+     * Counts the moves over the period of a game, to adjust the time limit
      * 0-10 Züge = opening, max 5s pro Zug
      * 11-50 Züge = midgame, max 8s pro Zug
      * 51+ Züge = endgame, max 4s pro Zug
      */
     private int moveCounter = 0;
 
+
     private long startTime;
     private long timeLimit;
+
+    public int maxDepth = 5;
+
+    //Benchmark:
+    public long nodesSearched = 0;
+    public int lastCompletedDepth = 0;
+    public Zug bestMove;
+    public boolean benchmarkMode = false;
+    private long benchmarkTimeLimitMs;
+
+    public boolean useAlphaBeta = true;
+
 
     public Zug findBestMove(Board board, boolean isWhiteToMove) {
 
         List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), isWhiteToMove);
         if (allMoves.isEmpty()) return null;
 
+        bestMove = allMoves.getFirst();
+
         startTime = System.nanoTime();
-        timeLimit = getTimeForMove() * 1_000_000;
 
-        Zug bestMove = allMoves.getFirst();
-
-        int maxDepth = 5;
+        if (benchmarkMode) {
+            timeLimit = benchmarkTimeLimitMs * 1_000_000;
+        } else {
+            timeLimit = getTimeForMove() * 1_000_000;
+        }
 
         for (int depth = 1; depth <= maxDepth; depth++) {
 
-            System.out.println("Searching with depth: "+depth);
             if (timeUp()) break;
 
             Zug currentBestMove = null;
-            int currentBestScore = Integer.MIN_VALUE;
+
+            int currentBestScore = isWhiteToMove ? Integer.MIN_VALUE : Integer.MAX_VALUE;
 
             for (Zug move : allMoves) {
 
@@ -54,16 +66,31 @@ public class AlphaBetaKI {
                 Board child = board.copy();
                 child.move(move);
 
-                int score = alphaBetaMin(child, Integer.MIN_VALUE, Integer.MAX_VALUE, depth - 1);
+                int score;
 
-                if (score > currentBestScore) {
-                    currentBestScore = score;
-                    currentBestMove = move;
+                if (isWhiteToMove) {
+
+                    score = alphaBetaMin(child, Integer.MIN_VALUE, Integer.MAX_VALUE, depth - 1);
+
+                    if (score > currentBestScore) {
+                        currentBestScore = score;
+                        currentBestMove = move;
+                    }
+
+                } else {
+
+                    score = alphaBetaMax(child, Integer.MIN_VALUE, Integer.MAX_VALUE, depth - 1);
+
+                    if (score < currentBestScore) {
+                        currentBestScore = score;
+                        currentBestMove = move;
+                    }
                 }
             }
 
-            if (!timeUp() && currentBestMove != null) {
+            if ((benchmarkMode || !timeUp()) && currentBestMove != null) {
                 bestMove = currentBestMove;
+                lastCompletedDepth = depth;
             } else {
                 break;
             }
@@ -73,13 +100,16 @@ public class AlphaBetaKI {
         return bestMove;
     }
 
+
     public int alphaBetaMax(Board board, int alpha, int beta, int depth) {
 
+        nodesSearched++;
+
         if (depth == 0 || board.isGameOver()) {
-            return bf.evaluate(board, false);
+            return bf.evaluate(board);
         }
 
-        if (timeUp()) return bf.evaluate(board, false);
+        if (!benchmarkMode && timeUp()) return bf.evaluate(board);
 
         List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), false);
 
@@ -90,7 +120,7 @@ public class AlphaBetaKI {
 
             int score = alphaBetaMin(child, alpha, beta, depth - 1);
 
-            if (score >= beta) return beta;
+            if (useAlphaBeta && score >= beta) return beta;
 
             if (score > alpha) alpha = score;
         }
@@ -98,13 +128,16 @@ public class AlphaBetaKI {
         return alpha;
     }
 
+
     public int alphaBetaMin(Board board, int alpha, int beta, int depth) {
 
+        nodesSearched++;
+
         if (depth == 0 || board.isGameOver()) {
-            return bf.evaluate(board, true);
+            return bf.evaluate(board);
         }
 
-        if (timeUp()) return bf.evaluate(board, true);
+        if (!benchmarkMode && timeUp()) return bf.evaluate(board);
 
         List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), true);
 
@@ -115,7 +148,7 @@ public class AlphaBetaKI {
 
             int score = alphaBetaMax(child, alpha, beta, depth - 1);
 
-            if (score <= alpha) return alpha;
+            if (useAlphaBeta && score <= alpha) return alpha;
 
             if (score < beta) beta = score;
         }
@@ -123,9 +156,11 @@ public class AlphaBetaKI {
         return beta;
     }
 
+
     private boolean timeUp() {
         return System.nanoTime() - startTime > timeLimit;
     }
+
 
     private long getTimeForMove() {
         if (moveCounter <= 10) {
@@ -134,5 +169,20 @@ public class AlphaBetaKI {
             return 8000;
         }
         return 4000;
+    }
+
+
+    public void configBenchmark(long timeLimitMs, int maxDepth, boolean useAlphaBeta) {
+        benchmarkMode = true;
+        this.benchmarkTimeLimitMs = timeLimitMs;
+        this.maxDepth = maxDepth;
+        this.useAlphaBeta = useAlphaBeta;
+    }
+
+
+    public void resetStatsForBenchmark() {
+        nodesSearched = 0;
+        lastCompletedDepth = 0;
+        bestMove = null;
     }
 }

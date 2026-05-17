@@ -4,5 +4,5 @@ import app.board.Board;
 
 public interface Bewertungsfunktion {
 
-    int evaluate(Board board, boolean isWhiteToMove);
+    int evaluate(Board board);
 }
