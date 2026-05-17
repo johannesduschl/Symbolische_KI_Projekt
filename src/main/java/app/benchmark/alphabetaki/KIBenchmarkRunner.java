@@ -17,61 +17,119 @@ public class KIBenchmarkRunner {
         runPosition("END", TestPositions.endGame());
     }
 
-    private void runPosition(String name, char[][] board) {
+    private void runPosition(String name, char[][] boardArray) {
 
+        Board board = new Board(boardArray);
+
+        System.out.println("=================================");
         System.out.println("Position: " + name);
+        System.out.println("=================================");
 
         // -------------------------
         // M: 10k evaluation
         // -------------------------
-        long t1 = System.nanoTime();
+        long evalStart = System.nanoTime();
 
         for (int i = 0; i < 10000; i++) {
-            ki.bf.evaluate(new Board(board), true);
+            ki.bf.evaluate(board);
         }
 
-        long evalMs = (System.nanoTime() - t1) / 1_000_000;
+        long evalTimeMs = (System.nanoTime() - evalStart) / 1_000_000;
 
-        System.out.println("10k eval: " + evalMs + " ms");
+        System.out.println("10k eval: " + evalTimeMs + " ms");
 
         // -------------------------
-        // N-Q: 1s search
+        // N-Q: AlphaBeta 1s
         // -------------------------
         ki.resetStatsForBenchmark();
+
         ki.configBenchmark(1000, 100, true);
 
-        long t2 = System.nanoTime();
-        Zug best1s = ki.findBestMove(new Board(board), true);
-        long searchMs = (System.nanoTime() - t2) / 1_000_000;
+        long abStart = System.nanoTime();
 
-        System.out.println("1s best: " + best1s);
+        Zug abBestMove = ki.findBestMove(new Board(boardArray), true);
+
+        long abTimeMs = (System.nanoTime() - abStart) / 1_000_000;
+
+        double abNodesPerSecond =
+                ki.nodesSearched / (abTimeMs / 1000.0);
+
+        System.out.println("\nALPHABETA 1s");
+        System.out.println("best move: " + abBestMove);
         System.out.println("depth: " + ki.lastCompletedDepth);
         System.out.println("nodes: " + ki.nodesSearched);
-        System.out.println("time: " + searchMs + " ms");
+        System.out.println("nodes/sec: " + (long) abNodesPerSecond);
+        System.out.println("time: " + abTimeMs + " ms");
+
+        // -------------------------
+        // N-Q: Minimax 1s
+        // -------------------------
+        ki.resetStatsForBenchmark();
+
+        ki.configBenchmark(1000, 100, false);
+
+        long mmStart = System.nanoTime();
+
+        Zug mmBestMove = ki.findBestMove(new Board(boardArray), true);
+
+        long mmTimeMs = (System.nanoTime() - mmStart) / 1_000_000;
+
+        double mmNodesPerSecond =
+                ki.nodesSearched / (mmTimeMs / 1000.0);
+
+        System.out.println("\nMINIMAX 1s");
+        System.out.println("best move: " + mmBestMove);
+        System.out.println("depth: " + ki.lastCompletedDepth);
+        System.out.println("nodes: " + ki.nodesSearched);
+        System.out.println("nodes/sec: " + (long) mmNodesPerSecond);
+        System.out.println("time: " + mmTimeMs + " ms");
 
         // -------------------------
         // R-U: depth 4
         // -------------------------
         ki.resetStatsForBenchmark();
-        ki.maxDepth = 4;
 
-        Zug bestD4 = ki.findBestMove(new Board(board), true);
+        ki.configBenchmark(120000, 4, true);
 
-        System.out.println("depth4 best: " + bestD4);
+        long d4Start = System.nanoTime();
+
+        Zug depth4Move = ki.findBestMove(new Board(boardArray), true);
+
+        long d4TimeMs = (System.nanoTime() - d4Start) / 1_000_000;
+
+        double d4NodesPerSecond =
+                ki.nodesSearched / (d4TimeMs / 1000.0);
+
+        System.out.println("\nDEPTH 4");
+        System.out.println("best move: " + depth4Move);
+        System.out.println("depth: " + ki.lastCompletedDepth);
+        System.out.println("nodes: " + ki.nodesSearched);
+        System.out.println("nodes/sec: " + (long) d4NodesPerSecond);
+        System.out.println("time: " + d4TimeMs + " ms");
 
         // -------------------------
-        // V-Z: stress
+        // V-Z: stress test
         // -------------------------
         ki.resetStatsForBenchmark();
-        ki.maxDepth = 100;
+
         ki.configBenchmark(120000, 100, true);
 
-        Zug bestStress = ki.findBestMove(new Board(board), true);
+        long stressStart = System.nanoTime();
 
-        System.out.println("stress best: " + bestStress);
-        System.out.println("nodes: " + ki.nodesSearched);
+        Zug stressMove = ki.findBestMove(new Board(boardArray), true);
+
+        long stressTimeMs = (System.nanoTime() - stressStart) / 1_000_000;
+
+        double stressNodesPerSecond =
+                ki.nodesSearched / (stressTimeMs / 1000.0);
+
+        System.out.println("\nSTRESS");
+        System.out.println("best move: " + stressMove);
         System.out.println("depth: " + ki.lastCompletedDepth);
+        System.out.println("nodes: " + ki.nodesSearched);
+        System.out.println("nodes/sec: " + (long) stressNodesPerSecond);
+        System.out.println("time: " + stressTimeMs + " ms");
 
-        System.out.println("---------------------\n");
+        System.out.println("\n");
     }
 }
