@@ -195,24 +195,35 @@ public class Zuggenerator {
     /**
      * findet die Koordinaten eines Char auf dem Spielfeld
      */
-    int[] findCharPosition(char[][] spielfeld, char gesuchterChar){
-        ArrayList<Integer> koordinaten = new ArrayList<>();
-        for (int zeile = 0; zeile < spielfeld.length; zeile++) {
-            for (int spalte = 0; spalte < spielfeld[zeile].length; spalte++) {
-
-                // Wenn der aktuelle Char dem gesuchten entspricht
-                if (spielfeld[zeile][spalte] == gesuchterChar) {
-                    // Koordinaten sofort als Array zurückgeben [Zeile, Spalte]
-                    koordinaten.add(zeile);
-                    koordinaten.add(spalte);
+    int[] findCharPosition(char[][] board, char target) {
+        if (target == 'k') {
+            if (board[4][4] == 'k') { //Königsfeld sehr wahrscheinlich
+                return new int[]{4, 4};
+            }
+            for (int i = 0; i < board.length; i++) {
+                for (int j = 0; j < board[i].length; j++) {
+                    if (board[i][j] == 'k') {
+                        return new int[]{i, j};
+                    }
                 }
+            }
 
+            return null; //möglicherweise Problem für alpha beta?
+        }
+
+        // worst-case: alle Steine einer Farbe vorhanden (8/16 Stück)
+        int maxPieces = (target == 's') ? 16 : (target == 'w') ? 8 : 1;
+        int[] temp = new int[maxPieces * 2]; //(x,y) Koordinaten pro Stein
+        int index = 0;
+
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                if (board[i][j] == target) {
+                    temp[index++] = i;
+                    temp[index++] = j;
+                }
             }
         }
-        int[] koordinatenArray = new int[koordinaten.size()];
-        for (int i = 0; i < koordinaten.size(); i=2) {
-            koordinatenArray[i] = koordinaten.get(i);
-        }
-        return koordinatenArray;
+        return java.util.Arrays.copyOf(temp, index); //reservierten 0-Indizes abschneiden
     }
 }
