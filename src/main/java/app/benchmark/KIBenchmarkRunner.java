@@ -13,6 +13,9 @@ public class KIBenchmarkRunner {
         this.ki = ki;
     }
 
+    // =========================
+    // GENERIC RUN (TIME + ID)
+    // =========================
     public KIBenchmarkResult run(Board board,
                                  boolean whiteToMove,
                                  long timeLimitMs,
@@ -38,6 +41,40 @@ public class KIBenchmarkRunner {
         );
     }
 
+    // =========================
+    // RUN WITH EXPLICIT MODE
+    // (CUTOFF vs MINIMAX)
+    // =========================
+    public KIBenchmarkResult run(Board board,
+                                 boolean whiteToMove,
+                                 long timeLimitMs,
+                                 int maxDepth,
+                                 boolean useCutoffs,
+                                 String name) {
+
+        ki.resetStats();
+        ki.setUseCutoffs(useCutoffs);
+
+        long start = System.nanoTime();
+
+        ki.iterativeDeepening(board, whiteToMove, timeLimitMs, maxDepth);
+
+        long end = System.nanoTime();
+
+        double timeMs = (end - start) / 1e6;
+
+        return new KIBenchmarkResult(
+                name + (useCutoffs ? " (AB)" : " (MM)"),
+                timeMs,
+                ki.getLastDepthReached(),
+                ki.getNodesSearched(),
+                ki.getBestMove()
+        );
+    }
+
+    // =========================
+    // PRINT RESULTS
+    // =========================
     public static void print(List<KIBenchmarkResult> results) {
 
         System.out.println("\n=== KI BENCHMARK ===\n");

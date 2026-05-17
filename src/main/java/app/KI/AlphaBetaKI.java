@@ -4,6 +4,7 @@ import app.board.Board;
 import app.board.Zug;
 import app.board.Zuggenerator;
 import app.Bewertungsfunktion;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -17,6 +18,9 @@ public class AlphaBetaKI {
     private Zug lastBestMove = null;
 
     private boolean stopped = false;
+
+    @Setter
+    private boolean useCutoffs = true;
 
     public long getNodesSearched() {
         return nodesSearched;
@@ -64,7 +68,12 @@ public class AlphaBetaKI {
 
             if (stopped) return alpha;
 
-            if (score >= beta) return beta;
+            // =========================
+            // CUTOFF LOGIC (optional)
+            // =========================
+            if (useCutoffs && score >= beta) {
+                return beta;
+            }
 
             if (score > alpha) {
                 alpha = score;
@@ -101,7 +110,12 @@ public class AlphaBetaKI {
 
             if (stopped) return alpha;
 
-            if (score <= alpha) return alpha;
+            // =========================
+            // CUTOFF LOGIC (optional)
+            // =========================
+            if (useCutoffs && score <= alpha) {
+                return alpha;
+            }
 
             if (score < beta) {
                 beta = score;
