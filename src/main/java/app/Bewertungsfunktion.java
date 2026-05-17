@@ -1,9 +1,13 @@
 package app;
 
+import app.board.Board;
 import app.board.Zug;
 import app.board.Zuggenerator;
 
+import java.util.Arrays;
 import java.util.List;
+
+import static java.lang.Math.abs;
 
 public class Bewertungsfunktion {
 
@@ -245,6 +249,136 @@ public class Bewertungsfunktion {
         List<Zug> moves = zg.getPossibleMoves(board, kingPos[0], kingPos[1]);
         int mobility = moves.size();
         return mobility;
+    }
+
+    /**
+     * Bewertet die Position aller Steine auf dem Spielfeld basierend auf der wichtgkeit der Position
+     * abhängig vom aktuellen Spielfortschritt.
+     * @param board
+     * @return
+     */
+    public int steinPositionBasedOnSpielfortschritt(Board board){
+        int score = 0;
+        int wcount = 0;
+        int scount = 0;
+        double spielfortschritt = spielfortschritt(board);
+        spielfortschritt = (spielfortschritt-0.5) *2; //rechnet zu parameter von -1 bis 1 für lineartransformation um
+        //wichtig! Eckfelder müssen für König immer hohen wert haben, hier in wertung 0 da externe Königspositionsbewertung das bereits auf max legt
+        int[][] bewertungsBoard = {
+                { 0,  8,  7,  3,  2,  3,  7,  8,  0},
+                { 8,  7,  5,  2,  1,  2,  5,  7,  8},
+                { 7,  5,  1, -1, -3, -1,  1,  5,  7},
+                { 3,  2, -3, -6, -6, -6, -3,  2,  3},
+                { 2,  1, -3, -6,-10, -6, -3,  1,  2},
+                { 3,  2, -3, -6, -6, -6, -3,  2,  3},
+                { 7,  5,  1, -1, -3, -1,  1,  5,  7},
+                { 8,  7,  5,  2,  1,  2,  5,  7,  8},
+                { 0,  8,  7,  3,  2,  3,  7,  8,  0}
+        };; //a1 unten links i9 oben rechts
+        double[][] transformiertesBoard = new double[9][9];
+
+        // 3. Über das Array iterieren und Transformation anwenden
+        for (int r = 0; r < 9; r++) {
+            for (int c = 0; c < 9; c++) {
+                transformiertesBoard[r][c] = bewertungsBoard[r][c] * spielfortschritt;
+            }
+        }
+        for(int i=0;i<9;i++){
+            for(int j=0;j<9;j++){
+                if(board.getBoard()[i][j]=='w'){
+                    wcount+= transformiertesBoard[i][j];
+                }
+                if(board.getBoard()[i][j]=='s'){
+                    scount+= transformiertesBoard[i][j];
+                }
+            }
+        }
+
+
+        return score;
+    }
+
+    public double spielfortschritt(Board board){
+        double score = 0;
+        char[][] startBoard = new char[][]{
+                { 'x','-','-','s','s','s','-','-','x' },
+                { '-','-','-','-','s','-','-','-','-' },
+                { '-','-','-','-','w','-','-','-','-' },
+                { 's','-','-','-','w','-','-','-','s' },
+                { 's','s','w','w','k','w','w','s','s' },
+                { 's','-','-','-','w','-','-','-','s' },
+                { '-','-','-','-','w','-','-','-','-' },
+                { '-','-','-','-','s','-','-','-','-' },
+                { 'x','-','-','s','s','s','-','-','x' }
+        }; //a1 unten links i9 oben rechts
+
+        //Abweichung von Spielfeld zu Startfeld
+        //max Abweichungen 81
+        int abweichung = 0;
+        for (int i = 0; i < startBoard.length; i++) {
+            for (int j = 0; j < startBoard[i].length; j++) {
+                if (startBoard[i][j] != board.getBoard()[i][j]) {
+                    abweichung++;
+                }
+            }
+        }
+        //Anzahl Figuren
+        //max Figuren 25
+        int figuren = 0;
+        figuren += count('w', Arrays.toString(board.getBoard()));
+        figuren += count('s', Arrays.toString(board.getBoard()));
+        figuren += count('k', Arrays.toString(board.getBoard()));
+
+        //Fortschritt König
+        //max value 8 min value 0
+        int königFortschritt = 0;
+        int[] kcords= findCharPosition(board.getBoard(), 'k');
+        königFortschritt = abs(4-kcords[0]) + abs(4-kcords[1]);
+
+        //
+        score = (abweichung*0.005)+(königFortschritt*0.05)+(0.25-(0.01*figuren));
+        return score;
+    }
+    public int count(char c, String s) {
+        int count = 0;
+        for(int i=0;i<s.length();i++){
+            if(s.charAt(i)==c) count++;
+        }
+        return count;
+    }
+    /**
+     * findet die Koordinaten eines Char auf dem Spielfeld
+     */
+    int[] findCharPosition(char[][] board, char target) {
+        if (target == 'k') {
+            if (board[4][4] == 'k') { //Königsfeld sehr wahrscheinlich
+                return new int[]{4, 4};
+            }
+            for (int i = 0; i < board.length; i++) {
+                for (int j = 0; j < board[i].length; j++) {
+                    if (board[i][j] == 'k') {
+                        return new int[]{i, j};
+                    }
+                }
+            }
+
+            return null; //möglicherweise Problem für alpha beta?
+        }
+
+        // worst-case: alle Steine einer Farbe vorhanden (8/16 Stück)
+        int maxPieces = (target == 's') ? 16 : (target == 'w') ? 8 : 1;
+        int[] temp = new int[maxPieces * 2]; //(x,y) Koordinaten pro Stein
+        int index = 0;
+
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                if (board[i][j] == target) {
+                    temp[index++] = i;
+                    temp[index++] = j;
+                }
+            }
+        }
+        return java.util.Arrays.copyOf(temp, index); //reservierten 0-Indizes abschneiden
     }
 
 }
