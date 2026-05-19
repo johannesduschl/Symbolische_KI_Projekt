@@ -11,16 +11,28 @@ import static java.lang.Math.abs;
 
 public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
+    private final char[][] debug_board = new char[][]{
+            { 'k','w','-','-','-','w','-','-','x' },
+            { 'w','w','-','-','-','w','-','-','-' },
+            { '-','-','-','-','-','w','-','-','-' },
+            { '-','-','-','-','-','w','-','-','-' },
+            { 'w','w','w','w','w','w','-','-','-' },
+            { '-','-','-','-','-','-','-','-','-' },
+            { '-','-','-','-','-','-','-','-','-' },
+            { '-','-','-','-','-','-','-','-','-' },
+            { 'x','-','-','-','-','-','-','-','x' }
+    };
+
     private static final boolean[][] BLOCKED = {
-            { true, false, false, false, false, false, false, false, true },
+            {  true, false, false, false, false, false, false, false,  true },
             { false, false, false, false, false, false, false, false, false },
             { false, false, false, false, false, false, false, false, false },
             { false, false, false, false, false, false, false, false, false },
+            { false, false, false, false,  true, false, false, false, false },
             { false, false, false, false, false, false, false, false, false },
             { false, false, false, false, false, false, false, false, false },
             { false, false, false, false, false, false, false, false, false },
-            { false, false, false, false, false, false, false, false, false },
-            { true, false, false, false, false, false, false, false, true }
+            {  true, false, false, false, false, false, false, false,  true }
     };
 
     private static final int[][] KING_PST = {
@@ -59,6 +71,8 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             { 0, 0, 0, 1, 1, 1, 0, 0, 0 }
     };
 
+    private static boolean onThrone = true;
+
     // =========================
     // HIGH-LEVEL WEIGHTS
     // =========================
@@ -70,7 +84,8 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     // =========================
     private static final int W_KING_PROGRESS = 1;
     private static final int W_CORNER = 1;
-    private static final int W_ESCAPE_PROGRESS = 5;
+    private static final int W_KING_MOBILITY = 1;
+    private static final int W_KING_SAFETY = 1;
 
     // =========================
     // BLACK FEATURE WEIGHTS
@@ -106,7 +121,9 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
         return whitePST(board)
                 + W_KING_PROGRESS * kingEscapeScore(board)
-                + W_CORNER * cornerProgress(board);
+                + W_CORNER * cornerProgress(board)
+                + W_KING_MOBILITY * kingMobility(board)
+                + W_KING_SAFETY * kingSafety(board);
     }
 
     private int evaluateBlack(char[][] board) {
@@ -116,11 +133,13 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
     private int[] findKing(char[][] board) {
         if (board[4][4] == 'k'){
+            onThrone = true;
             return new int[]{4, 4};
         }
         for (int i = 0; i < 9; i++) {
             for (int j = 0; j < 9; j++) {
                 if (board[i][j] == 'k') {
+                    onThrone = false;
                     return new int[]{i, j};
                 }
             }
@@ -142,13 +161,182 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         y += dy;
 
         while (x >= 0 && x < 9 && y >= 0 && y < 9) {
-            if (board[x][y] != '-') {
-                return false;
+
+            if (!BLOCKED[x][y]) {
+                if (board[x][y] != '-') {
+                    return false;
+                }
             }
+
             x += dx;
             y += dy;
         }
+
         return true;
+    }
+    /**
+     * oben   = (-1, 0)
+     * unten  = ( 1, 0)
+     * links  = ( 0,-1)
+     * rechts = ( 0, 1)
+     *
+     */
+    private int countMoves(char[][] board, int x, int y, int dx, int dy){
+
+        int moves = 0;
+        x += dx;
+        y += dy;
+
+        while (x >= 0 && x < 9 && y >= 0 && y < 9) {
+            if(BLOCKED[x][y]){
+                x += dx;
+                y += dy;
+                continue;
+            }
+
+            if(board[x][y] != '-'){
+                break;
+            }
+            moves++;
+            x += dx;
+            y += dy;
+        }
+        return moves;
+    }
+
+    //TODO:delete debug function drawLine()
+    private void drawLine(char[][] board, char target, int squares,
+                          int x, int y, int dx, int dy) {
+
+        int steps = 0;
+
+        while (x >= 0 && x < board.length &&
+                y >= 0 && y < board.length &&
+                steps <= squares) {
+
+            if (board[x][y] == '-') {
+                board[x][y] = target;
+            }
+
+            x += dx;
+            y += dy;
+            steps++;
+        }
+    }
+
+    private int countPieces(char[][] board, char target, int squares,
+                            int x, int y, int dx, int dy) {
+
+        int pieces = 0;
+        int steps = 0;
+
+        while (x >= 0 && x < 9 && y >= 0 && y < 9 && steps <= squares) {
+
+            if (board[x][y] == target) {
+                pieces++;
+            }
+
+            x += dx;
+            y += dy;
+            steps++;
+        }
+
+        return pieces;
+    }
+    /**
+     * oben   = (-1, 0)
+     * unten  = ( 1, 0)
+     * links  = ( 0,-1)
+     * rechts = ( 0, 1)
+     *
+     */
+    private int countRadius(char[][] board, char target, int radius, int x, int y){
+
+        //RADIUS: just use corners as reference points for loops
+        //corners might be outside the board -> problem!
+        //Calculate the closest legal corner and ignore blocked (x) fields, just use blocked pst afterwards
+        //for debug purposes, generate and print board as pieces for radius
+
+        //topLeft:     (x - radius, y - radius)
+        //if x < 0: ignoreTopRow = true and x(topLeft) = 0
+        //if y < 0: ignoreLeftColumn = true and y(topLeft) = 0
+        //topLeft = (x,y)
+
+        //topRight:    (x - radius, y + radius)
+        //if x < 0: ignoreTopRow = true and x(topRight) = 0
+        //if y > 8: ignoreRightColumn= true and y(topRight) = 8
+        //topRight = (x,y)
+
+        //bottomLeft:  (x + radius, y - radius)
+        //if x > 8: ignoreBottomRow = true and x(bottomLeft) = 8
+        //if y < 0: ignoreLeftColumn = true and y(bottomLeft) = 0
+        //bottomLeft = (x,y)
+
+        //bottomRight: (x + radius, y + radius)
+        //if x > 8: ignoreBottomRow = true and x(bottomRight) = 8
+        //if y > 8: ignoreRightColumn = true and y(bottomRight) = 8
+        //bottomRight = (x,y)
+
+        //topRow:
+        //from topRight to topLeft count pieces
+        //use y(topRight) - y(topLeft) to get number of fields for countPieces() function
+        //start at topLeft and add numberOfFields -> rechts = ( 0, 1)
+        //bottomRow:
+        //from bottomRight to bottomLeft count pieces
+        //use y(bottomRight) - y(bottomLeft) to get number of fields for countPieces() function
+        //start at bottomLeft and add numberOfFields -> rechts = ( 0, 1)
+        //leftColumn:
+        //from bottomLeft to topLeft count pieces
+        //use x(bottomLeft) - x(topLeft) to get number of fields for countPieces() function
+        //start at topLeft and add numberOfFields -> unten = (1, 0)
+        //rightColumn:
+        //from topRight to bottomRight count pieces
+        //use x(bottomRight) - x(topRight) to get number of fields for countPieces() function
+        //start at topRight and add numberOfFields -> unten = (1, 0)
+
+        int count = 0;
+        int max = board.length - 1;
+
+        int rawLeft = y - radius;
+        int rawRight = y + radius;
+        int rawTop = x - radius;
+        int rawBottom = x + radius;
+
+        boolean ignoreTopRow = rawTop < 0;
+        boolean ignoreBottomRow = rawBottom > max;
+        boolean ignoreLeftColumn = rawLeft < 0;
+        boolean ignoreRightColumn = rawRight > max;
+
+        int left = Math.max(0, Math.min(max, y - radius));
+        int right = Math.max(0, Math.min(max, y + radius));
+        int top = Math.max(0, Math.min(max, x - radius));
+        int bottom = Math.max(0, Math.min(max, x + radius));
+
+        int rowLength = right - left;
+        int columnLength = bottom - top;
+
+        //TODO:Delete debug stuff
+        //Mögliches Problem: Ecken werden doppelt gezählt! --> FIXED!!!
+        if(!ignoreTopRow){
+            count += countPieces(board, target, rowLength, top, left, 0, 1);
+            //fix counting corners twice:
+            columnLength--;
+            top++;
+        }
+        if(!ignoreBottomRow){
+            count += countPieces(board, target, rowLength, bottom, left, 0, 1);
+            //fix counting corners twice:
+            columnLength--;
+
+        }
+        if(!ignoreLeftColumn){
+            count += countPieces(board, target, columnLength, top, left, 1, 0);
+        }
+        if(!ignoreRightColumn){
+            count += countPieces(board, target, columnLength, top, right, 1, 0);
+        }
+
+        return count;
     }
 
     private int blackPST(char[][] board) {
@@ -242,14 +430,72 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     }
 
     private int kingMobility(char[][] board) {
+        //TODO: fixing inefficient Zuggenerator generating for every call
+        //IMPORTANT: Throne is safe therefore mobility less important
 
+        int moves = 0;
         int[] kingPos = findKing(board);
         if (kingPos == null) return -10000;
+        int x = kingPos[0];
+        int y = kingPos[1];
 
-        Zuggenerator zg = new Zuggenerator();
-        List<Zug> moves = zg.getPossibleMoves(board, kingPos[0], kingPos[1]);
+        if(!onThrone){
+            //more Moves make him vulnerable too!
 
-        return moves.size();
+            //apply this logic by rewarding black for (in-)direct view to the king
+            //keep it balanced with kingSafety -> more white pieces around are better
+            moves += countMoves(board, x, y, -1, 0);
+            moves += countMoves(board, x, y,  1, 0);
+            moves += countMoves(board, x, y,  0,-1);
+            moves += countMoves(board, x, y,  0, 1);
+        }
+        return moves;
+    }
+
+
+    //IDEA: reward white for having white pieces around the kind
+    //the closer to the king the better
+    //QUESTION: possible to move a smaller PST within board and arrange it to the king?
+    //-> bad idea, just use sth like countMoves but for general purposes
+    private int kingSafety(char[][] board){
+        int score = 0;
+        int[] kingPos = findKing(board);
+        if (kingPos == null) return -10000;
+        int x = kingPos[0];
+        int y = kingPos[1];
+        //Use multiplier for nearer pieces
+        score += 2 * countRadius(board, 'w', 1, x, y);
+        score +=     countRadius(board, 'w', 2, x, y);
+        System.out.println("kingSafety score: " + score);
+        printBoard(board);
+        return score;
+    }
+
+
+    public static void printBoard(char[][] board) {
+        if (board == null || board.length == 0 || board[0].length == 0) {
+            System.out.println("Board ist leer oder null");
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("  ");
+        for (int c = 0; c < board[0].length; c++) {
+            sb.append((char) ('A' + c)).append(' ');
+        }
+
+        for (int y = 0; y < board.length; y++) {
+            sb.append('\n');
+            sb.append(board.length - y).append(' ');
+
+            for (int x = 0; x < board[0].length; x++) {
+                sb.append(board[y][x]).append(' ');
+            }
+        }
+
+        sb.append('\n');
+        System.out.println(sb.toString());
     }
 
     /**
