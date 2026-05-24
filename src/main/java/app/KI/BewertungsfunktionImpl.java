@@ -7,6 +7,7 @@ import app.board.Zuggenerator;
 import java.util.Arrays;
 import java.util.List;
 
+import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 
 public class BewertungsfunktionImpl implements Bewertungsfunktion {
@@ -85,17 +86,28 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private static final int W_KING_PROGRESS = 1;
     private static final int W_CORNER = 1;
     private static final int W_KING_MOBILITY = 1;
-    private static final int W_KING_SAFETY = 1;
+    private static final int W_KING_SAFETY = 2;
 
     // =========================
     // BLACK FEATURE WEIGHTS
     // =========================
-    private static final int W_KING_THREAT = 10;
+    private static final int W_KING_THREAT = 3;
     private static final int W_MATERIAL_PRESSURE = 10;
     private static final int W_MOBILITY_PRESSURE = 5;
 
+    // =========================
+    // PIECE SQUARES
+    // =========================
+    private static int[] kingSquare;
+    private static int[] whiteSquares;
+    private static int[] blackSquares;
+
+    private static int test = 0;
     @Override
     public int evaluate(Board board) {
+        kingSquare = findCharPosition(board.getBoard(), 'k');
+        whiteSquares = findCharPosition(board.getBoard(), 'w');
+        blackSquares = findCharPosition(board.getBoard(), 's');
 
         int white = evaluateWhite(board.getBoard());
         int black = evaluateBlack(board.getBoard());
@@ -107,7 +119,6 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
         int white = evaluateWhite(board);
         int black = evaluateBlack(board);
-
         int total = white - black;
 
         System.out.println("WHITE: " + white);
@@ -128,23 +139,8 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
     private int evaluateBlack(char[][] board) {
 
-        return blackPST(board);
-    }
-
-    private int[] findKing(char[][] board) {
-        if (board[4][4] == 'k'){
-            onThrone = true;
-            return new int[]{4, 4};
-        }
-        for (int i = 0; i < 9; i++) {
-            for (int j = 0; j < 9; j++) {
-                if (board[i][j] == 'k') {
-                    onThrone = false;
-                    return new int[]{i, j};
-                }
-            }
-        }
-        return null;
+        return blackPST(board)
+                + W_KING_THREAT * kingThreat(board);
     }
 
     /**
@@ -173,6 +169,112 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         }
 
         return true;
+    }
+    // Determines whether movement along a direction is blocked by other pieces.
+    private boolean isSquareRestricted(char[][] board, int x, int y, int dx, int dy){
+
+        x += dx;
+        y += dy;
+
+        while (x >= 0 && x < 9 && y >= 0 && y < 9) {
+
+            if (!BLOCKED[x][y]) {
+                if (board[x][y] != '-') {
+                    return true;
+                }
+            }
+
+            x += dx;
+            y += dy;
+        }
+
+        return false;
+    }
+
+    private boolean isSquareThreatenedBy(char[][] board, char attackingPiece, int x, int y, int dx, int dy ){
+
+        //TODO
+        x += dx;
+        y += dy;
+
+        while (x >= 0 && x < 9 && y >= 0 && y < 9) {
+            if (board[x][y] == attackingPiece) {
+                return true;
+            }
+
+            x += dx;
+            y += dy;
+        }
+
+        return false;
+    }
+
+    private boolean canAnyPieceInSourceReachTarget(char[][] board, char PieceType, int dx, int dy,
+                                                   int sourceMinX, int sourceMaxX, int sourceMinY, int sourceMaxY,
+                                                   int targetMinX, int targetMaxX, int targetMinY, int targetMaxY
+                                                   ){
+        int[] PieceSquares = switch (PieceType) {
+            case 'k' -> kingSquare;
+            case 'w' -> whiteSquares;
+            case 's' -> blackSquares;
+            default -> throw new IllegalArgumentException("Unknown PieceType: " + PieceType);
+        };
+
+        for (int i = 0; i < PieceSquares.length; i += 2){
+            int x = PieceSquares[i];
+            int y = PieceSquares[i+1];
+            if (x >= targetMinX && x <= targetMaxX && y >= targetMinY && y <= targetMaxY) {
+                if(canPieceReachTarget(board, x, y, dx, dy,
+                        targetMinX, targetMaxX, targetMinY, targetMaxY)){
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+    //TODO:Reduce duplicate code...
+    private boolean canPieceReachTarget(char[][] board, int x, int y, int dx, int dy,
+                                        int targetMinX, int targetMaxX, int targetMinY, int targetMaxY){
+        if(dy == 0){
+            //is y not in range of targetMinY and targetMaxY
+            if(y < targetMinY || y > targetMaxY){
+                return false;
+            }
+        }else{
+            y += dy;
+
+            while (y >= 0 && y < 9){
+                if (board[x][y] != '-') {
+                    return false;
+                }
+
+                if (y >= targetMinY && y <= targetMaxY){
+                    return true;
+                }
+
+                y += dy;
+            }
+        }
+
+        if(dx == 0){
+            if(x < targetMinX || x > targetMaxX){
+                return false;
+            }
+        }else{
+            x += dx;
+            while (x >= 0 && x < 9) {
+                if (board[x][y] != '-') {
+                    return false;
+                }
+                if (x >= targetMinX && x <= targetMaxX){
+                    return true;
+                }
+                x += dx;
+            }
+        }
+
+        return false;
     }
     /**
      * oben   = (-1, 0)
@@ -380,11 +482,10 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     //Boni für freie Linien/Reihen und Nähe zum Rand
     private int kingEscapeScore(char[][] board) {
 
-        int[] king = findKing(board);
-        if (king == null) return -10000;
+        if (kingSquare == null) return -10000;
 
-        int x = king[0];
-        int y = king[1];
+        int x = kingSquare[0];
+        int y = kingSquare[1];
         int score = 0;
 
         if (x == 0 || x == 8 || y == 0 || y == 8) {
@@ -412,15 +513,14 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     //Ersetzen durch vorgefertigte Tabelle möglich...
     private int cornerProgress(char[][] board) {
 
-        int[] k = findKing(board);
-        if (k == null) return -10000;
+        if (kingSquare == null) return -10000;
 
         int bestProgress = 0;
         int[][] corners = {{0,0},{0,8},{8,0},{8,8}};
 
         for (int[] c : corners) {
 
-            int dist = Math.abs(k[0]-c[0]) + Math.abs(k[1]-c[1]);
+            int dist = Math.abs(kingSquare[0]-c[0]) + Math.abs(kingSquare[1]-c[1]);
             int progress = 16 - dist;
 
             bestProgress = Math.max(bestProgress, progress);
@@ -434,10 +534,9 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         //IMPORTANT: Throne is safe therefore mobility less important
 
         int moves = 0;
-        int[] kingPos = findKing(board);
-        if (kingPos == null) return -10000;
-        int x = kingPos[0];
-        int y = kingPos[1];
+        if (kingSquare == null) return -10000;
+        int x = kingSquare[0];
+        int y = kingSquare[1];
 
         if(!onThrone){
             //more Moves make him vulnerable too!
@@ -459,15 +558,22 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     //-> bad idea, just use sth like countMoves but for general purposes
     private int kingSafety(char[][] board){
         int score = 0;
-        int[] kingPos = findKing(board);
-        if (kingPos == null) return -10000;
-        int x = kingPos[0];
-        int y = kingPos[1];
+        if (kingSquare == null) return -10000;
+        int x = kingSquare[0];
+        int y = kingSquare[1];
         //Use multiplier for nearer pieces
         score += 2 * countRadius(board, 'w', 1, x, y);
         score +=     countRadius(board, 'w', 2, x, y);
-        System.out.println("kingSafety score: " + score);
-        printBoard(board);
+        return score;
+    }
+
+    private int kingThreat(char[][] board){
+        int score = 0;
+        if (kingSquare == null) return +10000;
+        int x = kingSquare[0];
+        int y = kingSquare[1];
+        score += 2 * countRadius(board, 's', 1, x, y);
+        score +=     countRadius(board, 's', 2, x, y);
         return score;
     }
 
@@ -600,7 +706,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     /**
      * findet die Koordinaten eines Char auf dem Spielfeld
      */
-    int[] findCharPosition(char[][] board, char target) {
+    private static int[] findCharPosition(char[][] board, char target) {
 
         if (target == 'k') {
 
