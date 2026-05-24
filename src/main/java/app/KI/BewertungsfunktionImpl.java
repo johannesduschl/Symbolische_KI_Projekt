@@ -3,6 +3,7 @@ package app.KI;
 import app.board.Board;
 import app.board.Zug;
 import app.board.Zuggenerator;
+import lombok.Setter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -34,6 +35,18 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             { false, false, false, false, false, false, false, false, false },
             { false, false, false, false, false, false, false, false, false },
             {  true, false, false, false, false, false, false, false,  true }
+    };
+
+    private static final boolean[][] BLOCKED_KING = {
+            { false, false, false, false, false, false, false, false, false },
+            { false, false, false, false, false, false, false, false, false },
+            { false, false, false, false, false, false, false, false, false },
+            { false, false, false, false, false, false, false, false, false },
+            { false, false, false, false,  true, false, false, false, false },
+            { false, false, false, false, false, false, false, false, false },
+            { false, false, false, false, false, false, false, false, false },
+            { false, false, false, false, false, false, false, false, false },
+            { false, false, false, false, false, false, false, false, false }
     };
 
     private static final int[][] KING_PST = {
@@ -72,8 +85,6 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             { 0, 0, 0, 1, 1, 1, 0, 0, 0 }
     };
 
-    private static boolean onThrone = true;
-
     // =========================
     // HIGH-LEVEL WEIGHTS
     // =========================
@@ -101,8 +112,9 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private static int[] kingSquare;
     private static int[] whiteSquares;
     private static int[] blackSquares;
+    @Setter
+    private static boolean onThrone = true;
 
-    private static int test = 0;
 
     public int[] getWhiteSquares() {
         return whiteSquares;
@@ -116,12 +128,21 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         return kingSquare;
     }
 
+    public boolean getOnThrone(){
+        return onThrone;
+    }
+
     @Override
     public int evaluate(Board board) {
         kingSquare = findCharPosition(board.getBoard(), 'k');
         whiteSquares = findCharPosition(board.getBoard(), 'w');
         blackSquares = findCharPosition(board.getBoard(), 's');
 
+        if(onThrone){
+            if(kingSquare[0] != 4 || kingSquare[1] != 4){
+                onThrone = false;
+            }
+        }
         int white = evaluateWhite(board.getBoard());
         int black = evaluateBlack(board.getBoard());
 
@@ -237,7 +258,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             int x = PieceSquares[i];
             int y = PieceSquares[i+1];
             if (x >= sourceMinX && x <= sourceMaxX && y >= sourceMinY && y <= sourceMaxY) {
-                if(canPieceReachTarget(board, x, y, dx, dy,
+                if(canPieceReachTarget(board, PieceType, x, y, dx, dy,
                         targetMinX, targetMaxX, targetMinY, targetMaxY)){
                     return true;
                 }
@@ -246,8 +267,8 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
         return false;
     }
-    //TODO:Reduce duplicate code...
-    private boolean canPieceReachTarget(char[][] board, int x, int y, int dx, int dy,
+    //TODO:Reduce duplicate code... --> DONE
+    private boolean canPieceReachTarget(char[][] board, char PieceType, int x, int y, int dx, int dy,
                                         int targetMinX, int targetMaxX, int targetMinY, int targetMaxY){
 
         if(dy == 0) {
@@ -265,10 +286,28 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         y += dy;
 
         while (x >= 0 && x < 9 && y >= 0 && y < 9){
-            if (board[x][y] != '-') {
-                return false;
+            if(PieceType == 'k'){
+                if(BLOCKED_KING[x][y]){
+                    x += dx;
+                    y += dy;
+                    continue;
+                }
+                if (board[x][y] != '-' && !BLOCKED[x][y]) {
+                    return false;
+                }
+            }else{
+                if(onThrone && x == 4 && y == 4){
+                    return false;
+                }
+                if(BLOCKED[x][y]){
+                    x += dx;
+                    y += dy;
+                    continue;
+                }
+                if (board[x][y] != '-') {
+                    return false;
+                }
             }
-
             if (x >= targetMinX && x <= targetMaxX && y >= targetMinY && y <= targetMaxY){
                 return true;
             }
