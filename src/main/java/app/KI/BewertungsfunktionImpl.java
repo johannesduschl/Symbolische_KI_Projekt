@@ -103,6 +103,19 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private static int[] blackSquares;
 
     private static int test = 0;
+
+    public int[] getWhiteSquares() {
+        return whiteSquares;
+    }
+
+    public int[] getBlackSquares() {
+        return blackSquares;
+    }
+
+    public int[] getKingSquare() {
+        return kingSquare;
+    }
+
     @Override
     public int evaluate(Board board) {
         kingSquare = findCharPosition(board.getBoard(), 'k');
@@ -223,7 +236,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         for (int i = 0; i < PieceSquares.length; i += 2){
             int x = PieceSquares[i];
             int y = PieceSquares[i+1];
-            if (x >= targetMinX && x <= targetMaxX && y >= targetMinY && y <= targetMaxY) {
+            if (x >= sourceMinX && x <= sourceMaxX && y >= sourceMinY && y <= sourceMaxY) {
                 if(canPieceReachTarget(board, x, y, dx, dy,
                         targetMinX, targetMaxX, targetMinY, targetMaxY)){
                     return true;
@@ -236,42 +249,31 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     //TODO:Reduce duplicate code...
     private boolean canPieceReachTarget(char[][] board, int x, int y, int dx, int dy,
                                         int targetMinX, int targetMaxX, int targetMinY, int targetMaxY){
-        if(dy == 0){
-            //is y not in range of targetMinY and targetMaxY
-            if(y < targetMinY || y > targetMaxY){
+
+        if(dy == 0) {
+            if (y < targetMinY || y > targetMaxY) {
                 return false;
             }
-        }else{
-            y += dy;
-
-            while (y >= 0 && y < 9){
-                if (board[x][y] != '-') {
-                    return false;
-                }
-
-                if (y >= targetMinY && y <= targetMaxY){
-                    return true;
-                }
-
-                y += dy;
+        }
+        if(dx == 0) {
+            if (x < targetMinX || x > targetMaxX) {
+                return false;
             }
         }
 
-        if(dx == 0){
-            if(x < targetMinX || x > targetMaxX){
+        x += dx;
+        y += dy;
+
+        while (x >= 0 && x < 9 && y >= 0 && y < 9){
+            if (board[x][y] != '-') {
                 return false;
             }
-        }else{
-            x += dx;
-            while (x >= 0 && x < 9) {
-                if (board[x][y] != '-') {
-                    return false;
-                }
-                if (x >= targetMinX && x <= targetMaxX){
-                    return true;
-                }
-                x += dx;
+
+            if (x >= targetMinX && x <= targetMaxX && y >= targetMinY && y <= targetMaxY){
+                return true;
             }
+            x += dx;
+            y += dy;
         }
 
         return false;
