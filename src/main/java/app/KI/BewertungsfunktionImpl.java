@@ -3,6 +3,7 @@ package app.KI;
 import app.board.Board;
 import app.board.Zug;
 import app.board.Zuggenerator;
+import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Arrays;
@@ -103,6 +104,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     // BLACK FEATURE WEIGHTS
     // =========================
     private static final int W_KING_THREAT = 3;
+    private static final int W_EDGE_SECURE_SCORE = 1;
     private static final int W_MATERIAL_PRESSURE = 10;
     private static final int W_MOBILITY_PRESSURE = 5;
 
@@ -112,6 +114,8 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private static int[] kingSquare;
     private static int[] whiteSquares;
     private static int[] blackSquares;
+    @Getter
+    private static int kingMoves;
     @Setter
     private static boolean onThrone = true;
 
@@ -143,6 +147,8 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
                 onThrone = false;
             }
         }
+        kingMoves = kingMoves(board.getBoard(), kingSquare[0], kingSquare[1]);
+
         int white = evaluateWhite(board.getBoard());
         int black = evaluateBlack(board.getBoard());
 
@@ -167,7 +173,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         return whitePST(board)
                 + W_KING_PROGRESS * kingEscapeScore(board)
                 + W_CORNER * cornerProgress(board)
-                + W_KING_MOBILITY * kingMobility(board)
+                + W_KING_MOBILITY * kingMobility()
                 + W_KING_SAFETY * kingSafety(board);
     }
 
@@ -211,7 +217,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         y += dy;
 
         while (x >= 0 && x < 9 && y >= 0 && y < 9) {
-
+        //TODO: fix logic for (4,4) if king on Throne...
             if (!BLOCKED[x][y]) {
                 if (board[x][y] != '-') {
                     return true;
@@ -225,9 +231,40 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         return false;
     }
 
+    private boolean isRowRestrictedInOneDirection(char[][] board, int x, int y){
+        return isSquareRestricted(board, x, y, 0, -1) || isSquareRestricted(board, x, y, 0, 1);
+    }
+
+    private boolean isRowRestrictedInBothDirections(char[][] board, int x, int y){
+        return isSquareRestricted(board, x, y, 0, -1) && isSquareRestricted(board, x, y, 0, 1);
+    }
+
+    private boolean isColumnRestrictedInOneDirection(char[][] board, int x, int y){
+        return isSquareRestricted(board, x, y, -1, 0) || isSquareRestricted(board, x, y, 1, 0);
+    }
+
+    private boolean isColumnRestrictedInBothDirections(char[][] board, int x, int y){
+        return isSquareRestricted(board, x, y, -1, 0) && isSquareRestricted(board, x, y, 1, 0);
+    }
+
+    private boolean isRowThreatenedInOneDirectionBy(char[][] board, char attackingPiece, int x, int y){
+        return isSquareThreatenedBy(board, attackingPiece, x, y, 0, -1) || isSquareThreatenedBy(board, attackingPiece, x, y, 0, 1);
+    }
+
+    private boolean isRowThreatenedInBothDirectionsBy(char[][] board, char attackingPiece, int x, int y){
+        return isSquareThreatenedBy(board, attackingPiece, x, y, 0, -1) && isSquareThreatenedBy(board, attackingPiece, x, y, 0, 1);
+    }
+
+    private boolean isColumnThreatenedInOneDirectionBy(char[][] board, char attackingPiece, int x, int y){
+        return isSquareThreatenedBy(board, attackingPiece, x, y, -1, 0) || isSquareThreatenedBy(board, attackingPiece, x, y, 1, 0);
+    }
+
+    private boolean isColumnThreatenedInBothDirectionsBy(char[][] board, char attackingPiece, int x, int y){
+        return isSquareThreatenedBy(board, attackingPiece, x, y, -1, 0) && isSquareThreatenedBy(board, attackingPiece, x, y, 1, 0);
+    }
+
     private boolean isSquareThreatenedBy(char[][] board, char attackingPiece, int x, int y, int dx, int dy ){
 
-        //TODO
         x += dx;
         y += dy;
 
@@ -326,20 +363,36 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
      */
     private int countMoves(char[][] board, int x, int y, int dx, int dy){
 
+        char PieceType = board[x][y];
+
         int moves = 0;
         x += dx;
         y += dy;
 
         while (x >= 0 && x < 9 && y >= 0 && y < 9) {
-            if(BLOCKED[x][y]){
-                x += dx;
-                y += dy;
-                continue;
+            if(PieceType == 'k'){
+                if(BLOCKED_KING[x][y]){
+                    x += dx;
+                    y += dy;
+                    continue;
+                }
+                if (board[x][y] != '-' && !BLOCKED[x][y]) {
+                    break;
+                }
+            }else{
+                if(onThrone && x == 4 && y == 4){
+                    break;
+                }
+                if(BLOCKED[x][y]){
+                    x += dx;
+                    y += dy;
+                    continue;
+                }
+                if(board[x][y] != '-'){
+                    break;
+                }
             }
 
-            if(board[x][y] != '-'){
-                break;
-            }
             moves++;
             x += dx;
             y += dy;
@@ -520,7 +573,77 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         return score;
     }
 
+    private int edgeSecureScore(char[][] board, int x, int y, int dx, int dy){
+
+        int score = 0;
+        int count = 1;
+        int edge_x = x;
+        int edge_y = y;
+        if(!isSquareRestricted(board, x, y, dx, dy)){
+            if(dy == 0){ //Move up/down
+                if(dx == -1){ //up
+                    edge_x = 0;
+                }else if(dx == 1){ //down
+                    edge_x = 8;
+                }
+                if(isRowRestrictedInBothDirections(board, edge_x, edge_y)){
+                    if(isRowThreatenedInOneDirectionBy(board, 's', edge_x, edge_y)){
+                        score += kingMoves; //TODO: KingMobility * 2: add KingMobility counter -> DONE
+                    }else if(isRowThreatenedInBothDirectionsBy(board, 's', edge_x, edge_y)){
+                        score += 2 * kingMoves;
+                    }
+                }else if(isRowRestrictedInOneDirection(board, edge_x, edge_y)){
+                    if(isRowThreatenedInOneDirectionBy(board, 's', edge_x, edge_y)){
+                        //TODO:macht kein sinn, logik verbessern -> DONE
+                        count++;
+                    }
+                    //Determine which direction is not restricted:
+                    if(!isSquareRestricted(board, edge_x, edge_y, 0, -1)){ //left = (0,-1)
+                        if(canAnyPieceInSourceReachTarget(board, 's', dx, dy, 0, 8, 0, edge_y - 1, edge_x, edge_x, 0, edge_y - 1)){
+                            score += count * kingMoves;
+                        }
+                    }else{
+                        if(canAnyPieceInSourceReachTarget(board, 's', dx, dy, 0, 8, edge_y + 1, 8, edge_x, edge_x, edge_y + 1, 8)){
+                            score += count * kingMoves;
+                        }
+                    }
+                }
+            }else if(dx == 0){ //Move left/right
+                if(dy == -1){ //left
+                    edge_y = 0;
+                }else if(dy == 1){ //right
+                    edge_y = 8;
+                }
+                if(isColumnRestrictedInBothDirections(board, edge_x, edge_y)){
+                    if(isColumnThreatenedInOneDirectionBy(board, 's', edge_x, edge_y)){
+                        score += kingMoves;
+                    }else if(isColumnThreatenedInBothDirectionsBy(board, 's', edge_x, edge_y)){
+                        score += 2 * kingMoves;
+                    }
+                }else if(isColumnRestrictedInOneDirection(board, edge_x, edge_y)){
+                    if(isColumnThreatenedInOneDirectionBy(board, 's', edge_x, edge_y)){
+                        count++;
+                    }
+                    //Determine which direction is not restricted:
+                    if(!isSquareRestricted(board, edge_x, edge_y, -1, 0)){
+                        if(canAnyPieceInSourceReachTarget(board, 's', dx, dy, 0, edge_x - 1, 0, 8, 0, edge_x - 1, edge_y, edge_y)){
+                            score += count * kingMoves;
+                        }
+                    }else{
+                        if(canAnyPieceInSourceReachTarget(board, 's', dx, dy, edge_x + 1, 8, 0, 8, edge_x + 1, 8, edge_y, edge_y)){
+                            score += count * kingMoves;
+                        }
+                    }
+                }
+            }
+        }
+
+
+        return score;
+    }
+
     //Boni für freie Linien/Reihen und Nähe zum Rand
+    //TODO:only reward white if edge is not defendable by black
     private int kingEscapeScore(char[][] board) {
 
         if (kingSquare == null) return -10000;
@@ -569,26 +692,31 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
         return bestProgress;
     }
+    private int kingMoves(char[][] board, int x, int y) {
+        int moves = 0;
+        moves += countMoves(board, x, y, -1, 0);
+        moves += countMoves(board, x, y,  1, 0);
+        moves += countMoves(board, x, y,  0,-1);
+        moves += countMoves(board, x, y,  0, 1);
 
-    private int kingMobility(char[][] board) {
-        //TODO: fixing inefficient Zuggenerator generating for every call
+        return moves;
+    }
+
+    private int kingMobility() {
+        //TODO: fixing inefficient Zuggenerator generating for every call -> DONE
         //IMPORTANT: Throne is safe therefore mobility less important
 
         int moves = 0;
         if (kingSquare == null) return -10000;
-        int x = kingSquare[0];
-        int y = kingSquare[1];
 
         if(!onThrone){
             //more Moves make him vulnerable too!
 
             //apply this logic by rewarding black for (in-)direct view to the king
             //keep it balanced with kingSafety -> more white pieces around are better
-            moves += countMoves(board, x, y, -1, 0);
-            moves += countMoves(board, x, y,  1, 0);
-            moves += countMoves(board, x, y,  0,-1);
-            moves += countMoves(board, x, y,  0, 1);
+            moves += kingMoves;
         }
+
         return moves;
     }
 
