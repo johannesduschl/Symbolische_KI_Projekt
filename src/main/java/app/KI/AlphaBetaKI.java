@@ -24,7 +24,7 @@ public class AlphaBetaKI {
     private long startTime;
     private long timeLimit;
 
-    public int maxDepth = 5;
+    public int maxDepth = 8;
 
     //Benchmark:
     public long nodesSearched = 0;
@@ -164,11 +164,11 @@ public class AlphaBetaKI {
 
     private long getTimeForMove() {
         if (moveCounter <= 10) {
-            return 5000;
+            return 8000;
         } else if (moveCounter <= 50) {
             return 8000;
         }
-        return 4000;
+        return 8000;
     }
 
 

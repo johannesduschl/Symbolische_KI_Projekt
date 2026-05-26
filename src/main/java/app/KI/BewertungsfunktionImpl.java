@@ -104,7 +104,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     // BLACK FEATURE WEIGHTS
     // =========================
     private static final int W_KING_THREAT = 3;
-    private static final int W_EDGE_SECURE_SCORE = 1;
+    private static final int W_EDGES_SECURE_SCORE = 1;
     private static final int W_MATERIAL_PRESSURE = 10;
     private static final int W_MOBILITY_PRESSURE = 5;
 
@@ -180,7 +180,8 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private int evaluateBlack(char[][] board) {
 
         return blackPST(board)
-                + W_KING_THREAT * kingThreat(board);
+                + W_KING_THREAT * kingThreat(board)
+                + W_EDGES_SECURE_SCORE * edgesSecureScore(board);
     }
 
     /**
@@ -511,7 +512,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         int rowLength = right - left;
         int columnLength = bottom - top;
 
-        //TODO:Delete debug stuff
+        //TODO:Delete debug stuff ->done
         //Mögliches Problem: Ecken werden doppelt gezählt! --> FIXED!!!
         if(!ignoreTopRow){
             count += countPieces(board, target, rowLength, top, left, 0, 1);
@@ -573,6 +574,17 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         return score;
     }
 
+    private int edgesSecureScore(char[][] board){
+        int score = 0;
+        int x = kingSquare[0];
+        int y = kingSquare[1];
+        score += edgeSecureScore(board, x, y, -1, 0); //up
+        score += edgeSecureScore(board, x, y, 1, 0); //down
+        score += edgeSecureScore(board, x, y, 0, -1); //left
+        score += edgeSecureScore(board, x, y, 0, 1); //right
+        return score;
+    }
+
     private int edgeSecureScore(char[][] board, int x, int y, int dx, int dy){
 
         int score = 0;
@@ -587,10 +599,10 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
                     edge_x = 8;
                 }
                 if(isRowRestrictedInBothDirections(board, edge_x, edge_y)){
-                    if(isRowThreatenedInOneDirectionBy(board, 's', edge_x, edge_y)){
-                        score += kingMoves; //TODO: KingMobility * 2: add KingMobility counter -> DONE
-                    }else if(isRowThreatenedInBothDirectionsBy(board, 's', edge_x, edge_y)){
+                    if(isRowThreatenedInBothDirectionsBy(board, 's', edge_x, edge_y)){
                         score += 2 * kingMoves;
+                    }else if(isRowThreatenedInOneDirectionBy(board, 's', edge_x, edge_y)){
+                        score += kingMoves; //TODO: KingMobility * 2: add KingMobility counter -> DONE
                     }
                 }else if(isRowRestrictedInOneDirection(board, edge_x, edge_y)){
                     if(isRowThreatenedInOneDirectionBy(board, 's', edge_x, edge_y)){
@@ -656,10 +668,10 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             return 999;
         }
 
-        if (isPathClear(board, x, y, -1, 0)) score += 10;
-        if (isPathClear(board, x, y,  1, 0)) score += 10;
-        if (isPathClear(board, x, y,  0,-1)) score += 10;
-        if (isPathClear(board, x, y,  0, 1)) score += 10;
+        if (isPathClear(board, x, y, -1, 0)) score += 2;
+        if (isPathClear(board, x, y,  1, 0)) score += 2;
+        if (isPathClear(board, x, y,  0,-1)) score += 2;
+        if (isPathClear(board, x, y,  0, 1)) score += 2;
 
         int distTop = x;
         int distBottom = 8 - x;
