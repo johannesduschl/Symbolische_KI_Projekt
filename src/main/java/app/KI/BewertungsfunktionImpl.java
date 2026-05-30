@@ -104,9 +104,10 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     // BLACK FEATURE WEIGHTS
     // =========================
     private static final int W_KING_THREAT = 3;
-    private static final int W_EDGES_SECURE_SCORE = 1;
+    private static final int W_EDGES_SECURE_SCORE = 4;
     private static final int W_MATERIAL_PRESSURE = 10;
     private static final int W_MOBILITY_PRESSURE = 5;
+    private static final int W_CHECkMATE_SCORE = 1;
 
     // =========================
     // PIECE SQUARES
@@ -181,7 +182,10 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
         return blackPST(board)
                 + W_KING_THREAT * kingThreat(board)
-                + W_EDGES_SECURE_SCORE * edgesSecureScore(board);
+                + W_EDGES_SECURE_SCORE * edgesSecureScore(board)
+                + W_CHECkMATE_SCORE * checkmateScore(board);
+        //TODO: Reward black for directly blocking king if edge is not safe!
+        //TODO: Test some edge cases for edgesSecureScore if king is next to corner -> is edge always or never safe?
     }
 
     /**
@@ -211,6 +215,8 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
         return true;
     }
+
+
     // Determines whether movement along a direction is blocked by other pieces.
     private boolean isSquareRestricted(char[][] board, int x, int y, int dx, int dy){
 
@@ -572,6 +578,35 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         }
 
         return score;
+    }
+
+    //Function that checks if black checkmated white's king, may be replaced in the future by implementing logic from board class
+    private int checkmateScore(char[][] board){
+        int score = 100;
+
+        if(onThrone){
+            //No array out of bound possible!
+            if(board[kingSquare[0] - 1][kingSquare[1]] == 's' && board[kingSquare[0] + 1][kingSquare[1]] == 's' &&
+            board[kingSquare[0]][kingSquare[1] - 1] == 's' && board[kingSquare[0]][kingSquare[1] + 1] == 's'){
+                return score;
+            }
+        }else{
+            //Mated vertically?:
+            if((    (kingSquare[0] - 1 >= 0 && kingSquare[0] + 1 < board.length) && //without check array out of bound error on top/bottom edge!
+                    (board[kingSquare[0] - 1][kingSquare[1]] == 's' || BLOCKED[kingSquare[0] - 1][kingSquare[1]]) &&
+                    (board[kingSquare[0] + 1][kingSquare[1]] == 's' || BLOCKED[kingSquare[0] + 1][kingSquare[1]])) ||
+            //Mated horizontally?:
+                    ((kingSquare[1] - 1 >= 0 && kingSquare[1] + 1 < board.length) && //without check array out of bound error on left/right edge!
+                    (board[kingSquare[0]][kingSquare[1] - 1] == 's' || BLOCKED[kingSquare[0]][kingSquare[1] - 1]) &&
+                    (board[kingSquare[0]][kingSquare[1] + 1] == 's' || BLOCKED[kingSquare[0]][kingSquare[1] + 1]))
+
+            ){
+                return score;
+            }
+
+        }
+
+        return 0;
     }
 
     private int edgesSecureScore(char[][] board){
