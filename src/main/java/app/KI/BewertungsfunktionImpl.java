@@ -98,16 +98,17 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private static final int W_KING_PROGRESS = 1;
     private static final int W_CORNER = 1;
     private static final int W_KING_MOBILITY = 1;
-    private static final int W_KING_SAFETY = 2;
+    private static final int W_KING_SAFETY = 1;
+    private static final int W_WHITE_MATERIAL = 1;
 
     // =========================
     // BLACK FEATURE WEIGHTS
     // =========================
-    private static final int W_KING_THREAT = 3;
-    private static final int W_EDGES_SECURE_SCORE = 4;
-    private static final int W_MATERIAL_PRESSURE = 10;
-    private static final int W_MOBILITY_PRESSURE = 5;
-    private static final int W_CHECkMATE_SCORE = 1;
+    private static final int W_KING_THREAT = 1;
+    private static final int W_EDGES_SECURE_SCORE = 1;
+    private static final int W_EDGES_ACCESS_BLOCKED = 1;
+    private static final int W_CHECKMATE_SCORE = 1;
+    private static final int W_BLACK_MATERIAL = 1;
 
     // =========================
     // PIECE SQUARES
@@ -172,19 +173,20 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private int evaluateWhite(char[][] board) {
 
         return whitePST(board)
+                + W_WHITE_MATERIAL * whiteMaterial()
                 + W_KING_PROGRESS * kingEscapeScore(board)
                 + W_CORNER * cornerProgress(board)
-                + W_KING_MOBILITY * kingMobility()
-                + W_KING_SAFETY * kingSafety(board);
+                + W_KING_MOBILITY * kingMobility();
     }
 
     private int evaluateBlack(char[][] board) {
 
         return blackPST(board)
-                + W_KING_THREAT * kingThreat(board)
+                + W_BLACK_MATERIAL * blackMaterial()
                 + W_EDGES_SECURE_SCORE * edgesSecureScore(board)
-                + W_CHECkMATE_SCORE * checkmateScore(board);
-        //TODO: Reward black for directly blocking king if edge is not safe!
+                + W_CHECKMATE_SCORE * checkmateScore(board)
+                + W_EDGES_ACCESS_BLOCKED * edgesAccessBlocked(board);
+        //TODO: Reward black for directly blocking king if edge is not safe! --> DONE
         //TODO: Test some edge cases for edgesSecureScore if king is next to corner -> is edge always or never safe?
     }
 
@@ -196,6 +198,8 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
      *
      * Prüft, ob in einer Richtung des Königs bis zum Rand freie Bahn ist
      */
+
+    //TODO:Replace with isSquareRestricted!
     private boolean isPathClear(char[][] board, int x, int y, int dx, int dy) {
 
         x += dx;
@@ -269,6 +273,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private boolean isColumnThreatenedInBothDirectionsBy(char[][] board, char attackingPiece, int x, int y){
         return isSquareThreatenedBy(board, attackingPiece, x, y, -1, 0) && isSquareThreatenedBy(board, attackingPiece, x, y, 1, 0);
     }
+
 
     private boolean isSquareThreatenedBy(char[][] board, char attackingPiece, int x, int y, int dx, int dy ){
 
@@ -550,13 +555,22 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             for (int j = 0; j < board[i].length; j++) {
                 if (BLOCKED[i][j]) continue;
                 if (board[i][j] == 's') {
-                    score += BLACK_PST[i][j];
+                    if(onThrone){
+                        score += BLACK_PST[i][j];
+                    }
                 }
             }
         }
-
+        if(!onThrone){
+            score += W_KING_THREAT * kingThreat(board);
+        }
         return score;
     }
+    //TODO: new idea -> use WHITE_PST when king is on throne and pre-generated (implementation still missing)
+    //                  king position related PST (for now just use kingThreat and kingSafety functions as they will
+    //                  be used for the PST generation and hash tables later on)
+
+    //TODO: another problem --> when not onThrone, white/black only get rewarded for proximity to the king, but not for general piece count
 
     private int whitePST(char[][] board) {
 
@@ -572,11 +586,16 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
                 }
 
                 if (c == 'w') {
-                    score += WHITE_PST[i][j];
+                    if(onThrone){
+                        score += WHITE_PST[i][j];
+                    }
                 }
             }
         }
+        if(!onThrone){
+            score += W_KING_SAFETY * kingSafety(board); //TODO:change to PST access in the future
 
+        }
         return score;
     }
 
@@ -617,6 +636,68 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         score += edgeSecureScore(board, x, y, 1, 0); //down
         score += edgeSecureScore(board, x, y, 0, -1); //left
         score += edgeSecureScore(board, x, y, 0, 1); //right
+        return score;
+    }
+
+    private int edgesAccessBlocked(char[][] board){
+        int score = 0;
+        int x = kingSquare[0];
+        int y = kingSquare[1];
+        score += edgeAccessBlockedBy(board, 's', x, y, -1, 0); //up
+        score += edgeAccessBlockedBy(board, 's', x, y, 1, 0);  //down
+        score += edgeAccessBlockedBy(board, 's', x, y, 0, -1); //left
+        score += edgeAccessBlockedBy(board, 's', x, y, 0, 1);  //right
+        return score;
+    }
+
+    private int edgeAccessBlockedBy(char [][] board, char PieceType, int x, int y, int dx, int dy){
+        int score = 0;
+        int edge_x = x;
+        int edge_y = y;
+        if(isSquareThreatenedBy(board, PieceType, x, y, dx, dy)){
+            if(dy == 0){ //Move up/down
+                if(dx == -1){ //up
+                    edge_x = 0;
+                }else if(dx == 1){ //down
+                    edge_x = 8;
+                }
+                if(!isRowRestrictedInBothDirections(board, edge_x, edge_y)) {
+                    score += 2;
+                }else if(isRowRestrictedInOneDirection(board, edge_x, edge_y)){
+                    //Determine which direction is not restricted:
+                    if(!isSquareRestricted(board, edge_x, edge_y, 0, -1)){ //left = (0,-1)
+                        if(!canAnyPieceInSourceReachTarget(board, PieceType, dx, dy, 0, 8, 0, edge_y - 1, edge_x, edge_x, 0, edge_y - 1)){
+                            score += 2;
+                        }
+                    }else{
+                        if(!canAnyPieceInSourceReachTarget(board, PieceType, dx, dy, 0, 8, edge_y + 1, 8, edge_x, edge_x, edge_y + 1, 8)){
+                            score += 2;
+                        }
+                    }
+                }
+                }else if(dx == 0){
+                if(dy == -1){ //left
+                    edge_y = 0;
+                }else if(dy == 1){ //right
+                    edge_y = 8;
+                }
+                if(!isColumnRestrictedInBothDirections(board, edge_x, edge_y)) {
+                    score += 2;
+                }else if(isColumnRestrictedInOneDirection(board, edge_x, edge_y)){
+                    //Determine which direction is not restricted:
+                    if(!isSquareRestricted(board, edge_x, edge_y, -1, 0)){
+                        if(!canAnyPieceInSourceReachTarget(board, PieceType, dx, dy, 0, edge_x - 1, 0, 8, 0, edge_x - 1, edge_y, edge_y)){
+                            score += 2;
+                        }
+                    }else{
+                        if(!canAnyPieceInSourceReachTarget(board, PieceType, dx, dy, edge_x + 1, 8, 0, 8, edge_x + 1, 8, edge_y, edge_y)){
+                            score += 2;
+                        }
+                    }
+                }
+            }
+        }
+
         return score;
     }
 
@@ -749,6 +830,14 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         return moves;
     }
 
+    private int whiteMaterial(){
+        return whiteSquares.length; //one white piece give two points, division unnecessary
+    }
+
+    private int blackMaterial(){
+        return blackSquares.length / 2; // explanation: every piece has an x- and y-coordinate, division returns piece count
+    }
+
     private int kingMobility() {
         //TODO: fixing inefficient Zuggenerator generating for every call -> DONE
         //IMPORTANT: Throne is safe therefore mobility less important
@@ -774,7 +863,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     //-> bad idea, just use sth like countMoves but for general purposes
     private int kingSafety(char[][] board){
         int score = 0;
-        if (kingSquare == null) return -10000;
+        if (kingSquare == null) return -10000; //never happens, maybe delete in the future
         int x = kingSquare[0];
         int y = kingSquare[1];
         //Use multiplier for nearer pieces
