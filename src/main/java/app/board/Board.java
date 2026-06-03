@@ -30,6 +30,18 @@ public class Board {
             { 'x','-','-','s','s','s','-','-','x' }
     }; //a1 unten links i9 oben rechts
 
+    private static final boolean[][] BLOCKED = {
+            {  true, false, false, false, false, false, false, false,  true },
+            { false, false, false, false, false, false, false, false, false },
+            { false, false, false, false, false, false, false, false, false },
+            { false, false, false, false, false, false, false, false, false },
+            { false, false, false, false,  true, false, false, false, false },
+            { false, false, false, false, false, false, false, false, false },
+            { false, false, false, false, false, false, false, false, false },
+            { false, false, false, false, false, false, false, false, false },
+            {  true, false, false, false, false, false, false, false,  true }
+    };
+
 
     public boolean isGameOver() {
 
@@ -61,52 +73,8 @@ public class Board {
                 (kingX == size - 1 && kingY == size - 1)) {
             return true;
         }
-
-        int[][] dirs = {
-                {1,0}, {-1,0}, {0,1}, {0,-1}
-        };
-
-        int blocked = 0;
-
-        boolean isOnThrone = (kingX == 4 && kingY == 4);
-
-        for (int[] d : dirs) {
-
-            int nx = kingX + d[0];
-            int ny = kingY + d[1];
-
-            if (nx < 0 || nx >= size || ny < 0 || ny >= size) {
-                blocked++;
-                continue;
-            }
-
-            char c = board[nx][ny];
-
-            // schwarze Figuren blocken
-            if (c == 's') {
-                blocked++;
-                continue;
-            }
-
-            // Thron ist blockierend für den König (wenn er nicht drauf steht)
-            if (nx == 4 && ny == 4 && !isOnThrone) {
-                blocked++;
-                continue;
-            }
-
-            // Ecken blockieren ebenfalls
-            if (c == 'x') {
-                blocked++;
-            }
-        }
-
-        // auf Thron: 4 blockiert nötig
-        if (isOnThrone) {
-            return blocked == 4;
-        }
-
-        // normal oder neben Thron: 4 blockiert nötig
-        return blocked == 4;
+        // 3. Sieg durch Schachmatt
+        return isCheckMate(kingX, kingY);
     }
 
 
@@ -132,6 +100,28 @@ public class Board {
         eliminatePieces(board, zug.getPiece(), toX, toY);
 
         return isGameOver();
+    }
+
+    public boolean isCheckMate(int x, int y){
+        char[][] board = this.board;
+        boolean onThrone = (x == 4 && y == 4);
+        int size = board.length;
+
+        if(onThrone){
+            //No array out of bound possible!
+            return board[x - 1][y] == 's' && board[x + 1][y] == 's' &&
+                    board[x][y - 1] == 's' && board[x][y + 1] == 's';
+        }else{
+            //Mated vertically?:
+            return ((x - 1 >= 0 && x + 1 < size) && //without check array out of bound error on top/bottom edge!
+                    (board[x - 1][y] == 's' || BLOCKED[x - 1][y]) &&
+                    (board[x + 1][y] == 's' || BLOCKED[x + 1][y])) ||
+                    //Mated horizontally?:
+                    ((y - 1 >= 0 && y + 1 < size) && //without check array out of bound error on left/right edge!
+                            (board[x][y - 1] == 's' || BLOCKED[x][y - 1]) &&
+                            (board[x][y + 1] == 's' || BLOCKED[x][y + 1]));
+
+        }
     }
 
 
