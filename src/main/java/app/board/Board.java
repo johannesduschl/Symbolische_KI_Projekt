@@ -10,6 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Board {
+    private char bewegt= ' ';
 
     /**
      * 's' = schwarze Figur
@@ -84,6 +85,7 @@ public class Board {
      * @return True, wenn das Spiel vorbei ist.
      */
     public boolean move(Zug zug) {
+        this.bewegt = zug.getPiece();
 
         char[][] board = this.board;
         int size = board.length;
@@ -103,6 +105,9 @@ public class Board {
     }
 
     public boolean isCheckMate(int x, int y){
+        //prüfen ob shcwarz überhaupt am Zug ist
+        if(this.bewegt!='s'){ return false;}
+
         char[][] board = this.board;
         boolean onThrone = (x == 4 && y == 4);
         int size = board.length;
