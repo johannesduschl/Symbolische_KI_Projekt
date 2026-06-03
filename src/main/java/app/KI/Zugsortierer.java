@@ -13,9 +13,11 @@ import java.util.Map;
 public class Zugsortierer {
 
     private final Zug[][] killerMoves;
+    private final int[][] historyTable;
 
     public Zugsortierer(int maxDepth){
         this.killerMoves = new Zug[maxDepth][2];
+        this.historyTable = new int[81][81];
     }
 
 
@@ -33,21 +35,20 @@ public class Zugsortierer {
 
         int score = 0;
 
-        if (isCapture(move, board)) {
-            score += 1000;
-        }
+        score += getCaptureScore(move, board);
+        score += getKillerScore(depth, move);
+        score += getHistoryScore(move, depth);
 
-        if (depth < killerMoves.length) {
-
-            if (move.equals(killerMoves[depth][0])) {
-                score += 500;
-            }
-
-            else if (move.equals(killerMoves[depth][1])) {
-                score += 400;
-            }
-        }
         return score;
+    }
+
+
+    public void addHistory(Zug move, int depth) {
+
+        int from = moveIndex(move.getFromRow(), move.getFromColumn());
+        int to = moveIndex(move.getToRow(), move.getToColumn());
+
+        historyTable[from][to] += depth * depth;
     }
 
 
@@ -62,7 +63,36 @@ public class Zugsortierer {
     }
 
 
-    private boolean isCapture(Zug move, Board board) {
+    private int getHistoryScore(Zug move, int depth) {
+        int from = moveIndex(move.getFromRow(), move.getFromColumn());
+        int to = moveIndex(move.getToRow(), move.getToColumn());
+        return historyTable[from][to];
+    }
+
+
+    private int getKillerScore(int depth, Zug move){
+        if (depth < killerMoves.length) {
+
+            if (move.equals(killerMoves[depth][0])) {
+                return 500;
+            }
+
+            else if (move.equals(killerMoves[depth][1])) {
+                return 400;
+            }
+        }
+        return 0;
+    }
+
+
+    private int moveIndex(int row, char col) {
+        int r = 9 - row;
+        int c = col - 'a';
+        return r * 9 + c;
+    }
+
+
+    private int getCaptureScore(Zug move, Board board) {
 
         char[][] b = board.getBoard();
         int size = b.length;
@@ -74,6 +104,8 @@ public class Zugsortierer {
         if (piece == 'k') piece = 'w';
 
         char enemy = (piece == 's') ? 'w' : 's';
+
+        int score = 0;
 
         int[][] dirs = {{1,0},{-1,0},{0,1},{0,-1}};
 
@@ -93,13 +125,15 @@ public class Zugsortierer {
 
             char behind = b[bx][by];
 
-            if (behind == piece || behind == 'x' ||
+            if (behind == piece ||
+                    behind == 'x' ||
                     (behind == 'k' && piece == 'w') ||
                     (bx == 4 && by == 4 && b[4][4] == '-')) {
-                return true;
+
+                score += 1000;
             }
         }
 
-        return false;
+        return score;
     }
 }

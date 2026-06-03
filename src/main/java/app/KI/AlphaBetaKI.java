@@ -126,6 +126,7 @@ public class AlphaBetaKI {
 
             if (useAlphaBeta && score >= beta){
                 zugsortierer.storeKillerMove(move, depthAsc);
+                zugsortierer.addHistory(move, depthAsc);
                 return beta;
             }
 
@@ -158,6 +159,7 @@ public class AlphaBetaKI {
 
             if (useAlphaBeta && score <= alpha) {
                 zugsortierer.storeKillerMove(move, depthAsc);
+                zugsortierer.addHistory(move, depthAsc);
                 return alpha;
             }
 
