@@ -62,7 +62,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             {  99,   3,   3,   3,   3,   3,   3,   3,  99 }
     };
 
-    private static final int[][] BLACK_PST = {
+    private static int[][] BLACK_PST = {
             {  0, 0, 0, 2, 2, 2, 0, 0,  0 },
             {  0, 0, 0, 2, 2, 2, 0, 0,  0 },
             {  0, 0, 0, 3, 2, 3, 0, 0,  0 },
@@ -74,7 +74,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             {  0, 0, 0, 2, 2, 2, 0, 0,  0 }
     };
 
-    private static final int[][] WHITE_PST = {
+    private static int[][] WHITE_PST = {
             { 0, 0, 0, 1, 1, 1, 0, 0, 0 },
             { 0, 1, 1, 2, 2, 2, 1, 1, 0 },
             { 0, 1, 2, 3, 3, 3, 2, 1, 0 },
@@ -84,6 +84,28 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             { 0, 1, 2, 3, 3, 3, 2, 1, 0 },
             { 0, 1, 1, 2, 2, 2, 1, 1, 0 },
             { 0, 0, 0, 1, 1, 1, 0, 0, 0 }
+    };
+
+    private static final int[][] BLACK_PATTERN = {
+            {4, 5, 4},
+            {0, 3, 2, 3, 0},
+            {0, 0, 2, 2, 2, 0, 0},
+            {0, 0, 0, 2, 2, 2, 0, 0, 0},
+            {0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0}
+    };
+
+    private static final int[][] WHITE_PATTERN = {
+            {4, 4, 4},
+            {2, 3, 3, 3, 2},
+            {1, 1, 2, 2, 2, 1, 1},
+            {0, 0, 0, 1, 1, 1, 0, 0, 0},
+            {0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0}
     };
 
     // =========================
@@ -98,13 +120,13 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private static final int W_KING_PROGRESS = 1;
     private static final int W_CORNER = 1;
     private static final int W_KING_MOBILITY = 1;
-    private static final int W_KING_SAFETY = 1;
+    private static final int W_KING_SAFETY = 2;
     private static final int W_WHITE_MATERIAL = 1;
 
     // =========================
     // BLACK FEATURE WEIGHTS
     // =========================
-    private static final int W_KING_THREAT = 1;
+    private static final int W_KING_THREAT = 2;
     private static final int W_EDGES_SECURE_SCORE = 1;
     private static final int W_EDGES_ACCESS_BLOCKED = 1;
     private static final int W_CHECKMATE_SCORE = 1;
@@ -151,6 +173,11 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         }
         kingMoves = kingMoves(board.getBoard(), kingSquare[0], kingSquare[1]);
 
+        if(!onThrone){
+            BLACK_PST = createPSTFromPattern(BLACK_PATTERN, kingSquare[0], kingSquare[1]);
+            WHITE_PST = createPSTFromPattern(WHITE_PATTERN, kingSquare[0], kingSquare[1]);
+        }
+
         int white = evaluateWhite(board.getBoard());
         int black = evaluateBlack(board.getBoard());
 
@@ -190,6 +217,174 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         //TODO: Test some edge cases for edgesSecureScore if king is next to corner -> is edge always or never safe?
     }
 
+    // =========================
+    // WHITE EVAL FUNCTIONS
+    // =========================
+    private int whitePST(char[][] board) {
+
+        int score = 0;
+
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 9; j++) {
+
+                char c = board[i][j];
+
+                if (c == 'k') {
+                    score += KING_PST[i][j];
+                }
+
+                if (c == 'w') {
+                    score += WHITE_PST[i][j];
+                }
+            }
+        }
+        return score;
+    }
+
+    private int whiteMaterial(){
+        return whiteSquares.length; //one white piece give two points, division unnecessary
+    }
+
+    private int kingEscapeScore(char[][] board) {
+
+        if (kingSquare == null) return -10000;
+
+        int x = kingSquare[0];
+        int y = kingSquare[1];
+        int score = 0;
+
+        if (x == 0 || x == 8 || y == 0 || y == 8) {
+            return 999;
+        }
+
+        if (!isSquareRestricted(board, x, y, -1, 0)) score += 2;
+        if (!isSquareRestricted(board, x, y,  1, 0)) score += 2;
+        if (!isSquareRestricted(board, x, y,  0,-1)) score += 2;
+        if (!isSquareRestricted(board, x, y,  0, 1)) score += 2;
+
+        int distTop = x;
+        int distBottom = 8 - x;
+        int distLeft = y;
+        int distRight = 8 - y;
+        int minDist = Math.min(Math.min(distTop, distBottom), Math.min(distLeft, distRight));
+
+        score += (4 - minDist) * 2;
+
+        return score;
+    }
+
+    //TODO: Teils redundant mit kingEscapeScore!
+    //Keine Prüfung auf Blockaden durch Schwarz, reine Distanzmessung
+    //Ersetzen durch vorgefertigte Tabelle möglich...
+    private int cornerProgress(char[][] board) {
+
+        if (kingSquare == null) return -10000;
+
+        int bestProgress = 0;
+        int[][] corners = {{0,0},{0,8},{8,0},{8,8}};
+
+        for (int[] c : corners) {
+
+            int dist = Math.abs(kingSquare[0]-c[0]) + Math.abs(kingSquare[1]-c[1]);
+            int progress = 16 - dist;
+
+            bestProgress = Math.max(bestProgress, progress);
+        }
+
+        return bestProgress;
+    }
+
+    private int kingMobility() {
+        //IMPORTANT: Throne is safe therefore mobility less important
+        //Mobility makes white play too risky and unsafe!
+        int moves = 0;
+        if (kingSquare == null) return -10000;
+
+        if(!onThrone){
+            //more Moves make him vulnerable too!
+
+            //apply this logic by rewarding black for (in-)direct view to the king
+            //keep it balanced with kingSafety -> more white pieces around are better
+            moves += kingMoves;
+        }
+
+        return moves;
+    }
+
+
+    // =========================
+    // BLACK EVAL FUNCTIONS
+    // =========================
+    private int blackPST(char[][] board) {
+
+        int score = 0;
+
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                if (BLOCKED[i][j]) continue;
+                if (board[i][j] == 's') {
+                    score += BLACK_PST[i][j];
+                }
+            }
+        }
+        return score;
+    }
+
+    private int blackMaterial(){
+        return blackSquares.length / 2; // explanation: every piece has an x- and y-coordinate, division returns piece count
+    }
+
+    private int edgesSecureScore(char[][] board){
+        int score = 0;
+        int x = kingSquare[0];
+        int y = kingSquare[1];
+        score += edgeSecureScore(board, x, y, -1, 0); //up
+        score += edgeSecureScore(board, x, y, 1, 0); //down
+        score += edgeSecureScore(board, x, y, 0, -1); //left
+        score += edgeSecureScore(board, x, y, 0, 1); //right
+        return score;
+    }
+
+    //Function that checks if black checkmated white's king, may be replaced in the future by implementing logic from board class
+    private int checkmateScore(char[][] board){
+        int score = 100;
+
+        if(onThrone){
+            //No array out of bound possible!
+            if(board[kingSquare[0] - 1][kingSquare[1]] == 's' && board[kingSquare[0] + 1][kingSquare[1]] == 's' &&
+                    board[kingSquare[0]][kingSquare[1] - 1] == 's' && board[kingSquare[0]][kingSquare[1] + 1] == 's'){
+                return score;
+            }
+        }else{
+            //Mated vertically?:
+            if((    (kingSquare[0] - 1 >= 0 && kingSquare[0] + 1 < board.length) && //without check array out of bound error on top/bottom edge!
+                    (board[kingSquare[0] - 1][kingSquare[1]] == 's' || BLOCKED[kingSquare[0] - 1][kingSquare[1]]) &&
+                    (board[kingSquare[0] + 1][kingSquare[1]] == 's' || BLOCKED[kingSquare[0] + 1][kingSquare[1]])) ||
+                    //Mated horizontally?:
+                    ((kingSquare[1] - 1 >= 0 && kingSquare[1] + 1 < board.length) && //without check array out of bound error on left/right edge!
+                            (board[kingSquare[0]][kingSquare[1] - 1] == 's' || BLOCKED[kingSquare[0]][kingSquare[1] - 1]) &&
+                            (board[kingSquare[0]][kingSquare[1] + 1] == 's' || BLOCKED[kingSquare[0]][kingSquare[1] + 1]))
+
+            ){
+                return score;
+            }
+
+        }
+
+        return 0;
+    }
+
+    private int edgesAccessBlocked(char[][] board){
+        int score = 0;
+        int x = kingSquare[0];
+        int y = kingSquare[1];
+        score += edgeAccessBlockedBy(board, 's', x, y, -1, 0); //up
+        score += edgeAccessBlockedBy(board, 's', x, y, 1, 0);  //down
+        score += edgeAccessBlockedBy(board, 's', x, y, 0, -1); //left
+        score += edgeAccessBlockedBy(board, 's', x, y, 0, 1);  //right
+        return score;
+    }
+
     /**
      * oben   = (-1, 0)
      * unten  = ( 1, 0)
@@ -198,27 +393,6 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
      *
      * Prüft, ob in einer Richtung des Königs bis zum Rand freie Bahn ist
      */
-
-    //TODO:Replace with isSquareRestricted!
-    private boolean isPathClear(char[][] board, int x, int y, int dx, int dy) {
-
-        x += dx;
-        y += dy;
-
-        while (x >= 0 && x < 9 && y >= 0 && y < 9) {
-
-            if (!BLOCKED[x][y]) {
-                if (board[x][y] != '-') {
-                    return false;
-                }
-            }
-
-            x += dx;
-            y += dy;
-        }
-
-        return true;
-    }
 
 
     // Determines whether movement along a direction is blocked by other pieces.
@@ -412,26 +586,6 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         return moves;
     }
 
-    //TODO:delete debug function drawLine()
-    private void drawLine(char[][] board, char target, int squares,
-                          int x, int y, int dx, int dy) {
-
-        int steps = 0;
-
-        while (x >= 0 && x < board.length &&
-                y >= 0 && y < board.length &&
-                steps <= squares) {
-
-            if (board[x][y] == '-') {
-                board[x][y] = target;
-            }
-
-            x += dx;
-            y += dy;
-            steps++;
-        }
-    }
-
     private int countPieces(char[][] board, char target, int squares,
                             int x, int y, int dx, int dy) {
 
@@ -451,6 +605,20 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
         return pieces;
     }
+
+    private void createLineForPST(int[] pattern, int startIdx, int squares,
+                                       int x, int y, int dx, int dy, int[][] PST) {
+
+        int steps = 0;
+
+        while (x >= 0 && x < 9 && y >= 0 && y < 9 && steps <= squares) {
+            PST[x][y] = pattern[startIdx];
+            x += dx;
+            y += dy;
+            steps++;
+            startIdx++;
+        }
+    }
     /**
      * oben   = (-1, 0)
      * unten  = ( 1, 0)
@@ -459,7 +627,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
      *
      */
     private int countRadius(char[][] board, char target, int radius, int x, int y){
-
+        //TODO:Delete in the future, may no longer be necessary!
         //RADIUS: just use corners as reference points for loops
         //corners might be outside the board -> problem!
         //Calculate the closest legal corner and ignore blocked (x) fields, just use blocked pst afterwards
@@ -523,8 +691,6 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         int rowLength = right - left;
         int columnLength = bottom - top;
 
-        //TODO:Delete debug stuff ->done
-        //Mögliches Problem: Ecken werden doppelt gezählt! --> FIXED!!!
         if(!ignoreTopRow){
             count += countPieces(board, target, rowLength, top, left, 0, 1);
             //fix counting corners twice:
@@ -547,24 +713,75 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         return count;
     }
 
-    private int blackPST(char[][] board) {
+    private void createRadiusForPSTFromPattern(int[] pattern, int radius, int x, int y, int[][] PST){
 
-        int score = 0;
+        int max = 8;
 
-        for (int i = 0; i < board.length; i++) {
-            for (int j = 0; j < board[i].length; j++) {
-                if (BLOCKED[i][j]) continue;
-                if (board[i][j] == 's') {
-                    if(onThrone){
-                        score += BLACK_PST[i][j];
-                    }
-                }
-            }
+        int rawLeft = y - radius;
+        int rawRight = y + radius;
+        int rawTop = x - radius;
+        int rawBottom = x + radius;
+
+        boolean ignoreTopRow = rawTop < 0;
+        boolean ignoreBottomRow = rawBottom > max;
+        boolean ignoreLeftColumn = rawLeft < 0;
+        boolean ignoreRightColumn = rawRight > max;
+
+        int left_y = Math.max(0, Math.min(max, y - radius));
+        int right_y = Math.max(0, Math.min(max, y + radius));
+        int top_x = Math.max(0, Math.min(max, x - radius));
+        int bottom_x = Math.max(0, Math.min(max, x + radius));
+
+        int rowLength = right_y - left_y;
+        int columnLength = bottom_x - top_x;
+        int offset_x = 0;
+        int offset_y = 0;
+
+        if(rawTop < top_x ){
+            offset_x = -(rawTop);
         }
-        if(!onThrone){
-            score += W_KING_THREAT * kingThreat(board);
+        if(rawLeft < left_y){
+            offset_y =-(rawLeft);
         }
-        return score;
+
+        if (!ignoreTopRow) {
+            createLineForPST(pattern, offset_y,
+                    rowLength, top_x, left_y, 0, 1, PST);
+        }
+        if (!ignoreBottomRow) {
+            createLineForPST(pattern, offset_y,
+                    rowLength, bottom_x, left_y, 0, 1, PST);
+        }
+        if (!ignoreLeftColumn) {
+            createLineForPST(pattern, offset_x,
+                    columnLength, top_x, left_y, 1, 0, PST);
+        }
+        if (!ignoreRightColumn) {
+            createLineForPST(pattern, offset_x,
+                    columnLength, top_x, right_y, 1, 0, PST);
+        }
+    }
+
+    private int[][] createPSTFromPattern(int[][] pattern, int x, int y){
+
+        int boardSize = 9;
+        int length = boardSize - 1;
+
+        int[][] PST = new int[boardSize][boardSize];
+
+        int distRight  = length - y;
+        int distBottom = length - x;
+
+        int requiredPatterns = Math.max(
+                Math.max(y, distRight),
+                Math.max(x, distBottom)
+        );
+
+        for (int i = 0; i < requiredPatterns; i++){
+            createRadiusForPSTFromPattern(pattern[i], i + 1, x, y, PST);
+        }
+
+        return PST;
     }
     //TODO: new idea -> use WHITE_PST when king is on throne and pre-generated (implementation still missing)
     //                  king position related PST (for now just use kingThreat and kingSafety functions as they will
@@ -572,83 +789,6 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
     //TODO: another problem --> when not onThrone, white/black only get rewarded for proximity to the king, but not for general piece count
 
-    private int whitePST(char[][] board) {
-
-        int score = 0;
-
-        for (int i = 0; i < 9; i++) {
-            for (int j = 0; j < 9; j++) {
-
-                char c = board[i][j];
-
-                if (c == 'k') {
-                    score += KING_PST[i][j];
-                }
-
-                if (c == 'w') {
-                    if(onThrone){
-                        score += WHITE_PST[i][j];
-                    }
-                }
-            }
-        }
-        if(!onThrone){
-            score += W_KING_SAFETY * kingSafety(board); //TODO:change to PST access in the future
-
-        }
-        return score;
-    }
-
-    //Function that checks if black checkmated white's king, may be replaced in the future by implementing logic from board class
-    private int checkmateScore(char[][] board){
-        int score = 100;
-
-        if(onThrone){
-            //No array out of bound possible!
-            if(board[kingSquare[0] - 1][kingSquare[1]] == 's' && board[kingSquare[0] + 1][kingSquare[1]] == 's' &&
-            board[kingSquare[0]][kingSquare[1] - 1] == 's' && board[kingSquare[0]][kingSquare[1] + 1] == 's'){
-                return score;
-            }
-        }else{
-            //Mated vertically?:
-            if((    (kingSquare[0] - 1 >= 0 && kingSquare[0] + 1 < board.length) && //without check array out of bound error on top/bottom edge!
-                    (board[kingSquare[0] - 1][kingSquare[1]] == 's' || BLOCKED[kingSquare[0] - 1][kingSquare[1]]) &&
-                    (board[kingSquare[0] + 1][kingSquare[1]] == 's' || BLOCKED[kingSquare[0] + 1][kingSquare[1]])) ||
-            //Mated horizontally?:
-                    ((kingSquare[1] - 1 >= 0 && kingSquare[1] + 1 < board.length) && //without check array out of bound error on left/right edge!
-                    (board[kingSquare[0]][kingSquare[1] - 1] == 's' || BLOCKED[kingSquare[0]][kingSquare[1] - 1]) &&
-                    (board[kingSquare[0]][kingSquare[1] + 1] == 's' || BLOCKED[kingSquare[0]][kingSquare[1] + 1]))
-
-            ){
-                return score;
-            }
-
-        }
-
-        return 0;
-    }
-
-    private int edgesSecureScore(char[][] board){
-        int score = 0;
-        int x = kingSquare[0];
-        int y = kingSquare[1];
-        score += edgeSecureScore(board, x, y, -1, 0); //up
-        score += edgeSecureScore(board, x, y, 1, 0); //down
-        score += edgeSecureScore(board, x, y, 0, -1); //left
-        score += edgeSecureScore(board, x, y, 0, 1); //right
-        return score;
-    }
-
-    private int edgesAccessBlocked(char[][] board){
-        int score = 0;
-        int x = kingSquare[0];
-        int y = kingSquare[1];
-        score += edgeAccessBlockedBy(board, 's', x, y, -1, 0); //up
-        score += edgeAccessBlockedBy(board, 's', x, y, 1, 0);  //down
-        score += edgeAccessBlockedBy(board, 's', x, y, 0, -1); //left
-        score += edgeAccessBlockedBy(board, 's', x, y, 0, 1);  //right
-        return score;
-    }
 
     private int edgeAccessBlockedBy(char [][] board, char PieceType, int x, int y, int dx, int dy){
         int score = 0;
@@ -772,54 +912,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
     //Boni für freie Linien/Reihen und Nähe zum Rand
     //TODO:only reward white if edge is not defendable by black
-    private int kingEscapeScore(char[][] board) {
 
-        if (kingSquare == null) return -10000;
-
-        int x = kingSquare[0];
-        int y = kingSquare[1];
-        int score = 0;
-
-        if (x == 0 || x == 8 || y == 0 || y == 8) {
-            return 999;
-        }
-
-        if (isPathClear(board, x, y, -1, 0)) score += 2;
-        if (isPathClear(board, x, y,  1, 0)) score += 2;
-        if (isPathClear(board, x, y,  0,-1)) score += 2;
-        if (isPathClear(board, x, y,  0, 1)) score += 2;
-
-        int distTop = x;
-        int distBottom = 8 - x;
-        int distLeft = y;
-        int distRight = 8 - y;
-        int minDist = Math.min(Math.min(distTop, distBottom), Math.min(distLeft, distRight));
-
-        score += (4 - minDist) * 2;
-
-        return score;
-    }
-
-    //TODO: Teils redundant mit kingEscapeScore!
-    //Keine Prüfung auf Blockaden durch Schwarz, reine Distanzmessung
-    //Ersetzen durch vorgefertigte Tabelle möglich...
-    private int cornerProgress(char[][] board) {
-
-        if (kingSquare == null) return -10000;
-
-        int bestProgress = 0;
-        int[][] corners = {{0,0},{0,8},{8,0},{8,8}};
-
-        for (int[] c : corners) {
-
-            int dist = Math.abs(kingSquare[0]-c[0]) + Math.abs(kingSquare[1]-c[1]);
-            int progress = 16 - dist;
-
-            bestProgress = Math.max(bestProgress, progress);
-        }
-
-        return bestProgress;
-    }
     private int kingMoves(char[][] board, int x, int y) {
         int moves = 0;
         moves += countMoves(board, x, y, -1, 0);
@@ -829,59 +922,6 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
         return moves;
     }
-
-    private int whiteMaterial(){
-        return whiteSquares.length; //one white piece give two points, division unnecessary
-    }
-
-    private int blackMaterial(){
-        return blackSquares.length / 2; // explanation: every piece has an x- and y-coordinate, division returns piece count
-    }
-
-    private int kingMobility() {
-        //TODO: fixing inefficient Zuggenerator generating for every call -> DONE
-        //IMPORTANT: Throne is safe therefore mobility less important
-
-        int moves = 0;
-        if (kingSquare == null) return -10000;
-
-        if(!onThrone){
-            //more Moves make him vulnerable too!
-
-            //apply this logic by rewarding black for (in-)direct view to the king
-            //keep it balanced with kingSafety -> more white pieces around are better
-            moves += kingMoves;
-        }
-
-        return moves;
-    }
-
-
-    //IDEA: reward white for having white pieces around the kind
-    //the closer to the king the better
-    //QUESTION: possible to move a smaller PST within board and arrange it to the king?
-    //-> bad idea, just use sth like countMoves but for general purposes
-    private int kingSafety(char[][] board){
-        int score = 0;
-        if (kingSquare == null) return -10000; //never happens, maybe delete in the future
-        int x = kingSquare[0];
-        int y = kingSquare[1];
-        //Use multiplier for nearer pieces
-        score += 2 * countRadius(board, 'w', 1, x, y);
-        score +=     countRadius(board, 'w', 2, x, y);
-        return score;
-    }
-
-    private int kingThreat(char[][] board){
-        int score = 0;
-        if (kingSquare == null) return +10000;
-        int x = kingSquare[0];
-        int y = kingSquare[1];
-        score += 2 * countRadius(board, 's', 1, x, y);
-        score +=     countRadius(board, 's', 2, x, y);
-        return score;
-    }
-
 
     public static void printBoard(char[][] board) {
         if (board == null || board.length == 0 || board[0].length == 0) {
