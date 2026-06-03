@@ -164,11 +164,11 @@ public class AlphaBetaKI {
 
     private long getTimeForMove() {
         if (moveCounter <= 10) {
-            return 8000;
+            return 5000;
         } else if (moveCounter <= 50) {
             return 8000;
         }
-        return 8000;
+        return 4000;
     }
 
 
