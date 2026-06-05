@@ -4,13 +4,17 @@ import app.board.Board;
 import app.board.Zug;
 import app.board.Zuggenerator;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AlphaBetaKI {
 
     public Bewertungsfunktion bf = new BewertungsfunktionImpl();
+    public int maxDepth = 8;
 
     Zuggenerator zuggenerator = new Zuggenerator();
+    Zugsortierer zugsortierer = new Zugsortierer(maxDepth);
 
     /**
      * Counts the moves over the period of a game, to adjust the time limit
@@ -20,11 +24,8 @@ public class AlphaBetaKI {
      */
     private int moveCounter = 0;
 
-
     private long startTime;
     private long timeLimit;
-
-    public int maxDepth = 8;
 
     //Benchmark:
     public long nodesSearched = 0;
@@ -41,8 +42,8 @@ public class AlphaBetaKI {
         List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), isWhiteToMove);
         if (allMoves.isEmpty()) return null;
 
-        bestMove = allMoves.getFirst();
 
+        bestMove = allMoves.getFirst();
         startTime = System.nanoTime();
 
         if (benchmarkMode) {
@@ -53,10 +54,12 @@ public class AlphaBetaKI {
 
         for (int depth = 1; depth <= maxDepth; depth++) {
 
+            //Zugsortierung
+            allMoves = zugsortierer.getSortedList(allMoves, board, depth);
+
             if (timeUp()) break;
 
             Zug currentBestMove = null;
-
             int currentBestScore = isWhiteToMove ? Integer.MIN_VALUE : Integer.MAX_VALUE;
 
             for (Zug move : allMoves) {
@@ -70,7 +73,7 @@ public class AlphaBetaKI {
 
                 if (isWhiteToMove) {
 
-                    score = alphaBetaMin(child, Integer.MIN_VALUE, Integer.MAX_VALUE, depth - 1);
+                    score = alphaBetaMin(child, Integer.MIN_VALUE, Integer.MAX_VALUE, depth - 1, 1);
 
                     if (score > currentBestScore) {
                         currentBestScore = score;
@@ -79,7 +82,7 @@ public class AlphaBetaKI {
 
                 } else {
 
-                    score = alphaBetaMax(child, Integer.MIN_VALUE, Integer.MAX_VALUE, depth - 1);
+                    score = alphaBetaMax(child, Integer.MIN_VALUE, Integer.MAX_VALUE, depth - 1, 1);
 
                     if (score < currentBestScore) {
                         currentBestScore = score;
@@ -101,7 +104,7 @@ public class AlphaBetaKI {
     }
 
 
-    public int alphaBetaMax(Board board, int alpha, int beta, int depth) {
+    public int alphaBetaMax(Board board, int alpha, int beta, int depth, int depthAsc) {
 
         nodesSearched++;
 
@@ -112,15 +115,20 @@ public class AlphaBetaKI {
         if (!benchmarkMode && timeUp()) return bf.evaluate(board);
 
         List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), false);
+        allMoves = zugsortierer.getSortedList(allMoves, board, depthAsc);
 
         for (Zug move : allMoves) {
 
             Board child = board.copy();
             child.move(move);
 
-            int score = alphaBetaMin(child, alpha, beta, depth - 1);
+            int score = alphaBetaMin(child, alpha, beta, depth - 1, depthAsc+1);
 
-            if (useAlphaBeta && score >= beta) return beta;
+            if (useAlphaBeta && score >= beta){
+                zugsortierer.storeKillerMove(move, depthAsc);
+                zugsortierer.addHistory(move, depthAsc);
+                return beta;
+            }
 
             if (score > alpha) alpha = score;
         }
@@ -129,7 +137,7 @@ public class AlphaBetaKI {
     }
 
 
-    public int alphaBetaMin(Board board, int alpha, int beta, int depth) {
+    public int alphaBetaMin(Board board, int alpha, int beta, int depth, int depthAsc) {
 
         nodesSearched++;
 
@@ -140,15 +148,20 @@ public class AlphaBetaKI {
         if (!benchmarkMode && timeUp()) return bf.evaluate(board);
 
         List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), true);
+        allMoves = zugsortierer.getSortedList(allMoves, board, depthAsc);
 
         for (Zug move : allMoves) {
 
             Board child = board.copy();
             child.move(move);
 
-            int score = alphaBetaMax(child, alpha, beta, depth - 1);
+            int score = alphaBetaMax(child, alpha, beta, depth - 1, depthAsc+1);
 
-            if (useAlphaBeta && score <= alpha) return alpha;
+            if (useAlphaBeta && score <= alpha) {
+                zugsortierer.storeKillerMove(move, depthAsc);
+                zugsortierer.addHistory(move, depthAsc);
+                return alpha;
+            }
 
             if (score < beta) beta = score;
         }
