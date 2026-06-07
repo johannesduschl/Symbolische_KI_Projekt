@@ -1,5 +1,7 @@
 package app.KI;
 
+import app.board.Zug;
+
 import java.util.HashMap;
 
 public class transpositionTable {
@@ -12,7 +14,7 @@ public class transpositionTable {
         this.table = new TTEntry[size];
     }
 
-    public void store(long hash, int score, int depth, byte flag, int bestMove) {
+    public void store(long hash, int score, int depth, byte flag, Zug bestMove) {
         int index = (int)(hash & (size - 1));
         TTEntry existing = table[index];
 

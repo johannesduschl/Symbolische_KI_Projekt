@@ -16,6 +16,8 @@ public class AlphaBetaKI {
     Zuggenerator zuggenerator = new Zuggenerator();
     Zugsortierer zugsortierer = new Zugsortierer(maxDepth);
 
+    transpositionTable tt = new transpositionTable(22); // ~4M Slots
+
     /**
      * Counts the moves over the period of a game, to adjust the time limit
      * 0-10 Züge = opening, max 5s pro Zug
@@ -108,14 +110,32 @@ public class AlphaBetaKI {
 
         nodesSearched++;
 
+        //TT lookup
+        long hash = board.getZobristHash();
+        TTEntry entry = tt.lookup(hash);
+
+        if (entry != null && entry.depth >= depth) {
+            if (entry.flag == TTEntry.EXACT) return entry.score;
+            if (entry.flag == TTEntry.LOWER) alpha = Math.max(alpha, entry.score);
+            if (entry.flag == TTEntry.UPPER) beta = Math.min(beta, entry.score);
+            //möglicher Cutoff
+            if (alpha >= beta) return entry.score;
+        }
+
         if (depth == 0 || board.isGameOver()) {
-            return bf.evaluate(board);
+            int score = bf.evaluate(board);
+            tt.store(hash, score, depth, TTEntry.EXACT, null);
+            return score;
         }
 
         if (!benchmarkMode && timeUp()) return bf.evaluate(board);
 
         List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), false);
         allMoves = zugsortierer.getSortedList(allMoves, board, depthAsc);
+
+        int origAlpha = alpha;
+        int bestScore = Integer.MIN_VALUE;
+        Zug bestMoveLocal = null;
 
         for (Zug move : allMoves) {
 
@@ -124,16 +144,29 @@ public class AlphaBetaKI {
 
             int score = alphaBetaMin(child, alpha, beta, depth - 1, depthAsc+1);
 
+            if (score > bestScore) {
+                bestScore = score;
+                bestMoveLocal = move;
+            }
+
             if (useAlphaBeta && score >= beta){
                 zugsortierer.storeKillerMove(move, depthAsc);
                 zugsortierer.addHistory(move, depthAsc);
-                return beta;
+                tt.store(hash, bestScore, depth, TTEntry.LOWER, move);
+                return bestScore;
             }
 
             if (score > alpha) alpha = score;
         }
 
-        return alpha;
+        byte flag;
+        if(bestScore <= origAlpha) flag = TTEntry.UPPER;
+        else if (bestScore >= beta) flag = TTEntry.LOWER;
+        else flag = TTEntry.EXACT;
+
+        tt.store(hash, bestScore, depth, flag, bestMoveLocal);
+
+        return bestScore;
     }
 
 
@@ -141,14 +174,31 @@ public class AlphaBetaKI {
 
         nodesSearched++;
 
+        //TT Lookup
+        long hash = board.getZobristHash();
+        TTEntry entry = tt.lookup(hash);
+
+        if (entry != null && entry.depth >= depth) {
+            if (entry.flag == TTEntry.EXACT) return entry.score;
+            if (entry.flag == TTEntry.LOWER) alpha = Math.max(alpha, entry.score);
+            if (entry.flag == TTEntry.UPPER) beta  = Math.min(beta,  entry.score);
+            if (alpha >= beta) return entry.score;
+        }
+
         if (depth == 0 || board.isGameOver()) {
-            return bf.evaluate(board);
+            int score = bf.evaluate(board);
+            tt.store(hash, score, depth, TTEntry.EXACT, null);
+            return score;
         }
 
         if (!benchmarkMode && timeUp()) return bf.evaluate(board);
 
         List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), true);
         allMoves = zugsortierer.getSortedList(allMoves, board, depthAsc);
+
+        int origBeta = beta;
+        int bestScore = Integer.MAX_VALUE;
+        Zug bestMoveLocal = null;
 
         for (Zug move : allMoves) {
 
@@ -157,16 +207,30 @@ public class AlphaBetaKI {
 
             int score = alphaBetaMax(child, alpha, beta, depth - 1, depthAsc+1);
 
+            if (score < bestScore) {
+                bestScore = score;
+                bestMoveLocal = move;
+            }
+
             if (useAlphaBeta && score <= alpha) {
                 zugsortierer.storeKillerMove(move, depthAsc);
                 zugsortierer.addHistory(move, depthAsc);
-                return alpha;
+                tt.store(hash, bestScore, depth, TTEntry.UPPER,move);
+                return bestScore;
             }
 
             if (score < beta) beta = score;
         }
 
-        return beta;
+        byte flag;
+        if (bestScore >= origBeta) flag = TTEntry.LOWER;
+        else if (bestScore <= alpha) flag = TTEntry.UPPER;
+        else flag = TTEntry.EXACT;
+
+        tt.store(hash, bestScore, depth, flag,bestMoveLocal);
+
+
+        return bestScore;
     }
 
 

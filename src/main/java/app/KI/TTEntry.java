@@ -1,5 +1,7 @@
 package app.KI;
 
+import app.board.Zug;
+
 public class TTEntry {
     public static final byte EXACT = 0;   // exakter Score
     public static final byte LOWER = 1;   // Alpha-Cutoff (Lower Bound)
@@ -9,9 +11,9 @@ public class TTEntry {
     public int  score;
     public int  depth;
     public byte flag;
-    public int  bestMove;  // kodierter Zug, z.B. von-nach als int
+    public Zug bestMove;  // kodierter Zug, z.B. von-nach als int
 
-    public TTEntry(long hash, int score, int depth, byte flag, int bestMove) {
+    public TTEntry(long hash, int score, int depth, byte flag, Zug bestMove) {
         this.hash     = hash;
         this.score    = score;
         this.depth    = depth;
