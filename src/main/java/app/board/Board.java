@@ -1,5 +1,6 @@
 package app.board;
 
+import app.KI.ZobristHash;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -7,10 +8,13 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
+//@AllArgsConstructor entfernt für Zobrist Hash
+//@NoArgsConstructor entfernt für Zobrist Hash
 public class Board {
+    private static final ZobristHash ZOBRIST = ZobristHash.getInstance();
+    private long zobristHash = 0L;
     private char bewegt= ' ';
+    private boolean blackToMove = true; // Schwarz beginnt
 
     /**
      * 's' = schwarze Figur
@@ -42,6 +46,26 @@ public class Board {
             { false, false, false, false, false, false, false, false, false },
             {  true, false, false, false, false, false, false, false,  true }
     };
+
+    /**
+     * Änderungen für Zobrist Hash
+     */
+    public void initHash() {
+        this.zobristHash = ZOBRIST.compute(this);
+    }
+    /** Primärkonstruktor – Startstellung, Hash wird initialisiert */
+    public Board() {
+        initHash();
+    }
+
+    /** Sekundärkonstruktor – für Tests und copy(), Hash wird übernommen oder neu berechnet */
+    public Board( char[][] board) {
+        this.bewegt = ' ';
+        this.board = board;
+        initHash(); // frisch berechnen, da wir einen beliebigen Zustand übergeben
+    }
+
+    public boolean isBlackToMove() { return blackToMove; }
 
 
     public boolean isGameOver() {
@@ -85,6 +109,7 @@ public class Board {
      * @return True, wenn das Spiel vorbei ist.
      */
     public boolean move(Zug zug) {
+
         this.bewegt = zug.getPiece();
 
         char[][] board = this.board;
@@ -100,6 +125,11 @@ public class Board {
         board[toX][toY] = zug.getPiece();
 
         eliminatePieces(board, zug.getPiece(), toX, toY);
+
+        blackToMove = !blackToMove; //Flag umschalten
+
+        // snapshot und updateAfterMove() entfernt – compute() nach Zustandsänderung
+        this.zobristHash = ZOBRIST.compute(this);
 
         return isGameOver();
     }
@@ -187,7 +217,11 @@ public class Board {
             System.arraycopy(board[i], 0, newBoard[i], 0, board[i].length);
         }
 
-        return new Board(' ', newBoard);
+        Board copy = new Board(newBoard);
+        copy.bewegt      = this.bewegt;
+        copy.blackToMove = this.blackToMove;      // Flag mit kopieren
+        copy.zobristHash = this.zobristHash; // Hash direkt übertragen statt neu berechnen
+        return copy;
     }
 
 
@@ -209,6 +243,10 @@ public class Board {
         }
         sb.append('\n');
         System.out.println(sb);
+    }
+
+    public long getZobristHash() {
+        return zobristHash;
     }
 
 
