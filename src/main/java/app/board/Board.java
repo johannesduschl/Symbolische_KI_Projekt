@@ -187,7 +187,7 @@ public class Board {
             System.arraycopy(board[i], 0, newBoard[i], 0, board[i].length);
         }
 
-        return new Board(newBoard);
+        return new Board(' ', newBoard);
     }
 
 
