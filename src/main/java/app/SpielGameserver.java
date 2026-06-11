@@ -5,10 +5,7 @@ import app.board.Board;
 import app.board.Zug;
 import app.board.Zuggenerator;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -23,74 +20,42 @@ public class SpielGameserver {
 
     public void startGame() {
 
-        try {
+        try (Socket socket = new Socket("127.0.0.1", 5000);
+             OutputStream out = socket.getOutputStream();
+             BufferedReader in = new BufferedReader(
+                     new InputStreamReader(socket.getInputStream()))
+        ) {
 
             Scanner scanner = new Scanner(System.in);
-            String response = sendCommandToGameServer("gspy").get();
+            String response = sendCommandToGameServer("gspy", out, in);
 
             if (!response.equals("ok")) throw new RuntimeException("Unexpected response from game server: " + response);
 
-            String clientToken = sendCommandToGameServer("register").get();
+            String clientToken = sendCommandToGameServer("register", out, in);
 
-            sendCommandToGameServer("login " + clientToken).get();
+            sendCommandToGameServer("login " + clientToken, out, in);
 
             System.out.println("Enter lobby name: ");
             String lobbyName = scanner.next();
 
-            sendCommandToGameServer("create " +lobbyName);
-            sendCommandToGameServer("join " + lobbyName);
+            sendCommandToGameServer("create " +lobbyName, out, in);
+            sendCommandToGameServer("join " + lobbyName, out, in);
 
-            sendCommandToGameServer("set game.type tablut");
-
+            sendCommandToGameServer("set game.type tablut", out, in);
 
 
         } catch (Exception e) {
-            System.out.println("Got exception in SpielGameserver: " + e.getMessage());
-        }
-
-        boolean isWhiteToMove = false;
-        boolean isGameOver = false;
-
-        while (!isGameOver) {
-
-            List<Zug> possibleMoves = zuggenerator.getAllLegalMoves(this.board.getBoard(), isWhiteToMove);
-            if (possibleMoves.isEmpty()) {
-                System.out.println("No legal moves available!");
-                break;
-            }
-
-            Zug chosenMove = ki.findBestMove(this.board, isWhiteToMove);
-            System.out.println("Move for " + (isWhiteToMove ? "White" : "Black") + ": " + chosenMove);
-            isGameOver = board.move(chosenMove);
-
-            if (isGameOver) {
-                this.board.printBoard();
-                String winner = isWhiteToMove ? "White" : "Black";
-                System.out.printf("Game is over. %s has won.", winner);
-                break;
-            }
-
-            this.board.printBoard();
-
-            isWhiteToMove = !isWhiteToMove;
+            throw new RuntimeException(e);
         }
     }
 
-    public CompletableFuture<String> sendCommandToGameServer(String msg) {
-        return CompletableFuture.supplyAsync(() -> {
-            try (Socket socket = new Socket("127.0.0.1", 5000);
-                 OutputStream out = socket.getOutputStream();
-                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))
-            ) {
+    public String sendCommandToGameServer(String msg, OutputStream out, BufferedReader in) throws IOException {
+        System.out.println(msg);
+        out.write((msg + "\n").getBytes());
+        out.flush();
 
-                out.write((msg + "\n").getBytes());
-                out.flush();
-
-                return in.readLine();
-
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
+        String response = in.readLine();
+        System.out.println("Response: " + response);
+        return response;
     }
 }
