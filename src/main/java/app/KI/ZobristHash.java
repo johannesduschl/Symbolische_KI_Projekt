@@ -66,13 +66,9 @@ public class ZobristHash {
                     hash ^= pieceTable[idx][square(row, col)];
             }
 
-        System.out.println("Hash vor blackToMove-XOR: " + hash);
-        System.out.println("blackToMove: " + board.isBlackToMove());
-
         if (board.isBlackToMove())
             hash ^= blackToMove;
 
-        System.out.println("Hash nach blackToMove-XOR: " + hash);
         return hash;
     }
 @Deprecated
