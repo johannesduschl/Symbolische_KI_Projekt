@@ -7,7 +7,7 @@ import app.board.Zuggenerator;
 
 import java.util.List;
 
-public class Spiel {
+public class SpielDummy {
 
     public Board board = new Board();
     Zuggenerator zuggenerator = new Zuggenerator();

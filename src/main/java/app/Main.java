@@ -6,8 +6,11 @@ public class Main {
 
         System.out.println("Hello and welcome!");
 
-        Spiel spiel = new Spiel();
-        spiel.startGame();
+        //SpielDummy spielDummy = new SpielDummy();
+        //spielDummy.startGame();
+
+        SpielGameserver spielGameserver = new SpielGameserver();
+        spielGameserver.startGame();
 
     }
 }
