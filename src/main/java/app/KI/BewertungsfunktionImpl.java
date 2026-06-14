@@ -14,18 +14,6 @@ import static java.lang.Math.abs;
 
 public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
-    private final char[][] debug_board = new char[][]{
-            { 'k','w','-','-','-','w','-','-','x' },
-            { 'w','w','-','-','-','w','-','-','-' },
-            { '-','-','-','-','-','w','-','-','-' },
-            { '-','-','-','-','-','w','-','-','-' },
-            { 'w','w','w','w','w','w','-','-','-' },
-            { '-','-','-','-','-','-','-','-','-' },
-            { '-','-','-','-','-','-','-','-','-' },
-            { '-','-','-','-','-','-','-','-','-' },
-            { 'x','-','-','-','-','-','-','-','x' }
-    };
-
     private static final boolean[][] BLOCKED = {
             {  true, false, false, false, false, false, false, false,  true },
             { false, false, false, false, false, false, false, false, false },
@@ -120,13 +108,11 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private static final int W_KING_PROGRESS = 1;
     private static final int W_CORNER = 1;
     private static final int W_KING_MOBILITY = 1;
-    private static final int W_KING_SAFETY = 2;
     private static final int W_WHITE_MATERIAL = 1;
 
     // =========================
     // BLACK FEATURE WEIGHTS
     // =========================
-    private static final int W_KING_THREAT = 2;
     private static final int W_EDGES_SECURE_SCORE = 1;
     private static final int W_EDGES_ACCESS_BLOCKED = 1;
     private static final int W_CHECKMATE_SCORE = 1;
@@ -184,17 +170,37 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         return white - black;
     }
 
-    public int evaluateDebug(char[][] board) {
+    public int pieceCount(Board board) {
+        int count = 0;
+        char[][] b = board.getBoard();
 
-        int white = evaluateWhite(board);
-        int black = evaluateBlack(board);
-        int total = white - black;
+        for (int i = 0; i < b.length; i++) {
+            for (int j = 0; j < b[i].length; j++) {
+                char c = b[i][j];
+                if (c == 'w' || c == 's' || c == 'k') count++;
+            }
+        }
+        return count;
+    }
 
-        System.out.println("WHITE: " + white);
-        System.out.println("BLACK: " + black);
-        System.out.println("TOTAL: " + total);
+    public boolean kingCanMove(Board board) {
+        int[] king = findCharPosition(board.getBoard(), 'k');
+        if (king == null) return false;
+        return kingMoves(board.getBoard(), king[0], king[1]) > 0;
+    }
 
-        return total;
+    public boolean kingHasDirectEdgeSight(Board board) {
+        int[] king = findCharPosition(board.getBoard(), 'k');
+        if (king == null) return false;
+
+        int x = king[0];
+        int y = king[1];
+        char[][] b = board.getBoard();
+
+        return !isSquareRestricted(b, x, y, -1, 0)
+                || !isSquareRestricted(b, x, y,  1, 0)
+                || !isSquareRestricted(b, x, y,  0,-1)
+                || !isSquareRestricted(b, x, y,  0, 1);
     }
 
     private int evaluateWhite(char[][] board) {
@@ -213,8 +219,6 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
                 + W_EDGES_SECURE_SCORE * edgesSecureScore(board)
                 + W_CHECKMATE_SCORE * checkmateScore(board)
                 + W_EDGES_ACCESS_BLOCKED * edgesAccessBlocked(board);
-        //TODO: Reward black for directly blocking king if edge is not safe! --> DONE
-        //TODO: Test some edge cases for edgesSecureScore if king is next to corner -> is edge always or never safe?
     }
 
     // =========================

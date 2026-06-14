@@ -4,19 +4,25 @@ import app.board.Board;
 import app.board.Zug;
 import app.board.Zuggenerator;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class AlphaBetaKI {
 
-    public Bewertungsfunktion bf = new BewertungsfunktionImpl();
+    // Bewertungsfunktion
+    public BewertungsfunktionImpl bf = new BewertungsfunktionImpl();
+
+    // Suchparameter
     public int maxDepth = 8;
 
-    Zuggenerator zuggenerator = new Zuggenerator();
-    Zugsortierer zugsortierer = new Zugsortierer(maxDepth);
+    // Schalter für die Benchmark-Konfiguration
+    public boolean useAlphaBeta = true;
+    public boolean useTranspositionTable = true;
+    public boolean useMoveOrdering = true;
+    public boolean useNullMovePruning = true;
 
-    transpositionTable tt = new transpositionTable(22); // ~4M Slots
+    private final Zuggenerator zuggenerator = new Zuggenerator();
+    private Zugsortierer zugsortierer;
+    private final transpositionTable tt = new transpositionTable(22); // ~4 Mio. Slots
 
     /**
      * Counts the moves over the period of a game, to adjust the time limit
@@ -29,21 +35,21 @@ public class AlphaBetaKI {
     private long startTime;
     private long timeLimit;
 
-    //Benchmark:
+    // Benchmark
     public long nodesSearched = 0;
     public int lastCompletedDepth = 0;
     public Zug bestMove;
     public boolean benchmarkMode = false;
     private long benchmarkTimeLimitMs;
 
-    public boolean useAlphaBeta = true;
-
+    public AlphaBetaKI() {
+        this.zugsortierer = new Zugsortierer(maxDepth);
+    }
 
     public Zug findBestMove(Board board, boolean isWhiteToMove) {
 
         List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), isWhiteToMove);
         if (allMoves.isEmpty()) return null;
-
 
         bestMove = allMoves.getFirst();
         startTime = System.nanoTime();
@@ -56,8 +62,9 @@ public class AlphaBetaKI {
 
         for (int depth = 1; depth <= maxDepth; depth++) {
 
-            //Zugsortierung
-            allMoves = zugsortierer.getSortedList(allMoves, board, depth);
+            if (useMoveOrdering) {
+                allMoves = zugsortierer.getSortedList(allMoves, board, depth);
+            }
 
             if (timeUp()) break;
 
@@ -74,16 +81,13 @@ public class AlphaBetaKI {
                 int score;
 
                 if (isWhiteToMove) {
-
                     score = alphaBetaMin(child, Integer.MIN_VALUE, Integer.MAX_VALUE, depth - 1, 1);
 
                     if (score > currentBestScore) {
                         currentBestScore = score;
                         currentBestMove = move;
                     }
-
                 } else {
-
                     score = alphaBetaMax(child, Integer.MIN_VALUE, Integer.MAX_VALUE, depth - 1, 1);
 
                     if (score < currentBestScore) {
@@ -105,33 +109,51 @@ public class AlphaBetaKI {
         return bestMove;
     }
 
-
     public int alphaBetaMax(Board board, int alpha, int beta, int depth, int depthAsc) {
+        return alphaBetaMax(board, alpha, beta, depth, depthAsc, true);
+    }
+
+    private int alphaBetaMax(Board board, int alpha, int beta, int depth, int depthAsc, boolean allowNullMovePruning) {
 
         nodesSearched++;
 
-        //TT lookup
-        long hash = board.getZobristHash();
-        TTEntry entry = tt.lookup(hash);
+        long hash = 0L;
+        TTEntry entry = null;
 
-        if (entry != null && entry.depth >= depth) {
-            if (entry.flag == TTEntry.EXACT) return entry.score;
-            if (entry.flag == TTEntry.LOWER) alpha = Math.max(alpha, entry.score);
-            if (entry.flag == TTEntry.UPPER) beta = Math.min(beta, entry.score);
-            //möglicher Cutoff
-            if (alpha >= beta) return entry.score;
+        if (useTranspositionTable) {
+            hash = board.getZobristHash();
+            entry = tt.lookup(hash);
+
+            if (entry != null && entry.depth >= depth) {
+                if (entry.flag == TTEntry.EXACT) return entry.score;
+                if (entry.flag == TTEntry.LOWER) alpha = Math.max(alpha, entry.score);
+                if (entry.flag == TTEntry.UPPER) beta = Math.min(beta, entry.score);
+                if (alpha >= beta) return entry.score;
+            }
         }
 
         if (depth == 0 || board.isGameOver()) {
             int score = bf.evaluate(board);
-            tt.store(hash, score, depth, TTEntry.EXACT, null);
+            if (useTranspositionTable) {
+                tt.store(hash, score, depth, TTEntry.EXACT, null);
+            }
             return score;
         }
 
         if (!benchmarkMode && timeUp()) return bf.evaluate(board);
 
+        // Null-Move-Pruning
+        if (useNullMovePruning && allowNullMovePruning) {
+            Integer nullMoveScore = tryNullMoveMax(board, alpha, beta, depth, depthAsc, hash);
+            if (nullMoveScore != null) {
+                return nullMoveScore;
+            }
+        }
+
         List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), false);
-        allMoves = zugsortierer.getSortedList(allMoves, board, depthAsc);
+        if (useMoveOrdering) {
+            allMoves = zugsortierer.getSortedList(allMoves, board, depthAsc);
+        }
 
         int origAlpha = alpha;
         int bestScore = Integer.MIN_VALUE;
@@ -142,17 +164,23 @@ public class AlphaBetaKI {
             Board child = board.copy();
             child.move(move);
 
-            int score = alphaBetaMin(child, alpha, beta, depth - 1, depthAsc+1);
+            int score = alphaBetaMin(child, alpha, beta, depth - 1, depthAsc + 1, allowNullMovePruning);
 
             if (score > bestScore) {
                 bestScore = score;
                 bestMoveLocal = move;
             }
 
-            if (useAlphaBeta && score >= beta){
-                zugsortierer.storeKillerMove(move, depthAsc);
-                zugsortierer.addHistory(move, depthAsc);
-                tt.store(hash, bestScore, depth, TTEntry.LOWER, move);
+            if (useAlphaBeta && score >= beta) {
+                if (useMoveOrdering) {
+                    zugsortierer.storeKillerMove(move, depthAsc);
+                    zugsortierer.addHistory(move, depthAsc);
+                }
+
+                if (useTranspositionTable) {
+                    tt.store(hash, bestScore, depth, TTEntry.LOWER, move);
+                }
+
                 return bestScore;
             }
 
@@ -160,42 +188,64 @@ public class AlphaBetaKI {
         }
 
         byte flag;
-        if(bestScore <= origAlpha) flag = TTEntry.UPPER;
+        if (bestScore <= origAlpha) flag = TTEntry.UPPER;
         else if (bestScore >= beta) flag = TTEntry.LOWER;
         else flag = TTEntry.EXACT;
 
-        tt.store(hash, bestScore, depth, flag, bestMoveLocal);
+        if (useTranspositionTable) {
+            tt.store(hash, bestScore, depth, flag, bestMoveLocal);
+        }
 
         return bestScore;
     }
 
-
     public int alphaBetaMin(Board board, int alpha, int beta, int depth, int depthAsc) {
+        return alphaBetaMin(board, alpha, beta, depth, depthAsc, true);
+    }
+
+    private int alphaBetaMin(Board board, int alpha, int beta, int depth, int depthAsc, boolean allowNullMovePruning) {
 
         nodesSearched++;
 
-        //TT Lookup
-        long hash = board.getZobristHash();
-        TTEntry entry = tt.lookup(hash);
+        long hash = 0L;
+        TTEntry entry = null;
 
-        if (entry != null && entry.depth >= depth) {
-            if (entry.flag == TTEntry.EXACT) return entry.score;
-            if (entry.flag == TTEntry.LOWER) alpha = Math.max(alpha, entry.score);
-            if (entry.flag == TTEntry.UPPER) beta  = Math.min(beta,  entry.score);
-            if (alpha >= beta) return entry.score;
+        if (useTranspositionTable) {
+            hash = board.getZobristHash();
+            entry = tt.lookup(hash);
+
+            if (entry != null && entry.depth >= depth) {
+                if (entry.flag == TTEntry.EXACT) return entry.score;
+                if (entry.flag == TTEntry.LOWER) alpha = Math.max(alpha, entry.score);
+                if (entry.flag == TTEntry.UPPER) beta = Math.min(beta, entry.score);
+                if (alpha >= beta) return entry.score;
+            }
         }
 
         if (depth == 0 || board.isGameOver()) {
             int score = bf.evaluate(board);
-            tt.store(hash, score, depth, TTEntry.EXACT, null);
+            if (useTranspositionTable) {
+                tt.store(hash, score, depth, TTEntry.EXACT, null);
+            }
             return score;
         }
 
         if (!benchmarkMode && timeUp()) return bf.evaluate(board);
 
-        List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), true);
-        allMoves = zugsortierer.getSortedList(allMoves, board, depthAsc);
+        // Null-Move-Pruning
+        if (useNullMovePruning && allowNullMovePruning) {
+            Integer nullMoveScore = tryNullMoveMin(board, alpha, beta, depth, depthAsc, hash);
+            if (nullMoveScore != null) {
+                return nullMoveScore;
+            }
+        }
 
+        List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), true);
+        if (useMoveOrdering) {
+            allMoves = zugsortierer.getSortedList(allMoves, board, depthAsc);
+        }
+
+        int origAlpha = alpha;
         int origBeta = beta;
         int bestScore = Integer.MAX_VALUE;
         Zug bestMoveLocal = null;
@@ -205,7 +255,7 @@ public class AlphaBetaKI {
             Board child = board.copy();
             child.move(move);
 
-            int score = alphaBetaMax(child, alpha, beta, depth - 1, depthAsc+1);
+            int score = alphaBetaMax(child, alpha, beta, depth - 1, depthAsc + 1, allowNullMovePruning);
 
             if (score < bestScore) {
                 bestScore = score;
@@ -213,9 +263,15 @@ public class AlphaBetaKI {
             }
 
             if (useAlphaBeta && score <= alpha) {
-                zugsortierer.storeKillerMove(move, depthAsc);
-                zugsortierer.addHistory(move, depthAsc);
-                tt.store(hash, bestScore, depth, TTEntry.UPPER,move);
+                if (useMoveOrdering) {
+                    zugsortierer.storeKillerMove(move, depthAsc);
+                    zugsortierer.addHistory(move, depthAsc);
+                }
+
+                if (useTranspositionTable) {
+                    tt.store(hash, bestScore, depth, TTEntry.UPPER, move);
+                }
+
                 return bestScore;
             }
 
@@ -223,21 +279,152 @@ public class AlphaBetaKI {
         }
 
         byte flag;
-        if (bestScore >= origBeta) flag = TTEntry.LOWER;
-        else if (bestScore <= alpha) flag = TTEntry.UPPER;
+        if (bestScore <= origAlpha) flag = TTEntry.UPPER;
+        else if (bestScore >= origBeta) flag = TTEntry.LOWER;
         else flag = TTEntry.EXACT;
 
-        tt.store(hash, bestScore, depth, flag,bestMoveLocal);
-
+        if (useTranspositionTable) {
+            tt.store(hash, bestScore, depth, flag, bestMoveLocal);
+        }
 
         return bestScore;
     }
 
+    private Integer tryNullMoveMax(Board board, int alpha, int beta, int depth, int depthAsc, long hash) {
+        int pieces = bf.pieceCount(board);
+        boolean kingOnThrone = isKingOnThrone(board);
+        boolean kingHasDirectEdgeSight = bf.kingHasDirectEdgeSight(board);
+
+        if (!allowNullMove(depth, pieces, kingOnThrone, kingHasDirectEdgeSight)) return null;
+
+        int reduction = nullMoveReduction(pieces, kingOnThrone, kingHasDirectEdgeSight);
+        int reducedDepth = depth - 1 - reduction;
+        if (reducedDepth < 0) return null;
+
+        Board nullBoard = board.copy();
+        nullBoard.setBlackToMove(!board.isBlackToMove());
+        nullBoard.setBewegt(' ');
+        nullBoard.initHash();
+
+        int score = alphaBetaMin(nullBoard, alpha, beta, reducedDepth, depthAsc + 1, true);
+
+        if (score >= beta) {
+            // Verifikation: in taktischen / riskanten Stellungen nicht blind cutten
+            if (shouldVerifyNullMove(depth, pieces, kingOnThrone, kingHasDirectEdgeSight)) {
+                int verifyScore = alphaBetaMax(board, beta - 1, beta, depth - 1, depthAsc, false);
+                if (verifyScore >= beta) {
+                    if (useTranspositionTable) {
+                        tt.store(hash, verifyScore, depth, TTEntry.LOWER, null);
+                    }
+                    return verifyScore;
+                }
+                return null;
+            }
+
+            if (useTranspositionTable) {
+                tt.store(hash, score, depth, TTEntry.LOWER, null);
+            }
+            return score;
+        }
+
+        return null;
+    }
+
+    private Integer tryNullMoveMin(Board board, int alpha, int beta, int depth, int depthAsc, long hash) {
+        int pieces = bf.pieceCount(board);
+        boolean kingOnThrone = isKingOnThrone(board);
+        boolean kingHasDirectEdgeSight = bf.kingHasDirectEdgeSight(board);
+
+        if (!allowNullMove(depth, pieces, kingOnThrone, kingHasDirectEdgeSight)) return null;
+
+        int reduction = nullMoveReduction(pieces, kingOnThrone, kingHasDirectEdgeSight);
+        int reducedDepth = depth - 1 - reduction;
+        if (reducedDepth < 0) return null;
+
+        Board nullBoard = board.copy();
+        nullBoard.setBlackToMove(!board.isBlackToMove());
+        nullBoard.setBewegt(' ');
+        nullBoard.initHash();
+
+        int score = alphaBetaMax(nullBoard, alpha, beta, reducedDepth, depthAsc + 1, true);
+
+        if (score <= alpha) {
+            // Verifikation: in taktischen / riskanten Stellungen nicht blind cutten
+            if (shouldVerifyNullMove(depth, pieces, kingOnThrone, kingHasDirectEdgeSight)) {
+                int verifyScore = alphaBetaMin(board, alpha, alpha + 1, depth - 1, depthAsc, false);
+                if (verifyScore <= alpha) {
+                    if (useTranspositionTable) {
+                        tt.store(hash, verifyScore, depth, TTEntry.UPPER, null);
+                    }
+                    return verifyScore;
+                }
+                return null;
+            }
+
+            if (useTranspositionTable) {
+                tt.store(hash, score, depth, TTEntry.UPPER, null);
+            }
+            return score;
+        }
+
+        return null;
+    }
+
+    /**
+     * Null-Move nur dann zulassen, wenn die Stellung dafür stabil genug ist.
+     * - direkte Rand-Sicht des Königs => deutlich vorsichtiger
+     * - sobald der König den Thron verlassen hat => klar taktischer, aber nicht komplett aus
+     * - 10-12 Figuren => komplett aus
+     * - je taktischer die Stellung, desto tiefer muss der Knoten sein
+     */
+    private boolean allowNullMove(int depth, int pieces, boolean kingOnThrone, boolean kingHasDirectEdgeSight) {
+        if (pieces <= 12) return false;
+
+        int minDepth = nullMoveMinDepth(pieces, kingOnThrone, kingHasDirectEdgeSight);
+        return depth >= minDepth;
+    }
+
+    private int nullMoveMinDepth(int pieces, boolean kingOnThrone, boolean kingHasDirectEdgeSight) {
+        int minDepth = (pieces > 16) ? 4 : 5;
+
+        if (!kingOnThrone) {
+            minDepth += 2;
+        }
+
+        if (kingHasDirectEdgeSight) {
+            minDepth += 1;
+        }
+
+        return minDepth;
+    }
+
+    private int nullMoveReduction(int pieces, boolean kingOnThrone, boolean kingHasDirectEdgeSight) {
+        int reduction = (pieces > 16) ? 2 : 1;
+
+        if (!kingOnThrone) {
+            reduction -= 1;
+        }
+
+        if (kingHasDirectEdgeSight) {
+            reduction -= 1;
+        }
+
+        return Math.max(1, reduction);
+    }
+
+    private boolean shouldVerifyNullMove(int depth, int pieces, boolean kingOnThrone, boolean kingHasDirectEdgeSight) {
+        if (depth < 5) return false;
+        return !kingOnThrone || kingHasDirectEdgeSight || pieces <= 16;
+    }
+
+    private boolean isKingOnThrone(Board board) {
+        char[][] b = board.getBoard();
+        return b != null && b.length > 4 && b[4].length > 4 && b[4][4] == 'k';
+    }
 
     private boolean timeUp() {
         return System.nanoTime() - startTime > timeLimit;
     }
-
 
     private long getTimeForMove() {
         if (moveCounter <= 10) {
@@ -248,7 +435,6 @@ public class AlphaBetaKI {
         return 4000;
     }
 
-
     public void configBenchmark(long timeLimitMs, int maxDepth, boolean useAlphaBeta) {
         benchmarkMode = true;
         this.benchmarkTimeLimitMs = timeLimitMs;
@@ -256,10 +442,13 @@ public class AlphaBetaKI {
         this.useAlphaBeta = useAlphaBeta;
     }
 
-
     public void resetStatsForBenchmark() {
         nodesSearched = 0;
         lastCompletedDepth = 0;
         bestMove = null;
+
+        // Cache und Heuristik-Infos leeren, damit die Benchmark pro Konfiguration sauber ist
+        tt.clear();
+        zugsortierer = new Zugsortierer(maxDepth);
     }
 }
