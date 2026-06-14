@@ -4,132 +4,243 @@ import app.KI.AlphaBetaKI;
 import app.board.Board;
 import app.board.Zug;
 
+import java.util.List;
+import java.util.Locale;
+
 public class KIBenchmarkRunner {
 
-    private final AlphaBetaKI ki = new AlphaBetaKI();
+    private static final boolean WHITE_TO_MOVE = true;
+
+    private static final int EVAL_WARMUP = 2_000;
+    private static final int EVAL_ITERATIONS = 10_000;
+
+    private static final long ONE_SECOND_MS = 1_000;
+    private static final long TWO_MINUTES_MS = 120_000;
+
+    private static final int FIXED_DEPTH = 4;
+
+    private record SearchConfig(
+            String name,
+            boolean useAlphaBeta,
+            boolean useTranspositionTable,
+            boolean useMoveOrdering,
+            boolean useNullMovePruning
+    ) {}
+
+    private record SearchResult(
+            String positionName,
+            String configName,
+            int depth,
+            long timeMs,
+            long nodes,
+            long nodesPerSecond,
+            String bestMove
+    ) {}
 
     public void run() {
-
         System.out.println("\n=== BENCHMARK START ===\n");
 
-        runPosition("START", TestPositions.startPosition());
-        runPosition("MID", TestPositions.midGame());
-        runPosition("END", TestPositions.endGame());
+        runEvaluationBenchmark();
+
+        runSearchBenchmarkSet(
+                "Iterative Suche mit Zeitlimit von 1 Sekunde",
+                ONE_SECOND_MS,
+                100,
+                benchmarkConfigs()
+        );
+
+        runSearchBenchmarkSet(
+                "Benchmark bei festem Tiefenlimit von 4",
+                TWO_MINUTES_MS,
+                FIXED_DEPTH,
+                benchmarkConfigs()
+        );
+
+        runSearchBenchmarkSet(
+                "Benchmark bei maximaler Suchzeit von 2 Minuten",
+                TWO_MINUTES_MS,
+                100,
+                benchmarkConfigs()
+        );
     }
 
-    private void runPosition(String name, char[][] boardArray) {
+    private void runEvaluationBenchmark() {
+        System.out.println("=================================");
+        System.out.println("BEWERTUNGSFUNKTION");
+        System.out.println("=================================");
 
+        runEvaluationOnPosition("START", TestPositions.startPosition());
+        runEvaluationOnPosition("MITTELSPIEL", TestPositions.midGame());
+        runEvaluationOnPosition("ENDSPIEL", TestPositions.endGame());
+
+        System.out.println();
+    }
+
+    private void runEvaluationOnPosition(String positionName, char[][] boardArray) {
+        AlphaBetaKI ki = new AlphaBetaKI();
         Board board = new Board(boardArray);
 
-        System.out.println("=================================");
-        System.out.println("Position: " + name);
-        System.out.println("=================================");
-
-        // -------------------------
-        // M: 10k evaluation
-        // -------------------------
-        long evalStart = System.nanoTime();
-
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < EVAL_WARMUP; i++) {
             ki.bf.evaluate(board);
         }
 
-        long evalTimeMs = (System.nanoTime() - evalStart) / 1_000_000;
+        long checksum = 0;
+        long start = System.nanoTime();
 
-        System.out.println("10k eval: " + evalTimeMs + " ms");
+        for (int i = 0; i < EVAL_ITERATIONS; i++) {
+            checksum += ki.bf.evaluate(board);
+        }
 
-        // -------------------------
-        // N-Q: AlphaBeta 1s
-        // -------------------------
+        long timeMs = (System.nanoTime() - start) / 1_000_000L;
+        if (timeMs == 0) timeMs = 1;
+
+        double evalsPerSecond = EVAL_ITERATIONS / (timeMs / 1000.0);
+
+        System.out.printf(
+                Locale.GERMAN,
+                "%-12s | %8d ms | %,.0f Bewertungen/s | checksum=%d%n",
+                positionName,
+                timeMs,
+                evalsPerSecond,
+                checksum
+        );
+    }
+
+    private void runSearchBenchmarkSet(String title,
+                                       long timeLimitMs,
+                                       int maxDepth,
+                                       List<SearchConfig> configs) {
+
+        System.out.println("=================================");
+        System.out.println(title);
+        System.out.println("=================================");
+        System.out.printf(
+                Locale.GERMAN,
+                "%-12s | %-34s | %4s | %12s | %14s | %14s | %s%n",
+                "Position",
+                "Konfiguration",
+                "Tiefe",
+                "Zeit (ms)",
+                "Knoten",
+                "Knoten/s",
+                "Bester Zug"
+        );
+
+        printSearchLineForPosition("START", TestPositions.startPosition(), timeLimitMs, maxDepth, configs);
+        printSearchLineForPosition("MITTELSPIEL", TestPositions.midGame(), timeLimitMs, maxDepth, configs);
+        printSearchLineForPosition("ENDSPIEL", TestPositions.endGame(), timeLimitMs, maxDepth, configs);
+
+        System.out.println();
+    }
+
+    private void printSearchLineForPosition(String positionName,
+                                            char[][] boardArray,
+                                            long timeLimitMs,
+                                            int maxDepth,
+                                            List<SearchConfig> configs) {
+
+        for (SearchConfig config : configs) {
+            SearchResult result = runSearch(positionName, boardArray, timeLimitMs, maxDepth, config);
+
+            System.out.printf(
+                    Locale.GERMAN,
+                    "%-12s | %-34s | %4d | %12d | %14d | %14d | %s%n",
+                    result.positionName(),
+                    result.configName(),
+                    result.depth(),
+                    result.timeMs(),
+                    result.nodes(),
+                    result.nodesPerSecond(),
+                    result.bestMove()
+            );
+        }
+    }
+
+    private SearchResult runSearch(String positionName,
+                                   char[][] boardArray,
+                                   long timeLimitMs,
+                                   int maxDepth,
+                                   SearchConfig config) {
+
+        AlphaBetaKI ki = new AlphaBetaKI();
+
+        // WICHTIG:
+        // Diese Schalter müssen in AlphaBetaKI vorhanden sein.
+        ki.useAlphaBeta = config.useAlphaBeta();
+        ki.useTranspositionTable = config.useTranspositionTable();
+        ki.useMoveOrdering = config.useMoveOrdering();
+        ki.useNullMovePruning = config.useNullMovePruning();
+
+        ki.configBenchmark(timeLimitMs, maxDepth, config.useAlphaBeta());
         ki.resetStatsForBenchmark();
 
-        ki.configBenchmark(1000, 100, true);
-
-        long abStart = System.nanoTime();
-
-        Zug abBestMove = ki.findBestMove(new Board(boardArray), true);
-
-        long abTimeMs = (System.nanoTime() - abStart) / 1_000_000;
-
-        double abNodesPerSecond =
-                ki.nodesSearched / (abTimeMs / 1000.0);
-
-        System.out.println("\nALPHABETA 1s");
-        System.out.println("best move: " + abBestMove);
-        System.out.println("depth: " + ki.lastCompletedDepth);
-        System.out.println("nodes: " + ki.nodesSearched);
-        System.out.println("nodes/sec: " + (long) abNodesPerSecond);
-        System.out.println("time: " + abTimeMs + " ms");
-
-        // -------------------------
-        // N-Q: Minimax 1s
-        // -------------------------
+        // Optionaler Warmup-Lauf, damit JIT-Effekte die erste Messung nicht dominieren.
+        ki.findBestMove(new Board(boardArray), WHITE_TO_MOVE);
         ki.resetStatsForBenchmark();
 
-        ki.configBenchmark(1000, 100, false);
+        long start = System.nanoTime();
+        Zug bestMove = ki.findBestMove(new Board(boardArray), WHITE_TO_MOVE);
+        long timeMs = (System.nanoTime() - start) / 1_000_000L;
 
-        long mmStart = System.nanoTime();
+        if (timeMs == 0) timeMs = 1;
 
-        Zug mmBestMove = ki.findBestMove(new Board(boardArray), true);
+        long nodesPerSecond = (long) (ki.nodesSearched / (timeMs / 1000.0));
 
-        long mmTimeMs = (System.nanoTime() - mmStart) / 1_000_000;
+        return new SearchResult(
+                positionName,
+                config.name(),
+                ki.lastCompletedDepth,
+                timeMs,
+                ki.nodesSearched,
+                nodesPerSecond,
+                bestMove == null ? "-" : bestMove.toString()
+        );
+    }
 
-        double mmNodesPerSecond =
-                ki.nodesSearched / (mmTimeMs / 1000.0);
-
-        System.out.println("\nMINIMAX 1s");
-        System.out.println("best move: " + mmBestMove);
-        System.out.println("depth: " + ki.lastCompletedDepth);
-        System.out.println("nodes: " + ki.nodesSearched);
-        System.out.println("nodes/sec: " + (long) mmNodesPerSecond);
-        System.out.println("time: " + mmTimeMs + " ms");
-
-        // -------------------------
-        // R-U: depth 4
-        // -------------------------
-        ki.resetStatsForBenchmark();
-
-        ki.configBenchmark(120000, 4, true);
-
-        long d4Start = System.nanoTime();
-
-        Zug depth4Move = ki.findBestMove(new Board(boardArray), true);
-
-        long d4TimeMs = (System.nanoTime() - d4Start) / 1_000_000;
-
-        double d4NodesPerSecond =
-                ki.nodesSearched / (d4TimeMs / 1000.0);
-
-        System.out.println("\nDEPTH 4");
-        System.out.println("best move: " + depth4Move);
-        System.out.println("depth: " + ki.lastCompletedDepth);
-        System.out.println("nodes: " + ki.nodesSearched);
-        System.out.println("nodes/sec: " + (long) d4NodesPerSecond);
-        System.out.println("time: " + d4TimeMs + " ms");
-
-        // -------------------------
-        // V-Z: stress test
-        // -------------------------
-        ki.resetStatsForBenchmark();
-
-        ki.configBenchmark(120000, 100, true);
-
-        long stressStart = System.nanoTime();
-
-        Zug stressMove = ki.findBestMove(new Board(boardArray), true);
-
-        long stressTimeMs = (System.nanoTime() - stressStart) / 1_000_000;
-
-        double stressNodesPerSecond =
-                ki.nodesSearched / (stressTimeMs / 1000.0);
-
-        System.out.println("\nSTRESS");
-        System.out.println("best move: " + stressMove);
-        System.out.println("depth: " + ki.lastCompletedDepth);
-        System.out.println("nodes: " + ki.nodesSearched);
-        System.out.println("nodes/sec: " + (long) stressNodesPerSecond);
-        System.out.println("time: " + stressTimeMs + " ms");
-
-        System.out.println("\n");
+    private List<SearchConfig> benchmarkConfigs() {
+        return List.of(
+                new SearchConfig(
+                        "Baseline / Minimax",
+                        false,
+                        false,
+                        false,
+                        false
+                ),
+                new SearchConfig(
+                        "Alpha-Beta",
+                        true,
+                        false,
+                        false,
+                        false
+                ),
+                new SearchConfig(
+                        "Alpha-Beta + TT",
+                        true,
+                        true,
+                        false,
+                        false
+                ),
+                new SearchConfig(
+                        "Alpha-Beta + Sortierung",
+                        true,
+                        false,
+                        true,
+                        false
+                ),
+                new SearchConfig(
+                        "Alpha-Beta + Nullzug",
+                        true,
+                        false,
+                        false,
+                        true
+                ),
+                new SearchConfig(
+                        "Alle Techniken",
+                        true,
+                        true,
+                        true,
+                        true
+                )
+        );
     }
 }
