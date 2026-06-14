@@ -71,7 +71,7 @@ public class ZobristHash {
 
         return hash;
     }
-@Deprecated
+    @Deprecated
     // Schwarz ist am Zug wenn zuletzt Weiß ('w' oder 'k') gezogen hat
     private static boolean isBlackToMove(Board board) {
         char last = board.getBewegt();

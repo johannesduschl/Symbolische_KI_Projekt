@@ -249,5 +249,4 @@ public class Board {
         return zobristHash;
     }
 
-
 }
