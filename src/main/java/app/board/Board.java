@@ -15,6 +15,7 @@ public class Board {
     private long zobristHash = 0L;
     private char bewegt= ' ';
     private boolean blackToMove = true; // Schwarz beginnt
+    private Zug lastMove;
 
     /**
      * 's' = schwarze Figur
@@ -110,6 +111,7 @@ public class Board {
      */
     public boolean move(Zug zug) {
 
+        this.lastMove = zug;
         this.bewegt = zug.getPiece();
 
         char[][] board = this.board;

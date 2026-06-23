@@ -58,7 +58,9 @@ public class Zuggenerator {
                         (1 + (size - 1 - x)),
                         (char)('a' + runningY),
                         1 + (size - 1 - runningX),
-                        piece
+                        piece,
+                        x, y,
+                        runningX, runningY
                 ));
                 runningX += dir[0];
                 runningY += dir[1];

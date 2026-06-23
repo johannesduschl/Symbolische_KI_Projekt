@@ -6,7 +6,9 @@ import app.board.Zuggenerator;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import static java.lang.Math.PI;
@@ -74,6 +76,10 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             { 0, 0, 0, 1, 1, 1, 0, 0, 0 }
     };
 
+    private static int[][] BLACK_PST_THREAT = new int[9][9];
+
+    private static int[][] WHITE_PST_THREAT = new int[9][9];
+
     private static final int[][] BLACK_PATTERN = {
             {4, 5, 4},
             {0, 3, 2, 3, 0},
@@ -109,6 +115,8 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private static final int W_CORNER = 1;
     private static final int W_KING_MOBILITY = 1;
     private static final int W_WHITE_MATERIAL = 1;
+    private static final int W_WHITE_PST = 1;
+    private static final int W_WHITE_PST_THREAT = 1;
 
     // =========================
     // BLACK FEATURE WEIGHTS
@@ -117,6 +125,8 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private static final int W_EDGES_ACCESS_BLOCKED = 1;
     private static final int W_CHECKMATE_SCORE = 1;
     private static final int W_BLACK_MATERIAL = 1;
+    private static final int W_BLACK_PST = 1;
+    private static final int W_BLACK_PST_THREAT = 1;
 
     // =========================
     // PIECE SQUARES
@@ -124,6 +134,15 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private static int[] kingSquare;
     private static int[] whiteSquares;
     private static int[] blackSquares;
+    private static boolean[] isBlackOnColumn = new boolean[9];
+    private static boolean[] isBlackOnRow = new boolean[9];
+
+    private static boolean[] isWhiteOnColumn = new boolean[9];
+    private static boolean[] isWhiteOnRow = new boolean[9];
+
+    private static int[] blackAndWhiteRows;
+    private static int[] blackAndWhiteColumns;
+
     @Getter
     private static int kingMoves;
     @Setter
@@ -151,23 +170,83 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         kingSquare = findCharPosition(board.getBoard(), 'k');
         whiteSquares = findCharPosition(board.getBoard(), 'w');
         blackSquares = findCharPosition(board.getBoard(), 's');
+        initArrays();
+        initThreatPST(board.getBoard(), BLACK_PST_THREAT, whiteSquares, 's');
+        initThreatPST(board.getBoard(), WHITE_PST_THREAT, blackSquares, 'w');
+
+        //TODO: move specific PST updates
+        if(BLACK_PST_THREAT == null){
+            //init
+        }
+
+        if(WHITE_PST_THREAT == null){
+            //init
+        }
 
         if(onThrone){
             if(kingSquare[0] != 4 || kingSquare[1] != 4){
                 onThrone = false;
             }
         }
+
         kingMoves = kingMoves(board.getBoard(), kingSquare[0], kingSquare[1]);
 
         if(!onThrone){
-            BLACK_PST = createPSTFromPattern(BLACK_PATTERN, kingSquare[0], kingSquare[1]);
-            WHITE_PST = createPSTFromPattern(WHITE_PATTERN, kingSquare[0], kingSquare[1]);
+            if(board.getBewegt() == 'k') {
+                BLACK_PST = createPSTFromPattern(BLACK_PATTERN, kingSquare[0], kingSquare[1]);
+                WHITE_PST = createPSTFromPattern(WHITE_PATTERN, kingSquare[0], kingSquare[1]);
+            }
         }
 
         int white = evaluateWhite(board.getBoard());
         int black = evaluateBlack(board.getBoard());
 
         return white - black;
+    }
+
+    private int evaluateWhite(char[][] board) {
+
+        return whitePST(board) //also includes threat pst
+                + W_WHITE_MATERIAL * whiteMaterial()
+                + W_KING_PROGRESS * kingEscapeScore(board)
+                + W_CORNER * cornerProgress(board)
+                + W_KING_MOBILITY * kingMobility();
+    }
+
+    private int evaluateBlack(char[][] board) {
+
+        return blackPST(board) //also includes threat pst
+                + W_BLACK_MATERIAL * blackMaterial()
+                //+ W_EDGES_SECURE_SCORE * edgesSecureScore(board)
+                //+ W_EDGES_ACCESS_BLOCKED * edgesAccessBlocked(board)
+                + W_CHECKMATE_SCORE * checkmateScore(board);
+    }
+
+    public static int[] sortByAxis(int[] data, boolean sortByX) {
+
+        int n = data.length / 2;
+
+        Integer[] indices = new Integer[n];
+        for (int i = 0; i < n; i++) {
+            indices[i] = i;
+        }
+
+        // Auswahl der Vergleichsachse
+        if (sortByX) {
+            Arrays.sort(indices, Comparator.comparingInt(i -> data[2 * i]));
+        } else {
+            Arrays.sort(indices, Comparator.comparingInt(i -> data[2 * i + 1]));
+        }
+
+        int[] sorted = new int[data.length];
+
+        for (int i = 0; i < n; i++) {
+            int idx = indices[i];
+            sorted[2 * i]     = data[2 * idx];
+            sorted[2 * i + 1] = data[2 * idx + 1];
+        }
+
+        return sorted;
     }
 
     public int pieceCount(Board board) {
@@ -203,22 +282,41 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
                 || !isSquareRestricted(b, x, y,  0, 1);
     }
 
-    private int evaluateWhite(char[][] board) {
+    private void initArrays(){
 
-        return whitePST(board)
-                + W_WHITE_MATERIAL * whiteMaterial()
-                + W_KING_PROGRESS * kingEscapeScore(board)
-                + W_CORNER * cornerProgress(board)
-                + W_KING_MOBILITY * kingMobility();
-    }
+        Arrays.fill(isBlackOnRow, false);
+        Arrays.fill(isBlackOnColumn, false);
+        Arrays.fill(isWhiteOnRow, false);
+        Arrays.fill(isWhiteOnColumn, false);
 
-    private int evaluateBlack(char[][] board) {
+        List<Integer> tempRows = new ArrayList<>();
+        List<Integer> tempCols = new ArrayList<>();
 
-        return blackPST(board)
-                + W_BLACK_MATERIAL * blackMaterial()
-                + W_EDGES_SECURE_SCORE * edgesSecureScore(board)
-                + W_CHECKMATE_SCORE * checkmateScore(board)
-                + W_EDGES_ACCESS_BLOCKED * edgesAccessBlocked(board);
+        for (int i = 0; i < blackSquares.length - 1; i += 2){
+            int row = blackSquares[i];
+            int col = blackSquares[i + 1];
+            isBlackOnRow[row] = true;
+            isBlackOnColumn[col] = true;
+        }
+
+        for (int i = 0; i < whiteSquares.length - 1; i += 2){
+            int row = whiteSquares[i];
+            int col = whiteSquares[i + 1];
+            isWhiteOnRow[row] = true;
+            isWhiteOnColumn[col] = true;
+        }
+
+        for (int i = 0; i < 9; i++){
+            if(isBlackOnRow[i] && isWhiteOnRow[i]){
+                tempRows.add(i);
+            }
+
+            if(isBlackOnColumn[i] && isWhiteOnColumn[i]){
+                tempCols.add(i);
+            }
+        }
+        blackAndWhiteRows = tempRows.stream().mapToInt(Integer::intValue).toArray();
+        blackAndWhiteColumns = tempCols.stream().mapToInt(Integer::intValue).toArray();
     }
 
     // =========================
@@ -235,10 +333,12 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
                 if (c == 'k') {
                     score += KING_PST[i][j];
+                    //TODO: fix threat pst for king (included in white pieces)
                 }
 
                 if (c == 'w') {
-                    score += WHITE_PST[i][j];
+                    score += W_WHITE_PST * WHITE_PST[i][j];
+                    score += W_WHITE_PST_THREAT * WHITE_PST_THREAT[i][j];
                 }
             }
         }
@@ -327,11 +427,90 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             for (int j = 0; j < board[i].length; j++) {
                 if (BLOCKED[i][j]) continue;
                 if (board[i][j] == 's') {
-                    score += BLACK_PST[i][j];
+                    score += W_BLACK_PST * BLACK_PST[i][j];
+                    score += W_BLACK_PST_THREAT * BLACK_PST_THREAT[i][j];
                 }
             }
         }
         return score;
+    }
+
+    private int updateBlackThreatPST(){
+
+        return 0;
+    }
+
+    private void fillThreatPST(char[][] board, int[][] PST, char PieceType, boolean trapped, int x, int y, int dx, int dy){
+        x += dx;
+        y += dy;
+
+        while (x >= 0 && x < 9 && y >= 0 && y < 9) {
+            if(trapped){
+                if(board[x][y] == PieceType){
+                    PST[x][y] += 2;
+                    break;
+                }
+            }else{
+                if(board[x][y] == '-'){
+                    PST[x][y] += 2;
+                }
+            }
+
+            x += dx;
+            y += dy;
+        }
+    }
+    //generate ThreatPST for white/black pieces
+    //use whiteSquares for black threat PST and vise versa!
+    //TODO: if possible, only change PST where move effects rows/columns
+    private void initThreatPST(char[][] board, int[][] PST, int[] Squares, char PieceType){
+        for (int i = 0; i < Squares.length - 1; i += 2){
+            int x = Squares[i];
+            int y = Squares[i + 1];
+
+            //check all rows:
+            for (int j = 0; j < blackAndWhiteRows.length; j++){
+                if(Squares[i] == blackAndWhiteRows[j]){
+                    //left
+                    if(isSquareThreatenedBy(board, PieceType, x, y, 0, -1)){
+                        if(isSquareThreatenedBy(board, PieceType, x, y, 0, 1)){
+                            //figur wird von beiden schwarzen/weißen Steinen bereits eingeklemmt, nur einzelne steine belohnen, nicht alle felder
+                            fillThreatPST(board, PST, PieceType, true, x, y, 0, -1);
+                            fillThreatPST(board, PST, PieceType, true, x, y, 0, 1);
+                        }else{
+                            //black/white piece must be on the left side
+                            fillThreatPST(board, PST, PieceType, false, x, y, 0, 1);
+                        }
+
+                    }else{
+                        //black/white piece must be on the right side
+                        fillThreatPST(board, PST, PieceType, false, x, y, 0, -1);
+                    }
+
+                }
+            }
+            //check all columns:
+            for (int j = 0; j < blackAndWhiteColumns.length; j++) {
+                if(Squares[i + 1] == blackAndWhiteColumns[j]){
+                    //up
+                    if(isSquareThreatenedBy(board, PieceType, x, y, -1, 0)){
+                        if(isSquareThreatenedBy(board, PieceType, x, y, 1, 0)){
+                            //figur wird von beiden schwarzen/weißen Steinen bereits eingeklemmt, nur einzelne steine belohnen, nicht alle felder
+                            fillThreatPST(board, PST, PieceType, true, x, y, -1, 0);
+                            fillThreatPST(board, PST, PieceType, true, x, y, 1, 0);
+                        }else{
+                            //black/white piece must be on top
+                            fillThreatPST(board, PST, PieceType, false, x, y, 1, 0);
+                        }
+
+                    }else{
+                        //black/white piece must be at the bottom
+                        fillThreatPST(board, PST, PieceType, false, x, y, -1, 0);
+                    }
+
+                }
+            }
+        }
     }
 
     private int blackMaterial(){
@@ -1078,8 +1257,8 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         int[] temp = new int[maxPieces * 2];
         int index = 0;
 
-        for (int i = 0; i < board.length; i++) {
-            for (int j = 0; j < board[i].length; j++) {
+        for (int i = 0; i < board.length; i++) { //x-Indizes
+            for (int j = 0; j < board[i].length; j++) { //y-Indizes
                 if (board[i][j] == target) {
                     temp[index++] = i;
                     temp[index++] = j;

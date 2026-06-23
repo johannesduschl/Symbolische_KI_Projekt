@@ -13,6 +13,9 @@ public class Zug {
     int toRow;
     char piece;
 
+    int fromX, fromY;
+    int toX, toY;
+
     @Override
     public String toString() {
         return "" + fromColumn + fromRow + " -> " + toColumn + toRow;
