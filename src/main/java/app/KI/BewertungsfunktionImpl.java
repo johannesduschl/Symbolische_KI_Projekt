@@ -170,6 +170,10 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         kingSquare = findCharPosition(board.getBoard(), 'k');
         whiteSquares = findCharPosition(board.getBoard(), 'w');
         blackSquares = findCharPosition(board.getBoard(), 's');
+
+        resetPST(BLACK_PST_THREAT);
+        resetPST(WHITE_PST_THREAT); //not necessary if per move updates will work
+
         initArrays();
         initThreatPST(board.getBoard(), BLACK_PST_THREAT, whiteSquares, 's');
         initThreatPST(board.getBoard(), WHITE_PST_THREAT, blackSquares, 'w');
@@ -319,6 +323,12 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         blackAndWhiteColumns = tempCols.stream().mapToInt(Integer::intValue).toArray();
     }
 
+    private void resetPST(int[][] pst) {
+        for (int i = 0; i < pst.length; i++) {
+            Arrays.fill(pst[i], 0);
+        }
+    }
+
     // =========================
     // WHITE EVAL FUNCTIONS
     // =========================
@@ -445,17 +455,14 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         y += dy;
 
         while (x >= 0 && x < 9 && y >= 0 && y < 9) {
-            if(trapped){
                 if(board[x][y] == PieceType){
-                    PST[x][y] += 2;
+                    if(trapped){
+                        PST[x][y] += 2;
+                    }else{
+                        PST[x][y] += 1;
+                    }
                     break;
                 }
-            }else{
-                if(board[x][y] == '-'){
-                    PST[x][y] += 2;
-                }
-            }
-
             x += dx;
             y += dy;
         }
@@ -479,12 +486,12 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
                             fillThreatPST(board, PST, PieceType, true, x, y, 0, 1);
                         }else{
                             //black/white piece must be on the left side
-                            fillThreatPST(board, PST, PieceType, false, x, y, 0, 1);
+                            fillThreatPST(board, PST, PieceType, false, x, y, 0, -1);
                         }
 
                     }else{
                         //black/white piece must be on the right side
-                        fillThreatPST(board, PST, PieceType, false, x, y, 0, -1);
+                        fillThreatPST(board, PST, PieceType, false, x, y, 0, 1);
                     }
 
                 }
@@ -500,12 +507,12 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
                             fillThreatPST(board, PST, PieceType, true, x, y, 1, 0);
                         }else{
                             //black/white piece must be on top
-                            fillThreatPST(board, PST, PieceType, false, x, y, 1, 0);
+                            fillThreatPST(board, PST, PieceType, false, x, y, -1, 0);
                         }
 
                     }else{
                         //black/white piece must be at the bottom
-                        fillThreatPST(board, PST, PieceType, false, x, y, -1, 0);
+                        fillThreatPST(board, PST, PieceType, false, x, y, 1, 0);
                     }
 
                 }
