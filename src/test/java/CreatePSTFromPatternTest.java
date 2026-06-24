@@ -10,8 +10,8 @@ public class CreatePSTFromPatternTest {
 
     @Test
     void testCreatePSTFromPatternThrone() {
-        int[][] blackPST = invokeCreatePSTFromPattern(BLACK_PATTERN, 4, 4);
-        int[][] whitePST = invokeCreatePSTFromPattern(WHITE_PATTERN, 4, 4);
+        int[][] blackPST = invokeCreatePSTFromPattern(BLACK_PATTERN, 4, 4, true);
+        int[][] whitePST = invokeCreatePSTFromPattern(WHITE_PATTERN, 4, 4, false);
 
         printPST(blackPST);
         printPST(whitePST);
@@ -22,8 +22,8 @@ public class CreatePSTFromPatternTest {
 
     @Test
     void testCreatePSTFromPatternNotThrone() {
-        int[][] blackPST = invokeCreatePSTFromPattern(BLACK_PATTERN, 0, 0);
-        int[][] whitePST = invokeCreatePSTFromPattern(WHITE_PATTERN, 0, 0);
+        int[][] blackPST = invokeCreatePSTFromPattern(BLACK_PATTERN, 0, 0, true);
+        int[][] whitePST = invokeCreatePSTFromPattern(WHITE_PATTERN, 0, 0, false);
 
         printPST(blackPST);
         printPST(whitePST);
@@ -41,15 +41,15 @@ public class CreatePSTFromPatternTest {
         };
 
         int[][] exp_black = {
-                {  0, 5, 2, 2, 2, 2, 2, 2,  2 },
-                {  5, 4, 3, 2, 2, 2, 2, 2,  2 },
-                {  2, 3, 0, 0, 0, 0, 0, 0,  0 },
-                {  2, 2, 0, 0, 0, 0, 0, 0,  0 },
-                {  2, 2, 0, 0, 0, 0, 0, 0,  0 },
-                {  2, 2, 0, 0, 0, 0, 0, 0,  0 },
-                {  2, 2, 0, 0, 0, 0, 0, 0,  0 },
-                {  2, 2, 0, 0, 0, 0, 0, 0,  0 },
-                {  2, 2, 0, 0, 0, 0, 0, 0,  0 }
+                {  0, 5, 3, 2, 2, 2, 2, 2,  0 },
+                {  5, 3, 1, 1, 1, 1, 1, 1,  0 },
+                {  3, 1, 0, 0, 0, 0, 0, 0,  2 },
+                {  2, 1, 0, 0, 0, 0, 0, 0,  2 },
+                {  2, 1, 0, 0, 0, 0, 0, 0,  2 },
+                {  2, 1, 0, 0, 0, 0, 0, 0,  2 },
+                {  2, 1, 0, 0, 0, 0, 0, 0,  2 },
+                {  2, 1, 0, 0, 0, 0, 0, 0,  0 },
+                {  0, 0, 2, 2, 2, 2, 2, 0,  0 }
         };
 
         assertArrayEquals(exp_black, blackPST);
@@ -60,20 +60,21 @@ public class CreatePSTFromPatternTest {
     // REFLECTION
     // =========================
 
-    private int[][] invokeCreatePSTFromPattern(int[][] pattern, int x, int y) {
+    private int[][] invokeCreatePSTFromPattern(int[][] pattern, int x, int y, boolean withEdgePattern) {
         try {
             Method m = BewertungsfunktionImpl.class.getDeclaredMethod(
                     "createPSTFromPattern",
                     int[][].class,
                     int.class,
-                    int.class
+                    int.class,
+                    boolean.class
             );
 
             m.setAccessible(true);
 
             BewertungsfunktionImpl eval = new BewertungsfunktionImpl();
 
-            return (int[][]) m.invoke(eval, (Object) pattern, x, y);
+            return (int[][]) m.invoke(eval, (Object) pattern, x, y, withEdgePattern);
 
         } catch (Exception e) {
             throw new RuntimeException("Fehler beim Aufruf von createPSTFromPattern per Reflection", e);
@@ -102,14 +103,17 @@ public class CreatePSTFromPatternTest {
     // =========================
 
     private static final int[][] BLACK_PATTERN = {
-            {4, 5, 4},
-            {0, 3, 2, 3, 0},
-            {0, 0, 2, 2, 2, 0, 0},
-            {0, 0, 0, 2, 2, 2, 0, 0, 0},
-            {0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0}
+            {3, 5, 3},
+            {0, 1, 3, 1, 0},
+            {0, 0, 1, 2, 1, 0, 0},
+            {0, 0, 0, 1, 2, 1, 0, 0, 0},
+            {0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0},
+
+            //last element is always an edge pattern!
+            {0, 0, 2, 2, 2, 2, 2, 0, 0},
     };
 
     private static final int[][] WHITE_PATTERN = {
@@ -124,15 +128,15 @@ public class CreatePSTFromPatternTest {
     };
 
     private static final int[][] BLACK_PST = {
-            {  0, 0, 0, 2, 2, 2, 0, 0,  0 },
-            {  0, 0, 0, 2, 2, 2, 0, 0,  0 },
-            {  0, 0, 0, 3, 2, 3, 0, 0,  0 },
-            {  2, 2, 3, 4, 5, 4, 3, 2,  2 },
-            {  2, 2, 2, 5, 0 ,5, 2, 2,  2 },
-            {  2, 2, 3, 4, 5, 4, 3, 2,  2 },
-            {  0, 0, 0, 3, 2, 3, 0, 0,  0 },
-            {  0, 0, 0, 2, 2, 2, 0, 0,  0 },
-            {  0, 0, 0, 2, 2, 2, 0, 0,  0 }
+            {  0, 0, 2, 2, 2, 2, 2, 0,  0 },
+            {  0, 0, 0, 1, 2, 1, 0, 0,  0 },
+            {  2, 0, 0, 1, 3, 1, 0, 0,  2 },
+            {  2, 1, 1, 3, 5, 3, 1, 1,  2 },
+            {  2, 2, 3, 5, 0 ,5, 3, 2,  2 },
+            {  2, 1, 1, 3, 5, 3, 1, 1,  2 },
+            {  2, 0, 0, 1, 3, 1, 0, 0,  2 },
+            {  0, 0, 0, 1, 2, 1, 0, 0,  0 },
+            {  0, 0, 2, 2, 2, 2, 2, 0,  0 }
     };
 
     private static final int[][] WHITE_PST = {

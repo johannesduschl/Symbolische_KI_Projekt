@@ -45,7 +45,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             {   4,   2,   1,   1,   1,   1,   1,   2,   4 },
             {   3,   1,  -1,  -1,  -1,  -1,  -1,   1,   3 },
             {   3,   1,  -1,  -1,  -3,  -1,  -1,   1,   3 },
-            {   3,   1,  -1,  -3,   4,  -3,  -1,   1,   3 },
+            {   3,   1,  -1,  -3,   5,  -3,  -1,   1,   3 },
             {   3,   1,  -1,  -1,  -3,  -1,  -1,   1,   3 },
             {   3,   1,  -1,  -1,  -1,  -1,  -1,   1,   3 },
             {   4,   2,   1,   1,   1,   1,   1,   2,   4 },
@@ -53,15 +53,15 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     };
 
     private static int[][] BLACK_PST = {
-            {  0, 0, 0, 2, 2, 2, 0, 0,  0 },
-            {  0, 0, 0, 2, 2, 2, 0, 0,  0 },
-            {  0, 0, 0, 3, 2, 3, 0, 0,  0 },
-            {  2, 2, 3, 4, 5, 4, 3, 2,  2 },
-            {  2, 2, 2, 5, 0 ,5, 2, 2,  2 },
-            {  2, 2, 3, 4, 5, 4, 3, 2,  2 },
-            {  0, 0, 0, 3, 2, 3, 0, 0,  0 },
-            {  0, 0, 0, 2, 2, 2, 0, 0,  0 },
-            {  0, 0, 0, 2, 2, 2, 0, 0,  0 }
+            {  0, 0, 2, 2, 2, 2, 2, 0,  0 },
+            {  0, 0, 0, 1, 2, 1, 0, 0,  0 },
+            {  2, 0, 0, 1, 3, 1, 0, 0,  2 },
+            {  2, 1, 1, 3, 5, 3, 1, 1,  2 },
+            {  2, 2, 3, 5, 0 ,5, 3, 2,  2 },
+            {  2, 1, 1, 3, 5, 3, 1, 1,  2 },
+            {  2, 0, 0, 1, 3, 1, 0, 0,  2 },
+            {  0, 0, 0, 1, 2, 1, 0, 0,  0 },
+            {  0, 0, 2, 2, 2, 2, 2, 0,  0 }
     };
 
     private static int[][] WHITE_PST = {
@@ -81,14 +81,17 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private static int[][] WHITE_PST_THREAT = new int[9][9];
 
     private static final int[][] BLACK_PATTERN = {
-            {4, 5, 4},
-            {0, 3, 2, 3, 0},
-            {0, 0, 2, 2, 2, 0, 0},
-            {0, 0, 0, 2, 2, 2, 0, 0, 0},
-            {0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0}
+            {3, 5, 3},
+            {0, 1, 3, 1, 0},
+            {0, 0, 1, 2, 1, 0, 0},
+            {0, 0, 0, 1, 2, 1, 0, 0, 0},
+            {0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0},
+
+            //last element is always an edge pattern!
+            {0, 0, 2, 2, 2, 2, 2, 0, 0},
     };
 
     private static final int[][] WHITE_PATTERN = {
@@ -197,8 +200,8 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
         if(!onThrone){
             if(board.getBewegt() == 'k') {
-                BLACK_PST = createPSTFromPattern(BLACK_PATTERN, kingSquare[0], kingSquare[1]);
-                WHITE_PST = createPSTFromPattern(WHITE_PATTERN, kingSquare[0], kingSquare[1]);
+                BLACK_PST = createPSTFromPattern(BLACK_PATTERN, kingSquare[0], kingSquare[1], true);
+                WHITE_PST = createPSTFromPattern(WHITE_PATTERN, kingSquare[0], kingSquare[1], false);
             }
         }
 
@@ -437,7 +440,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             if(kingMoves <= 16 && kingMoves > 11){
                 score += multiplier * 4;
             //SOME
-            }else if(kingMoves <= 11 && kingMoves > 6){
+            }else if(kingMoves <= 11 && kingMoves > 8){
                 score += multiplier * 2;
             //FEW
             }else{
@@ -972,10 +975,11 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         }
     }
 
-    private int[][] createPSTFromPattern(int[][] pattern, int x, int y){
+    private int[][] createPSTFromPattern(int[][] pattern, int x, int y, boolean withEdgePattern){
 
         int boardSize = 9;
         int length = boardSize - 1;
+        int edge_radius = 4;
 
         int[][] PST = new int[boardSize][boardSize];
 
@@ -987,10 +991,14 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
                 Math.max(x, distBottom)
         );
 
+        if(withEdgePattern){
+            createRadiusForPSTFromPattern(pattern[pattern.length - 1], edge_radius, 4, 4, PST);
+            requiredPatterns--;
+        }
+
         for (int i = 0; i < requiredPatterns; i++){
             createRadiusForPSTFromPattern(pattern[i], i + 1, x, y, PST);
         }
-
         return PST;
     }
     //TODO: new idea -> use WHITE_PST when king is on throne and pre-generated (implementation still missing)
