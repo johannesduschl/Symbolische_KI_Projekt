@@ -213,19 +213,19 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         return whitePST(board) //also includes threat pst
                 + W_WHITE_MATERIAL * whiteMaterial()
                 + W_KING_PROGRESS * kingEscapeScore(board)
-                + W_CORNER * cornerProgress(board)
-                + W_KING_MOBILITY * kingMobility();
+                //+ W_CORNER * cornerProgress(board) //already included in kingEscapeScore -> delete!
+                + W_KING_MOBILITY * kingMobility(); //might lead to too unsafe king moves -> check amount of black pieces first, then reward...
     }
 
     private int evaluateBlack(char[][] board) {
 
         return blackPST(board) //also includes threat pst
                 + W_BLACK_MATERIAL * blackMaterial()
-                //+ W_EDGES_SECURE_SCORE * edgesSecureScore(board)
-                //+ W_EDGES_ACCESS_BLOCKED * edgesAccessBlocked(board)
+                + W_EDGES_SECURE_SCORE * edgesSecureScore(board) //simplify those functions to be more efficient
+                + W_EDGES_ACCESS_BLOCKED * edgesAccessBlocked(board)  //over-engineering might be counter-intuitive!
                 + W_CHECKMATE_SCORE * checkmateScore(board);
     }
-
+    //might be useful in the future for faster computing
     public static int[] sortByAxis(int[] data, boolean sortByX) {
 
         int n = data.length / 2;
@@ -411,18 +411,43 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private int kingMobility() {
         //IMPORTANT: Throne is safe therefore mobility less important
         //Mobility makes white play too risky and unsafe!
-        int moves = 0;
-        if (kingSquare == null) return -10000;
+        int score = 0;
+        int multiplier;
 
         if(!onThrone){
+            int blackCount = blackSquares.length / 2;
+
             //more Moves make him vulnerable too!
 
             //apply this logic by rewarding black for (in-)direct view to the king
             //keep it balanced with kingSafety -> more white pieces around are better
-            moves += kingMoves;
+
+            //MANY
+            if(blackCount <= 16 && blackCount > 12){
+                multiplier = 1;
+                //SOME
+            }else if(blackCount <= 12 && blackCount > 6){
+                multiplier = 2;
+                //FEW
+            }else{
+                multiplier = 3;
+            }
+
+            //MANY
+            if(kingMoves <= 16 && kingMoves > 11){
+                score += multiplier * 4;
+            //SOME
+            }else if(kingMoves <= 11 && kingMoves > 6){
+                score += multiplier * 2;
+            //FEW
+            }else{
+                score += multiplier;
+            }
+
+
         }
 
-        return moves;
+        return score;
     }
 
 
@@ -443,11 +468,6 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             }
         }
         return score;
-    }
-
-    private int updateBlackThreatPST(){
-
-        return 0;
     }
 
     private void fillThreatPST(char[][] board, int[][] PST, char PieceType, boolean trapped, int x, int y, int dx, int dy){
