@@ -34,10 +34,12 @@ public class Spiel {
                 this.board.printBoard();
                 String winner = isWhiteToMove ? "White" : "Black";
                 System.out.printf("Game is over. %s has won.", winner);
+                System.out.println("\nMoves played: " + ki.moveCounter);
                 break;
             }
 
             this.board.printBoard();
+            System.out.println("Reached depth: " + ki.lastCompletedDepth +"\n");
 
             isWhiteToMove = !isWhiteToMove;
         }

@@ -138,6 +138,7 @@ public class Board {
 
     public boolean isCheckMate(int x, int y){
         //prüfen ob shcwarz überhaupt am Zug ist
+        Zug lastMove = this.getLastMove();
         if(this.bewegt!='s'){ return false;}
 
         char[][] board = this.board;
@@ -152,11 +153,13 @@ public class Board {
             //Mated vertically?:
             return ((x - 1 >= 0 && x + 1 < size) && //without check array out of bound error on top/bottom edge!
                     (board[x - 1][y] == 's' || BLOCKED[x - 1][y]) &&
-                    (board[x + 1][y] == 's' || BLOCKED[x + 1][y])) ||
+                    (board[x + 1][y] == 's' || BLOCKED[x + 1][y]) &&
+                    (lastMove.toX == (x - 1) || lastMove.toX == (x + 1))) ||
                     //Mated horizontally?:
                     ((y - 1 >= 0 && y + 1 < size) && //without check array out of bound error on left/right edge!
                             (board[x][y - 1] == 's' || BLOCKED[x][y - 1]) &&
-                            (board[x][y + 1] == 's' || BLOCKED[x][y + 1]));
+                            (board[x][y + 1] == 's' || BLOCKED[x][y + 1]) &&
+                            (lastMove.toY == (y - 1) || lastMove.toY == (y + 1)));
 
         }
     }
@@ -220,9 +223,10 @@ public class Board {
         }
 
         Board copy = new Board(newBoard);
+        copy.lastMove = this.lastMove;
         copy.bewegt      = this.bewegt;
         copy.blackToMove = this.blackToMove;      // Flag mit kopieren
-        copy.zobristHash = this.zobristHash; // Hash direkt übertragen statt neu berechnen
+        copy.zobristHash = this.zobristHash; // Hash direkt übertragen statt neu berechnen //TODO: schauen ob dies zu korrupten Hashes führt
         return copy;
     }
 

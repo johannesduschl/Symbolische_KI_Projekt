@@ -9,7 +9,7 @@ import java.util.Locale;
 
 public class KIBenchmarkRunner {
 
-    private static final boolean WHITE_TO_MOVE = true;
+    private static final boolean WHITE_TO_MOVE = false;
 
     private static final int EVAL_WARMUP = 2_000;
     private static final int EVAL_ITERATIONS = 10_000;

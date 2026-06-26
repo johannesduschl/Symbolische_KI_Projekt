@@ -18,7 +18,7 @@ public class AlphaBetaKI {
     public boolean useAlphaBeta = true;
     public boolean useTranspositionTable = true;
     public boolean useMoveOrdering = true;
-    public boolean useNullMovePruning = true;
+    public boolean useNullMovePruning = false;
 
     private final Zuggenerator zuggenerator = new Zuggenerator();
     private Zugsortierer zugsortierer;
@@ -30,7 +30,7 @@ public class AlphaBetaKI {
      * 11-50 Züge = midgame, max 8s pro Zug
      * 51+ Züge = endgame, max 4s pro Zug
      */
-    private int moveCounter = 0;
+    public int moveCounter = 0;
 
     private long startTime;
     private long timeLimit;
