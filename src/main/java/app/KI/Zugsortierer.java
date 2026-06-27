@@ -130,7 +130,7 @@ public class Zugsortierer {
                     (behind == 'k' && piece == 'w') ||
                     (bx == 4 && by == 4 && b[4][4] == '-')) {
 
-                score += 1000;
+                score += 600;
             }
         }
 

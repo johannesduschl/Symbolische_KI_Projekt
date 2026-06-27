@@ -18,7 +18,7 @@ public class AlphaBetaKI {
     public boolean useAlphaBeta = true;
     public boolean useTranspositionTable = true;
     public boolean useMoveOrdering = true;
-    public boolean useNullMovePruning = false;
+    public boolean useNullMovePruning = true;
 
     private final Zuggenerator zuggenerator = new Zuggenerator();
     private Zugsortierer zugsortierer;
@@ -73,28 +73,27 @@ public class AlphaBetaKI {
 
             for (Zug move : allMoves) {
 
-                if (timeUp()) break;
-
-                Board child = board.copy();
-                child.move(move);
+                board.move(move);
 
                 int score;
 
                 if (isWhiteToMove) {
-                    score = alphaBetaMin(child, Integer.MIN_VALUE, Integer.MAX_VALUE, depth - 1, 1);
+                    score = alphaBetaMin(board, Integer.MIN_VALUE, Integer.MAX_VALUE, depth - 1, 1);
 
                     if (score > currentBestScore) {
                         currentBestScore = score;
                         currentBestMove = move;
                     }
                 } else {
-                    score = alphaBetaMax(child, Integer.MIN_VALUE, Integer.MAX_VALUE, depth - 1, 1);
+                    score = alphaBetaMax(board, Integer.MIN_VALUE, Integer.MAX_VALUE, depth - 1, 1);
 
                     if (score < currentBestScore) {
                         currentBestScore = score;
                         currentBestMove = move;
                     }
                 }
+
+                board.undoMove();
             }
 
             if ((benchmarkMode || !timeUp()) && currentBestMove != null) {
@@ -132,6 +131,7 @@ public class AlphaBetaKI {
             }
         }
 
+        // 🚨 FIX: no null-move in leaf nodes
         if (depth == 0 || board.isGameOver()) {
             int score = bf.evaluate(board);
             if (useTranspositionTable) {
@@ -142,29 +142,36 @@ public class AlphaBetaKI {
 
         if (!benchmarkMode && timeUp()) return bf.evaluate(board);
 
-        // Null-Move-Pruning
+        // ✔ single null-move entry point
         if (useNullMovePruning && allowNullMovePruning) {
-            Integer nullMoveScore = tryNullMoveMax(board, alpha, beta, depth, depthAsc, hash);
-            if (nullMoveScore != null) {
-                return nullMoveScore;
-            }
+            Integer nullScore = tryNullMoveMax(board, alpha, beta, depth, depthAsc, hash);
+            if (nullScore != null) return nullScore;
         }
 
         List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), false);
+
         if (useMoveOrdering) {
             allMoves = zugsortierer.getSortedList(allMoves, board, depthAsc);
         }
 
-        int origAlpha = alpha;
         int bestScore = Integer.MIN_VALUE;
         Zug bestMoveLocal = null;
+        int origAlpha = alpha;
 
         for (Zug move : allMoves) {
 
-            Board child = board.copy();
-            child.move(move);
+            board.move(move);
 
-            int score = alphaBetaMin(child, alpha, beta, depth - 1, depthAsc + 1, allowNullMovePruning);
+            int score = alphaBetaMin(
+                    board,
+                    alpha,
+                    beta,
+                    depth - 1,
+                    depthAsc + 1,
+                    false   // 🚨 FIX: stop null-move propagation
+            );
+
+            board.undoMove();
 
             if (score > bestScore) {
                 bestScore = score;
@@ -180,7 +187,6 @@ public class AlphaBetaKI {
                 if (useTranspositionTable) {
                     tt.store(hash, bestScore, depth, TTEntry.LOWER, move);
                 }
-
                 return bestScore;
             }
 
@@ -221,7 +227,6 @@ public class AlphaBetaKI {
                 if (alpha >= beta) return entry.score;
             }
         }
-
         if (depth == 0 || board.isGameOver()) {
             int score = bf.evaluate(board);
             if (useTranspositionTable) {
@@ -232,30 +237,35 @@ public class AlphaBetaKI {
 
         if (!benchmarkMode && timeUp()) return bf.evaluate(board);
 
-        // Null-Move-Pruning
         if (useNullMovePruning && allowNullMovePruning) {
-            Integer nullMoveScore = tryNullMoveMin(board, alpha, beta, depth, depthAsc, hash);
-            if (nullMoveScore != null) {
-                return nullMoveScore;
-            }
+            Integer nullScore = tryNullMoveMin(board, alpha, beta, depth, depthAsc, hash);
+            if (nullScore != null) return nullScore;
         }
 
         List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), true);
+
         if (useMoveOrdering) {
             allMoves = zugsortierer.getSortedList(allMoves, board, depthAsc);
         }
 
-        int origAlpha = alpha;
-        int origBeta = beta;
         int bestScore = Integer.MAX_VALUE;
         Zug bestMoveLocal = null;
+        int origBeta = beta;
 
         for (Zug move : allMoves) {
 
-            Board child = board.copy();
-            child.move(move);
+            board.move(move);
 
-            int score = alphaBetaMax(child, alpha, beta, depth - 1, depthAsc + 1, allowNullMovePruning);
+            int score = alphaBetaMax(
+                    board,
+                    alpha,
+                    beta,
+                    depth - 1,
+                    depthAsc + 1,
+                    false
+            );
+
+            board.undoMove();
 
             if (score < bestScore) {
                 bestScore = score;
@@ -271,7 +281,6 @@ public class AlphaBetaKI {
                 if (useTranspositionTable) {
                     tt.store(hash, bestScore, depth, TTEntry.UPPER, move);
                 }
-
                 return bestScore;
             }
 
@@ -279,7 +288,7 @@ public class AlphaBetaKI {
         }
 
         byte flag;
-        if (bestScore <= origAlpha) flag = TTEntry.UPPER;
+        if (bestScore <= alpha) flag = TTEntry.UPPER;
         else if (bestScore >= origBeta) flag = TTEntry.LOWER;
         else flag = TTEntry.EXACT;
 
@@ -291,6 +300,7 @@ public class AlphaBetaKI {
     }
 
     private Integer tryNullMoveMax(Board board, int alpha, int beta, int depth, int depthAsc, long hash) {
+
         int pieces = bf.pieceCount(board);
         boolean kingOnThrone = isKingOnThrone(board);
         boolean kingHasDirectEdgeSight = bf.kingHasDirectEdgeSight(board);
@@ -299,19 +309,27 @@ public class AlphaBetaKI {
 
         int reduction = nullMoveReduction(pieces, kingOnThrone, kingHasDirectEdgeSight);
         int reducedDepth = depth - 1 - reduction;
+
         if (reducedDepth < 0) return null;
 
-        Board nullBoard = board.copy();
-        nullBoard.setBlackToMove(!board.isBlackToMove());
-        nullBoard.setBewegt(' ');
-        nullBoard.initHash();
+        // ===== MAKE NULL MOVE =====
+        board.makeNullMove();
 
-        int score = alphaBetaMin(nullBoard, alpha, beta, reducedDepth, depthAsc + 1, true);
+        int score = alphaBetaMin(board, alpha, beta, reducedDepth, depthAsc + 1, true);
+
+        board.undoNullMove();
+        // ==========================
 
         if (score >= beta) {
-            // Verifikation: in taktischen / riskanten Stellungen nicht blind cutten
+
             if (shouldVerifyNullMove(depth, pieces, kingOnThrone, kingHasDirectEdgeSight)) {
-                int verifyScore = alphaBetaMax(board, beta - 1, beta, depth - 1, depthAsc, false);
+
+                int verifyScore;
+
+                // Re-use original board state (already restored)
+
+                verifyScore = alphaBetaMax(board, beta - 1, beta, depth - 1, depthAsc, false);
+
                 if (verifyScore >= beta) {
                     if (useTranspositionTable) {
                         tt.store(hash, verifyScore, depth, TTEntry.LOWER, null);
@@ -324,6 +342,7 @@ public class AlphaBetaKI {
             if (useTranspositionTable) {
                 tt.store(hash, score, depth, TTEntry.LOWER, null);
             }
+
             return score;
         }
 
@@ -331,6 +350,7 @@ public class AlphaBetaKI {
     }
 
     private Integer tryNullMoveMin(Board board, int alpha, int beta, int depth, int depthAsc, long hash) {
+
         int pieces = bf.pieceCount(board);
         boolean kingOnThrone = isKingOnThrone(board);
         boolean kingHasDirectEdgeSight = bf.kingHasDirectEdgeSight(board);
@@ -339,31 +359,37 @@ public class AlphaBetaKI {
 
         int reduction = nullMoveReduction(pieces, kingOnThrone, kingHasDirectEdgeSight);
         int reducedDepth = depth - 1 - reduction;
+
         if (reducedDepth < 0) return null;
 
-        Board nullBoard = board.copy();
-        nullBoard.setBlackToMove(!board.isBlackToMove());
-        nullBoard.setBewegt(' ');
-        nullBoard.initHash();
+        // ===== MAKE NULL MOVE =====
+        board.makeNullMove();
 
-        int score = alphaBetaMax(nullBoard, alpha, beta, reducedDepth, depthAsc + 1, true);
+        int score = alphaBetaMax(board, alpha, beta, reducedDepth, depthAsc + 1, true);
+
+        board.undoNullMove();
+        // ==========================
 
         if (score <= alpha) {
-            // Verifikation: in taktischen / riskanten Stellungen nicht blind cutten
+
             if (shouldVerifyNullMove(depth, pieces, kingOnThrone, kingHasDirectEdgeSight)) {
+
                 int verifyScore = alphaBetaMin(board, alpha, alpha + 1, depth - 1, depthAsc, false);
+
                 if (verifyScore <= alpha) {
                     if (useTranspositionTable) {
                         tt.store(hash, verifyScore, depth, TTEntry.UPPER, null);
                     }
                     return verifyScore;
                 }
+
                 return null;
             }
 
             if (useTranspositionTable) {
                 tt.store(hash, score, depth, TTEntry.UPPER, null);
             }
+
             return score;
         }
 

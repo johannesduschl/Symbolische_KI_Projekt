@@ -6,12 +6,17 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+
 @Getter
 @Setter
 //@AllArgsConstructor entfernt für Zobrist Hash
 //@NoArgsConstructor entfernt für Zobrist Hash
 public class Board {
+    private final Deque<UndoInfo> history = new ArrayDeque<>();
     private static final ZobristHash ZOBRIST = ZobristHash.getInstance();
+    private int nullMoveStack = 0;
     private long zobristHash = 0L;
     private char bewegt= ' ';
     private boolean blackToMove = true; // Schwarz beginnt
@@ -111,29 +116,139 @@ public class Board {
      */
     public boolean move(Zug zug) {
 
-        this.lastMove = zug;
-        this.bewegt = zug.getPiece();
+        UndoInfo ui = new UndoInfo();
+
+        ui.move = zug;
+        ui.blackToMove = blackToMove;
+        ui.bewegt = this.bewegt;
+        ui.zobristHash = this.zobristHash;
 
         char[][] board = this.board;
         int size = board.length;
 
-        int fromX = size - zug.getFromRow(); // Row 9 wird zu index 0, row 8 wird zu index 1 usw.
-        int fromY = zug.getFromColumn() - 'a'; // Spalte 'a' wird zu 0, 'b' zu 1 usw.
+        int fromX = size - zug.getFromRow();
+        int fromY = zug.getFromColumn() - 'a';
         int toX = size - zug.getToRow();
         int toY = zug.getToColumn() - 'a';
 
+        ui.fromX = fromX;
+        ui.fromY = fromY;
+        ui.toX = toX;
+        ui.toY = toY;
 
+        char piece = zug.getPiece();
+
+        // 1. Figur entfernen / setzen
         board[fromX][fromY] = '-';
-        board[toX][toY] = zug.getPiece();
+        board[toX][toY] = piece;
 
-        eliminatePieces(board, zug.getPiece(), toX, toY);
+        // 2. Captures mitloggen (EXTREM WICHTIG)
+        captureWithUndo(board, piece, toX, toY, ui);
 
-        blackToMove = !blackToMove; //Flag umschalten
+        // State updates
+        lastMove = zug;
+        bewegt = piece;
+        blackToMove = !blackToMove;
 
-        // snapshot und updateAfterMove() entfernt – compute() nach Zustandsänderung
-        this.zobristHash = ZOBRIST.compute(this);
+        zobristHash = ZOBRIST.compute(this);
+
+        // speichern
+        history.push(ui);
 
         return isGameOver();
+    }
+
+    private void captureWithUndo(char[][] board, char piece, int toX, int toY, UndoInfo ui) {
+
+        int size = board.length;
+
+        if (piece == 'k') piece = 'w';
+
+        char enemy = (piece == 's') ? 'w' : 's';
+
+        int[][] dirs = {
+                {1,0}, {-1,0}, {0,1}, {0,-1}
+        };
+
+        for (int[] d : dirs) {
+
+            int ex = toX + d[0];
+            int ey = toY + d[1];
+
+            if (ex < 0 || ex >= size || ey < 0 || ey >= size) continue;
+
+            if (board[ex][ey] != enemy) continue;
+
+            int bx = ex + d[0];
+            int by = ey + d[1];
+
+            if (bx < 0 || bx >= size || by < 0 || by >= size) continue;
+
+            char behind = board[bx][by];
+
+            if (
+                    behind == piece ||
+                            behind == 'x' ||
+                            (behind == 'k' && piece == 'w') ||
+                            (bx == 4 && by == 4 && board[4][4] == '-')
+            ) {
+                // speichern
+                ui.capX[ui.capCount] = ex;
+                ui.capY[ui.capCount] = ey;
+                ui.captured[ui.capCount] = board[ex][ey];
+                ui.capCount++;
+
+                // löschen
+                board[ex][ey] = '-';
+            }
+        }
+    }
+
+    public void undoMove() {
+
+        if (history.isEmpty()) return;
+
+        UndoInfo ui = history.pop();
+
+        char[][] board = this.board;
+
+        // 1. Zug zurücksetzen
+        board[ui.toX][ui.toY] = '-';
+        board[ui.fromX][ui.fromY] = ui.move.getPiece();
+
+        // 2. geschlagene Figuren wiederherstellen
+        for (int i = 0; i < ui.capCount; i++) {
+            board[ui.capX[i]][ui.capY[i]] = ui.captured[i];
+        }
+
+        // 3. State restore
+        blackToMove = ui.blackToMove;
+        bewegt = ui.bewegt;
+        lastMove = ui.move;
+        zobristHash = ui.zobristHash;
+    }
+
+    public void makeNullMove() {
+        // Kein history push!
+        nullMoveStack++;
+
+        bewegt = ' ';
+        blackToMove = !blackToMove;
+
+        // Wichtig: Hash muss konsistent bleiben
+        // → wir müssen inkrementell updaten oder neu berechnen
+        zobristHash = ZOBRIST.compute(this);
+    }
+
+    public void undoNullMove() {
+        if (nullMoveStack == 0) return;
+
+        nullMoveStack--;
+
+        blackToMove = !blackToMove;
+
+        // restore hash exakt wie vorheriger Zustand
+        zobristHash = ZOBRIST.compute(this);
     }
 
     public boolean isCheckMate(int x, int y){
