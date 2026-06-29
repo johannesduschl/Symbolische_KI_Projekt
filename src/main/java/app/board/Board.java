@@ -19,7 +19,7 @@ public class Board {
     private int nullMoveStack = 0;
     private long zobristHash = 0L;
     private char bewegt= ' ';
-    private boolean blackToMove = true; // Schwarz beginnt
+    private boolean blackMovesNext = true; // Schwarz beginnt
     private Zug lastMove;
 
     /**
@@ -71,7 +71,7 @@ public class Board {
         initHash(); // frisch berechnen, da wir einen beliebigen Zustand übergeben
     }
 
-    public boolean isBlackToMove() { return blackToMove; }
+    public boolean blackMovesNext() { return blackMovesNext; }
 
 
     public boolean isGameOver() {
@@ -119,7 +119,7 @@ public class Board {
         UndoInfo ui = new UndoInfo();
 
         ui.move = zug;
-        ui.blackToMove = blackToMove;
+        ui.blackMovesNext = blackMovesNext;
         ui.bewegt = this.bewegt;
         ui.zobristHash = this.zobristHash;
 
@@ -148,7 +148,7 @@ public class Board {
         // State updates
         lastMove = zug;
         bewegt = piece;
-        blackToMove = !blackToMove;
+        blackMovesNext = !blackMovesNext;
 
         zobristHash = ZOBRIST.compute(this);
 
@@ -222,7 +222,7 @@ public class Board {
         }
 
         // 3. State restore
-        blackToMove = ui.blackToMove;
+        blackMovesNext = ui.blackMovesNext;
         bewegt = ui.bewegt;
         lastMove = ui.move;
         zobristHash = ui.zobristHash;
@@ -233,7 +233,7 @@ public class Board {
         nullMoveStack++;
 
         bewegt = ' ';
-        blackToMove = !blackToMove;
+        blackMovesNext = !blackMovesNext;
 
         // Wichtig: Hash muss konsistent bleiben
         // → wir müssen inkrementell updaten oder neu berechnen
@@ -245,7 +245,7 @@ public class Board {
 
         nullMoveStack--;
 
-        blackToMove = !blackToMove;
+        blackMovesNext = !blackMovesNext;
 
         // restore hash exakt wie vorheriger Zustand
         zobristHash = ZOBRIST.compute(this);
@@ -342,7 +342,7 @@ public class Board {
         Board copy = new Board(newBoard);
         copy.lastMove = this.lastMove;
         copy.bewegt      = this.bewegt;
-        copy.blackToMove = this.blackToMove;      // Flag mit kopieren
+        copy.blackMovesNext = this.blackMovesNext;      // Flag mit kopieren
         copy.zobristHash = this.zobristHash; // Hash direkt übertragen statt neu berechnen //TODO: schauen ob dies zu korrupten Hashes führt
         return copy;
     }

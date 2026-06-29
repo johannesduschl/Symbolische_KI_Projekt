@@ -156,18 +156,18 @@ public class ZobristHashValueTest {
     @Test
     void debugBlackToMove() {
         Board board = new Board();
-        System.out.println("Start - blackToMove: " + board.isBlackToMove());
+        System.out.println("Start - blackToMove: " + board.blackMovesNext());
 
         board.move(zug('e', 9, 'e', 7, 's'));
-        System.out.println("Nach Schwarz - blackToMove: " + board.isBlackToMove());
+        System.out.println("Nach Schwarz - blackToMove: " + board.blackMovesNext());
 
         board.move(zug('e', 4, 'f', 4, 'w'));
-        System.out.println("Nach Weiß - blackToMove: " + board.isBlackToMove());
+        System.out.println("Nach Weiß - blackToMove: " + board.blackMovesNext());
 
         board.move(zug('e', 7, 'e', 9, 's'));
-        System.out.println("Nach Schwarz zurück - blackToMove: " + board.isBlackToMove());
+        System.out.println("Nach Schwarz zurück - blackToMove: " + board.blackMovesNext());
 
         board.move(zug('f', 4, 'e', 4, 'w'));
-        System.out.println("Nach Weiß zurück - blackToMove: " + board.isBlackToMove());
+        System.out.println("Nach Weiß zurück - blackToMove: " + board.blackMovesNext());
     }
 }

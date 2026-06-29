@@ -16,7 +16,7 @@ public class ZobristHash {
     private static final int SQUARES = 81;
 
     private final long[][] pieceTable = new long[3][SQUARES]; // [Figurtyp][Feld]
-    private final long     blackToMove;
+    private final long blackMovesNext;
 
     // Eine einzige Instanz für die gesamte Anwendung
     private static final ZobristHash INSTANCE = new ZobristHash(0xAB1A8B1ACAFEEL);
@@ -32,7 +32,7 @@ public class ZobristHash {
             for (int s = 0; s < SQUARES; s++)
                 pieceTable[p][s] = rng.nextLong();
 
-        blackToMove = rng.nextLong();
+        blackMovesNext = rng.nextLong();
     }
 
     // -----------------------------------------------------------
@@ -66,8 +66,8 @@ public class ZobristHash {
                     hash ^= pieceTable[idx][square(row, col)];
             }
 
-        if (board.isBlackToMove())
-            hash ^= blackToMove;
+        if (board.blackMovesNext())
+            hash ^= blackMovesNext;
 
         return hash;
     }
@@ -128,7 +128,7 @@ public class ZobristHash {
         }
 
         // 4. Seitenwechsel
-        hash ^= blackToMove;
+        hash ^= blackMovesNext;
 
         return hash;
     }

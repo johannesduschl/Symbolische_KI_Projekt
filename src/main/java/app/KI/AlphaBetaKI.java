@@ -16,9 +16,9 @@ public class AlphaBetaKI {
 
     // Schalter für die Benchmark-Konfiguration
     public boolean useAlphaBeta = true;
-    public boolean useTranspositionTable = true;
+    public boolean useTranspositionTable = false;
     public boolean useMoveOrdering = true;
-    public boolean useNullMovePruning = true;
+    public boolean useNullMovePruning = false;
 
     private final Zuggenerator zuggenerator = new Zuggenerator();
     private Zugsortierer zugsortierer;
@@ -131,7 +131,6 @@ public class AlphaBetaKI {
             }
         }
 
-        // 🚨 FIX: no null-move in leaf nodes
         if (depth == 0 || board.isGameOver()) {
             int score = bf.evaluate(board);
             if (useTranspositionTable) {
@@ -148,7 +147,12 @@ public class AlphaBetaKI {
             if (nullScore != null) return nullScore;
         }
 
-        List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), false);
+        boolean isWhiteToMove = !board.blackMovesNext();
+
+        List<Zug> allMoves = zuggenerator.getAllLegalMoves(
+                board.getBoard(),
+                isWhiteToMove
+        );
 
         if (useMoveOrdering) {
             allMoves = zugsortierer.getSortedList(allMoves, board, depthAsc);
@@ -168,7 +172,7 @@ public class AlphaBetaKI {
                     beta,
                     depth - 1,
                     depthAsc + 1,
-                    false   // 🚨 FIX: stop null-move propagation
+                    false
             );
 
             board.undoMove();
@@ -242,7 +246,12 @@ public class AlphaBetaKI {
             if (nullScore != null) return nullScore;
         }
 
-        List<Zug> allMoves = zuggenerator.getAllLegalMoves(board.getBoard(), true);
+        boolean isWhiteToMove = !board.blackMovesNext();
+
+        List<Zug> allMoves = zuggenerator.getAllLegalMoves(
+                board.getBoard(),
+                isWhiteToMove
+        );
 
         if (useMoveOrdering) {
             allMoves = zugsortierer.getSortedList(allMoves, board, depthAsc);

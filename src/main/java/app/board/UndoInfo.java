@@ -5,7 +5,7 @@ import app.board.Zug;
 public class UndoInfo {
     public Zug move;
 
-    public boolean blackToMove;
+    public boolean blackMovesNext;
     public char bewegt;
     public long zobristHash;
 

@@ -38,7 +38,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     };
 
     private static final int[][] KING_PST = {
-            {  99,   4,   3,   3,   3,   3,   3,   4,  99 },
+            {  999,   4,   3,   3,   3,   3,   3,   4,  999 },
             {   4,   2,   1,   1,   1,   1,   1,   2,   4 },
             {   3,   1,  -1,  -1,  -1,  -1,  -1,   1,   3 },
             {   3,   1,  -1,  -1,  -3,  -1,  -1,   1,   3 },
@@ -46,7 +46,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             {   3,   1,  -1,  -1,  -3,  -1,  -1,   1,   3 },
             {   3,   1,  -1,  -1,  -1,  -1,  -1,   1,   3 },
             {   4,   2,   1,   1,   1,   1,   1,   2,   4 },
-            {  99,   4,   3,   3,   3,   3,   3,   4,  99 }
+            {  999,   4,   3,   3,   3,   3,   3,   4,  999 }
     };
 
     private static int[][] BLACK_PST = {
@@ -120,6 +120,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private static final int W_KING_EDGE_ACCESS = 1;
     private static final int W_KING_EDGE_SECURE = 1;
     private static final int W_CHECKMATE_THREAT = 1;
+    private static final int W_WINNING_THREAT = 1;
 
     // =========================
     // BLACK FEATURE WEIGHTS
@@ -216,10 +217,8 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         return whitePST(board) //also includes threat pst
                 + W_WHITE_MATERIAL * whiteMaterial()
                 + W_KING_PROGRESS * kingEscapeScore(board)
-                //+ W_CORNER * cornerProgress(board) //already included in kingEscapeScore -> delete!
-                + W_KING_EDGE_ACCESS * cornerAccess(board)
                 + W_KING_EDGE_SECURE * secureKingOnEdge(board)
-                + W_CHECKMATE_THREAT * threatensCheckmate(boardObject)
+                + W_WINNING_THREAT * threatensWin(boardObject)
                 + W_KING_MOBILITY * kingMobility(); //might lead to too unsafe king moves -> check amount of black pieces first, then reward... --> fixed
                 //TODO: new concept for white: check, if edge is defendable when king has edge sight -> no more overlooking of instant winning chances
     }
@@ -231,6 +230,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
                 + W_BLACK_MATERIAL * blackMaterial()
                 + W_EDGES_SECURE_SCORE * edgesSecureScore(board) //simplify those functions to be more efficient, fix edge case where king can capture white piece in front of x square
                 + W_EDGES_ACCESS_BLOCKED * edgesAccessBlocked(board)  //over-engineering might be counter-intuitive!
+                + W_CHECKMATE_THREAT * threatensCheckmate(boardObject)
                 + W_CHECKMATE_SCORE * checkmateScore(boardObject);
     }
     //might be useful in the future for faster computing
@@ -388,15 +388,9 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
     private int kingEscapeScore(char[][] board) {
 
-        if (kingSquare == null) return -10000;
-
         int x = kingSquare[0];
         int y = kingSquare[1];
         int score = 0;
-
-        if (x == 0 || x == 8 || y == 0 || y == 8) {
-            return 999;
-        }
 
         if (!isSquareRestricted(board, x, y, -1, 0)) score += 2;
         if (!isSquareRestricted(board, x, y,  1, 0)) score += 2;
@@ -414,83 +408,145 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         return score;
     }
 
-    private int threatensCheckmate(Board boardObject){
+    private int threatensWin(Board boardObject){
+        boolean isBlackToMove = !boardObject.blackMovesNext();
         char[][] board = boardObject.getBoard();
-        int score;
-
-        if(boardObject.isBlackToMove()){
-            //only threat that white can defend on the next move
-            score = -5;
-        }else{
-            //checkmate for black on the next move -> punishment for white
-            score = -1000;
-        }
         int x = kingSquare[0];
         int y = kingSquare[1];
 
-        if(onThrone){
-            if(board[x - 1][y] == 's' && board[x + 1][y] == 's'){
-                if(board[x][y - 1] == 's'){
-                    if((board[x][y + 1] == '-') && (isSquareDirectlyThreatenedBy(board, 's', x, y, 0, 1) ||
-                            isSquareDirectlyThreatenedBy(board, 's', x, y + 1, -1, 0)||
-                            isSquareDirectlyThreatenedBy(board, 's', x, y + 1, 1, 0))){
-                        return score;
-                    }
-                }else if(board[x][y + 1] == 's'){
-                    if((board[x][y - 1] == '-') && (isSquareDirectlyThreatenedBy(board, 's', x, y, 0, -1) ||
-                            isSquareDirectlyThreatenedBy(board, 's', x, y - 1, -1, 0)||
-                            isSquareDirectlyThreatenedBy(board, 's', x, y - 1, 1, 0))){
-                        return score;
-                    }
-                }
-            }else if(board[x][y - 1] == 's' && board[x][y + 1] == 's'){
-                if(board[x - 1][y] == 's'){
-                    if((board[x + 1][y] == '-') && (isSquareDirectlyThreatenedBy(board, 's', x, y, 1, 0) ||
-                            isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, -1)||
-                            isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, 1))){
-                        return score;
-                    }
-                }else if(board[x + 1][y] == 's'){
-                    if((board[x - 1][y] == '-') && (isSquareDirectlyThreatenedBy(board, 's', x, y, -1, 0) ||
-                            isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, -1)||
-                            isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, 1))){
-                        return score;
-                    }
-                }
-            }
+        int x_min = 0;
+        int x_max = 8;
+        int y_min = 0;
+        int y_max = 8;
+        int score;
 
-        }else {
-            if (y > 0 && y + 1 < board.length){
-                if((board[x][y - 1] == 's' || BLOCKED[x][y - 1]) && board[x][y + 1] != 'w' && !BLOCKED[x][y + 1]){
-                    if(isSquareDirectlyThreatenedBy(board, 's', x, y, 0, 1) ||
-                            isSquareDirectlyThreatenedBy(board, 's', x, y + 1, -1, 0)||
-                            isSquareDirectlyThreatenedBy(board, 's', x, y + 1, 1, 0)){
-                        return (board[x][y + 1] == 's') ? -5 : score;
+        if(isBlackToMove){
+            score = 1000;
+        }else{
+            score = 5;
+        }
+
+        if(isPieceOnTopEdge(x)){
+            //left
+            if(!isSquareRestricted(board, x, y, 0, -1)){
+                //regular case
+                if(y > (y_min + 1)) {
+                    if(!canAnyPieceInSourceReachTarget(board, 's', -1, 0, x_min + 1, x_max, y_min + 1, y - 1, x_min, x_min, y_min + 1, y - 1)){
+                        return score;
                     }
-                }else if((board[x][y + 1] == 's' || BLOCKED[x][y + 1]) && board[x][y - 1] != 'w' && !BLOCKED[x][y - 1]){
-                    if(isSquareDirectlyThreatenedBy(board, 's', x, y, 0, -1) ||
-                            isSquareDirectlyThreatenedBy(board, 's', x, y - 1, -1, 0)||
-                            isSquareDirectlyThreatenedBy(board, 's', x, y - 1, 1, 0)){
-                        return (board[x][y - 1] == 's') ? -5 : score;
+                    //edge case
+                }else if(y == y_min + 1){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, 1) && !isSquareDirectlyThreatenedBy(board, 's', x, y + 1, 1, 0)){
+                        return score;
                     }
                 }
-            }
-            if (x > 0 && x + 1 < board.length){
-                if((board[x - 1][y] == 's' || BLOCKED[x - 1][y]) && board[x + 1][y] != 'w' && !BLOCKED[x + 1][y]) {
-                    if(isSquareDirectlyThreatenedBy(board, 's', x, y, 1, 0) ||
-                            isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, -1)||
-                            isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, 1)){
-                        return (board[x + 1][y] == 's') ? -5 : score;
+                //right
+            }else if(!isSquareRestricted(board, x, y, 0, 1)){
+                //regular case
+                if(y < (y_max - 1) ){
+                    if(!canAnyPieceInSourceReachTarget(board, 's', -1, 0, x_min + 1, x_max, y + 1, y_max - 1, x_min, x_min, y + 1, y_max - 1)){
+                        return score;
                     }
-                }else if((board[x + 1][y] == 's' || BLOCKED[x + 1][y]) && board[x - 1][y] != 'w' && !BLOCKED[x - 1][y]){
-                    if(isSquareDirectlyThreatenedBy(board, 's', x, y, -1, 0) ||
-                            isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, -1)||
-                            isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, 1)){
-                        return (board[x - 1][y] == 's') ? -5 : score;
+                    //edge case
+                }else if(y == y_max - 1){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, -1) && !isSquareDirectlyThreatenedBy(board, 's', x, y - 1, 1, 0)){
+                        return score;
                     }
                 }
             }
         }
+
+        if(isPieceOnBottomEdge(x)){
+            //left
+            if(!isSquareRestricted(board, x, y, 0, -1)){
+                //regular case
+                if(y > (y_min + 1)) {
+                    if(!canAnyPieceInSourceReachTarget(board, 's', 1, 0, x_min, x_max - 1, y_min + 1, y - 1, x_max, x_max, y_min + 1, y - 1)){
+                        return score;
+                    }
+                    //edge case
+                }else if(y == y_min + 1){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, 1) && !isSquareDirectlyThreatenedBy(board, 's', x, y + 1, -1, 0)){
+                        return score;
+                    }
+                }
+
+                //right
+            }else if(!isSquareRestricted(board, x, y, 0, 1)){
+                //regular case
+                if(y < (y_max - 1) ){
+                    if(!canAnyPieceInSourceReachTarget(board, 's', 1, 0, x_min, x_max - 1, y + 1, y_max - 1, x_max, x_max, y + 1, y_max - 1)){
+                        return score;
+                    }
+                    //edge case
+                }else if(y == y_max - 1){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, -1) && !isSquareDirectlyThreatenedBy(board, 's', x, y - 1, -1, 0)){
+                        return score;
+                    }
+                }
+            }
+        }
+
+        if(isPieceOnLeftEdge(y)){
+            //up
+            if(!isSquareRestricted(board, x, y, -1, 0)){
+                //regular case
+                if(x > (x_min + 1)){
+                    if(!canAnyPieceInSourceReachTarget(board, 's', 0, -1, x_min + 1, x - 1, y_min + 1, y_max, x_min + 1, x - 1, y_min, y_min)){
+                        return score;
+                    }
+                    //edge case
+                }else if(x == x_min + 1){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y, 1, 0) && !isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, 1)){
+                        return score;
+                    }
+                }
+                //down
+            }else if(!isSquareRestricted(board, x, y, 1, 0)){
+                //regular case
+                if(x < (x_max - 1)){
+                    if(!canAnyPieceInSourceReachTarget(board, 's', 0, -1, x + 1, x_max - 1, y_min + 1, y_max, x + 1, x_max - 1, y_min, y_min)){
+                        return score;
+                    }
+                    //edge case
+                }else if(x == x_max - 1){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y, -1, 0) && !isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, 1)){
+                        return score;
+                    }
+                }
+            }
+        }
+
+        if(isPieceOnRightEdge(y)){
+            //up
+            if(!isSquareRestricted(board, x, y, -1, 0)){
+                //regular case
+                if(x > (x_min + 1)){
+                    if(!canAnyPieceInSourceReachTarget(board, 's', 0, 1, x_min + 1, x - 1, y_min, y_max - 1, x_min + 1, x - 1, y_max, y_max)){
+                        return score;
+                    }
+                    //edge case
+                }else if(x == x_min + 1){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y, 1, 0) && !isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, -1)){
+                        return score;
+                    }
+                }
+                //down
+            }else if(!isSquareRestricted(board, x, y, 1, 0)){
+                //regular case
+                if(x < (x_max - 1)){
+                    if(!canAnyPieceInSourceReachTarget(board, 's', 0, 1, x + 1, x_max - 1, y_min, y_max - 1, x + 1, x_max - 1, y_max, y_max)){
+                        return score;
+                    }
+                    //edge case
+                }else if(x == x_max - 1){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y, -1, 0) && !isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, -1)){
+                        return score;
+                    }
+                }
+            }
+        }
+
         return 0;
     }
 
@@ -575,6 +631,87 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             }
         }
         return score;
+    }
+
+    private int threatensCheckmate(Board boardObject){
+        char[][] board = boardObject.getBoard();
+        boolean isBlackToMove = !boardObject.blackMovesNext();
+        int score;
+
+        if(isBlackToMove){
+            //only threat that white can defend on the next move
+            score = 5;
+        }else{
+            //checkmate for black on the next move -> punishment for white
+            score = 1000;
+        }
+        int x = kingSquare[0];
+        int y = kingSquare[1];
+
+        if(onThrone){
+            if(board[x - 1][y] == 's' && board[x + 1][y] == 's'){
+                if(board[x][y - 1] == 's'){
+                    if((board[x][y + 1] == '-') && (isSquareDirectlyThreatenedBy(board, 's', x, y, 0, 1) ||
+                            isSquareDirectlyThreatenedBy(board, 's', x, y + 1, -1, 0)||
+                            isSquareDirectlyThreatenedBy(board, 's', x, y + 1, 1, 0))){
+                        return score;
+                    }
+                }else if(board[x][y + 1] == 's'){
+                    if((board[x][y - 1] == '-') && (isSquareDirectlyThreatenedBy(board, 's', x, y, 0, -1) ||
+                            isSquareDirectlyThreatenedBy(board, 's', x, y - 1, -1, 0)||
+                            isSquareDirectlyThreatenedBy(board, 's', x, y - 1, 1, 0))){
+                        return score;
+                    }
+                }
+            }else if(board[x][y - 1] == 's' && board[x][y + 1] == 's'){
+                if(board[x - 1][y] == 's'){
+                    if((board[x + 1][y] == '-') && (isSquareDirectlyThreatenedBy(board, 's', x, y, 1, 0) ||
+                            isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, -1)||
+                            isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, 1))){
+                        return score;
+                    }
+                }else if(board[x + 1][y] == 's'){
+                    if((board[x - 1][y] == '-') && (isSquareDirectlyThreatenedBy(board, 's', x, y, -1, 0) ||
+                            isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, -1)||
+                            isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, 1))){
+                        return score;
+                    }
+                }
+            }
+
+        }else {
+            if (y > 0 && y + 1 < board.length){
+                if((board[x][y - 1] == 's' || BLOCKED[x][y - 1]) && board[x][y + 1] != 'w' && !BLOCKED[x][y + 1]){
+                    if(isSquareDirectlyThreatenedBy(board, 's', x, y, 0, 1) ||
+                            isSquareDirectlyThreatenedBy(board, 's', x, y + 1, -1, 0)||
+                            isSquareDirectlyThreatenedBy(board, 's', x, y + 1, 1, 0)){
+                        return (board[x][y + 1] == 's') ? 5 : score;
+                    }
+                }else if((board[x][y + 1] == 's' || BLOCKED[x][y + 1]) && board[x][y - 1] != 'w' && !BLOCKED[x][y - 1]){
+                    if(isSquareDirectlyThreatenedBy(board, 's', x, y, 0, -1) ||
+                            isSquareDirectlyThreatenedBy(board, 's', x, y - 1, -1, 0)||
+                            isSquareDirectlyThreatenedBy(board, 's', x, y - 1, 1, 0)){
+                        return (board[x][y - 1] == 's') ? 5 : score;
+                    }
+                }
+            }
+            if (x > 0 && x + 1 < board.length){
+                if((board[x - 1][y] == 's' || BLOCKED[x - 1][y]) && board[x + 1][y] != 'w' && !BLOCKED[x + 1][y]) {
+                    if(isSquareDirectlyThreatenedBy(board, 's', x, y, 1, 0) ||
+                            isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, -1)||
+                            isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, 1)){
+                        return (board[x + 1][y] == 's') ? 5 : score;
+                    }
+                }else if((board[x + 1][y] == 's' || BLOCKED[x + 1][y]) && board[x - 1][y] != 'w' && !BLOCKED[x - 1][y]){
+                    if(isSquareDirectlyThreatenedBy(board, 's', x, y, -1, 0) ||
+                            isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, -1)||
+                            isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, 1)){
+                        return (board[x - 1][y] == 's') ? 5 : score;
+                    }
+                }
+            }
+        }
+        return 0;
     }
 
     private void fillThreatPST(char[][] board, int[][] PST, char PieceType, boolean trapped, int x, int y, int dx, int dy){
@@ -664,8 +801,8 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
     //Function that checks if black checkmated white's king, may be replaced in the future by implementing logic from board class
     private int checkmateScore(Board boardObject){
-        if(!(boardObject.isBlackToMove())) return 0;
-
+        boolean isBlackToMove = !boardObject.blackMovesNext();
+        if(!isBlackToMove) return 0;
         char[][] board = boardObject.getBoard();
         int score = 1000;
 
@@ -709,137 +846,6 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         }else if(isPieceOnLeftEdge(y) || isPieceOnRightEdge(y)){
             if((x > 0 && board[x - 1 ][y] == 'w') || (x < 8 && board[x + 1][y] == 'w')){
                 score += 5;
-            }
-        }
-        return score;
-    }
-
-    private int cornerAccess(char[][] board){
-        int score = 0;
-        int x = kingSquare[0];
-        int y = kingSquare[1];
-
-        int x_max = 8;
-        int x_min = 0;
-        int y_max = 8;
-        int y_min = 0;
-
-        if(isPieceOnTopEdge(x)){
-            //left
-            if(y > (y_min + 1)) {
-                if (!canAnyPieceInSourceReachTarget(board, 's', -1, 0, x_min +1 , x_max, y_min + 1, y - 1, x, x, y_min + 1, y - 1)) {
-                    if (!isSquareRestricted(board, x, y, 0, -1)) {
-                        score += 10;
-                    } else if (!isSquareThreatenedBy(board, 's', x, y, 0, -1)) {
-                        score += 5;
-                    }
-                }
-            }else if(y == y_min + 1){
-                if (!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, 1)) {
-                    //TODO: missing logic
-                    score += 10;
-                }
-            }
-            //right
-            if(y < (y_max - 1) ){
-                if (!canAnyPieceInSourceReachTarget(board, 's', -1, 0, x_min + 1, x_max, y + 1, y_max - 1, x, x, y + 1, y_max - 1)) {
-                    if(!isSquareRestricted(board, x, y, 0, -1)){
-                        score += 10;
-                    } else if (!isSquareThreatenedBy(board, 's', x, y, 0, 1)) {
-                        score += 5;
-                    }
-                }
-            }else if(y == y_max - 1){
-                if (!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, -1)) {
-                    score += 10;
-                }
-            }
-        }else if(isPieceOnBottomEdge(x)){
-            //left
-            if(y > (y_min + 1)) {
-                if (!canAnyPieceInSourceReachTarget(board, 's', 1, 0, x_min, x_max - 1, y_min + 1, y - 1, x, x, y_min + 1, y - 1)) {
-                    if (!isSquareRestricted(board, x, y, 0, -1)) {
-                        score += 10;
-                    } else if (!isSquareThreatenedBy(board, 's', x, y, 0, -1)) {
-                        score += 5;
-                    }
-                }
-            }else if(y == y_min + 1){
-                if (!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, 1)) {
-                    score += 10;
-                }
-            }
-            //right
-            if(y < (y_max - 1) ){
-                if (!canAnyPieceInSourceReachTarget(board, 's', 1, 0, x_min, x_max - 1, y + 1, y_max - 1, x, x, y + 1, y_max - 1)) {
-                    if(!isSquareRestricted(board, x, y, 0, -1)){
-                        score += 10;
-                    } else if (!isSquareThreatenedBy(board, 's', x, y, 0, 1)) {
-                        score += 5;
-                    }
-                }
-            }else if(y == y_max - 1) {
-                if (!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, -1)) {
-                    score += 10;
-                }
-            }
-        }else if(isPieceOnLeftEdge(y)){
-            //up
-            if(x > (x_min + 1)){
-                if (!canAnyPieceInSourceReachTarget(board, 's', 0, -1, x_min + 1, x - 1, y_min + 1, y_max, x_min + 1, x - 1, y, y)) {
-                    if(!isSquareRestricted(board, x, y, -1, 0)){
-                        score += 10;
-                    } else if (!isSquareThreatenedBy(board, 's', x, y, -1, 0)) {
-                        score += 5;
-                    }
-                }
-            }else if(x == x_min + 1){
-                if (!isSquareDirectlyThreatenedBy(board, 's', x, y, 1, 0)) {
-                    score += 10;
-                }
-            }
-            //down
-            if(x < (x_max - 1)){
-                if (!canAnyPieceInSourceReachTarget(board, 's', 0, -1, x + 1, x_max - 1, y_min, y_max - 1, x + 1, x_max - 1, y, y)) {
-                    if(!isSquareRestricted(board, x, y, 1, 0)){
-                        score += 10;
-                    } else if (!isSquareThreatenedBy(board, 's', x, y, 1, 0)) {
-                        score += 5;
-                    }
-                }
-            }else if(x == x_max - 1){
-                if (!isSquareDirectlyThreatenedBy(board, 's', x, y, -1, 0)) {
-                    score += 10;
-                }
-            }
-        }else if(isPieceOnRightEdge(y)){
-            //up
-            if(x > (x_min + 1)){
-                if (!canAnyPieceInSourceReachTarget(board, 's', 0, 1, x_min + 1, x - 1, y_min, y_max - 1, x_min + 1, x - 1, y, y)) {
-                    if(!isSquareRestricted(board, x, y, -1, 0)){
-                        score += 10;
-                    } else if (!isSquareThreatenedBy(board, 's', x, y, -1, 0)) {
-                        score += 5;
-                    }
-                }
-            }else if(x == x_min + 1){
-                if (!isSquareDirectlyThreatenedBy(board, 's', x, y, 1, 0)) {
-                    score += 10;
-                }
-            }
-            //down
-            if(x < (x_max - 1)){
-                if (!canAnyPieceInSourceReachTarget(board, 's', 0, 1, x + 1, x_max - 1, y_min, y_max - 1, x + 1, x_max - 1, y, y)) {
-                    if(!isSquareRestricted(board, x, y, 1, 0)){
-                        score += 10;
-                    } else if (!isSquareThreatenedBy(board, 's', x, y, 1, 0)) {
-                        score += 5;
-                    }
-                }
-            }else if(x == x_max - 1){
-                if (!isSquareDirectlyThreatenedBy(board, 's', x, y, -1, 0)) {
-                    score += 10;
-                }
             }
         }
         return score;
@@ -1406,5 +1412,71 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         }
         whiteCount = wIndex;
         blackCount = bIndex;
+    }
+
+    public void debugEvaluation(Board board) {
+        char[][] b = board.getBoard();
+
+        // ===== WHITE =====
+        int whitePST = whitePST(b);
+        int whiteMaterial = W_WHITE_MATERIAL * whiteMaterial();
+        int kingProgress = W_KING_PROGRESS * kingEscapeScore(b);
+        int kingEdgeSecure = W_KING_EDGE_SECURE * secureKingOnEdge(b);
+        int winningThreat = W_WINNING_THREAT * threatensWin(board);
+        int kingMobility = W_KING_MOBILITY * kingMobility();
+
+        int totalWhite =
+                whitePST +
+                        whiteMaterial +
+                        kingProgress +
+                        kingEdgeSecure +
+                        winningThreat +
+                        kingMobility;
+
+        // ===== BLACK =====
+        int blackPST = blackPST(b);
+        int blackMaterial = W_BLACK_MATERIAL * blackMaterial();
+        int edgesSecure = W_EDGES_SECURE_SCORE * edgesSecureScore(b);
+        int edgesBlocked = W_EDGES_ACCESS_BLOCKED * edgesAccessBlocked(b);
+        int checkmateThreat = W_CHECKMATE_THREAT * threatensCheckmate(board);
+        int checkmateScore = W_CHECKMATE_SCORE * checkmateScore(board);
+
+        int totalBlack =
+                blackPST +
+                        blackMaterial +
+                        edgesSecure +
+                        edgesBlocked +
+                        checkmateThreat +
+                        checkmateScore;
+
+        int finalScore = totalWhite - totalBlack;
+
+        // ===== OUTPUT =====
+        System.out.println("\n========== DEBUG EVALUATION ==========");
+
+        System.out.println("WHITE:");
+        System.out.printf("  PST                : %6d%n", whitePST);
+        System.out.printf("  Material           : %6d%n", whiteMaterial);
+        System.out.printf("  King Progress      : %6d%n", kingProgress);
+        System.out.printf("  King Edge Secure   : %6d%n", kingEdgeSecure);
+        System.out.printf("  Winning Threat     : %6d%n", winningThreat);
+        System.out.printf("  King Mobility      : %6d%n", kingMobility);
+        System.out.printf("  -> TOTAL WHITE     : %6d%n", totalWhite);
+
+        System.out.println();
+
+        System.out.println("BLACK:");
+        System.out.printf("  PST                : %6d%n", blackPST);
+        System.out.printf("  Material           : %6d%n", blackMaterial);
+        System.out.printf("  Edges Secure       : %6d%n", edgesSecure);
+        System.out.printf("  Edges Blocked      : %6d%n", edgesBlocked);
+        System.out.printf("  Checkmate Threat   : %6d%n", checkmateThreat);
+        System.out.printf("  Checkmate Score    : %6d%n", checkmateScore);
+        System.out.printf("  -> TOTAL BLACK     : %6d%n", totalBlack);
+
+        System.out.println();
+
+        System.out.printf("FINAL SCORE (W - B)  : %6d%n", finalScore);
+        System.out.println("======================================\n");
     }
 }
