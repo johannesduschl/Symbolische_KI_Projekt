@@ -35,6 +35,7 @@ public class Spiel {
                 String winner = isWhiteToMove ? "White" : "Black";
                 System.out.printf("Game is over. %s has won.", winner);
                 System.out.println("\nMoves played: " + ki.moveCounter);
+                System.out.println("Last move: " + board.getLastMove().toString());
                 break;
             }
 

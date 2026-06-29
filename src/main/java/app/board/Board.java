@@ -269,12 +269,14 @@ public class Board {
             return ((x - 1 >= 0 && x + 1 < size) && //without check array out of bound error on top/bottom edge!
                     (board[x - 1][y] == 's' || BLOCKED[x - 1][y]) &&
                     (board[x + 1][y] == 's' || BLOCKED[x + 1][y]) &&
-                    (lastMove.toX == (x - 1) || lastMove.toX == (x + 1))) ||
+                    (lastMove.toX == (x - 1) || lastMove.toX == (x + 1)) &&
+                    lastMove.toY == y) ||
                     //Mated horizontally?:
                     ((y - 1 >= 0 && y + 1 < size) && //without check array out of bound error on left/right edge!
                             (board[x][y - 1] == 's' || BLOCKED[x][y - 1]) &&
                             (board[x][y + 1] == 's' || BLOCKED[x][y + 1]) &&
-                            (lastMove.toY == (y - 1) || lastMove.toY == (y + 1)));
+                            (lastMove.toY == (y - 1) || lastMove.toY == (y + 1)) &&
+                            lastMove.toX == x);
 
         }
     }

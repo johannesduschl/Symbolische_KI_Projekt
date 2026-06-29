@@ -5,6 +5,7 @@ import app.board.Zug;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.swing.text.BadLocationException;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -118,6 +119,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private static final int W_WHITE_PST_THREAT = 1;
     private static final int W_KING_EDGE_ACCESS = 1;
     private static final int W_KING_EDGE_SECURE = 1;
+    private static final int W_CHECKMATE_THREAT = 1;
 
     // =========================
     // BLACK FEATURE WEIGHTS
@@ -201,13 +203,15 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             }
         }
 
-        int white = evaluateWhite(board.getBoard());
-        int black = evaluateBlack(board.getBoard());
+        int white = evaluateWhite(board);
+        int black = evaluateBlack(board);
 
         return white - black;
+
     }
 
-    private int evaluateWhite(char[][] board) {
+    private int evaluateWhite(Board boardObject) {
+        char[][] board = boardObject.getBoard();
 
         return whitePST(board) //also includes threat pst
                 + W_WHITE_MATERIAL * whiteMaterial()
@@ -215,17 +219,19 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
                 //+ W_CORNER * cornerProgress(board) //already included in kingEscapeScore -> delete!
                 + W_KING_EDGE_ACCESS * cornerAccess(board)
                 + W_KING_EDGE_SECURE * secureKingOnEdge(board)
+                + W_CHECKMATE_THREAT * threatensCheckmate(boardObject)
                 + W_KING_MOBILITY * kingMobility(); //might lead to too unsafe king moves -> check amount of black pieces first, then reward... --> fixed
                 //TODO: new concept for white: check, if edge is defendable when king has edge sight -> no more overlooking of instant winning chances
     }
 
-    private int evaluateBlack(char[][] board) {
+    private int evaluateBlack(Board boardObject) {
+        char[][] board = boardObject.getBoard();
 
         return blackPST(board) //also includes threat pst
                 + W_BLACK_MATERIAL * blackMaterial()
                 + W_EDGES_SECURE_SCORE * edgesSecureScore(board) //simplify those functions to be more efficient, fix edge case where king can capture white piece in front of x square
                 + W_EDGES_ACCESS_BLOCKED * edgesAccessBlocked(board)  //over-engineering might be counter-intuitive!
-                + W_CHECKMATE_SCORE * checkmateScore(board);
+                + W_CHECKMATE_SCORE * checkmateScore(boardObject);
     }
     //might be useful in the future for faster computing
     public static int[] sortByAxis(int[] data, boolean sortByX) {
@@ -253,6 +259,19 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         }
 
         return sorted;
+    }
+
+    public static void printPST(int[][] pst) {
+        for (int i = 0; i < pst.length; i++) {
+            int[] row = pst[i]; // Cache für bessere locality
+            for (int j = 0; j < row.length; j++) {
+                System.out.print(row[j]);
+                if (j < row.length - 1) {
+                    System.out.print(" ");
+                }
+            }
+            System.out.println();
+        }
     }
 
     public int pieceCount(Board board) {
@@ -393,6 +412,86 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         score += (4 - minDist) * 2;
 
         return score;
+    }
+
+    private int threatensCheckmate(Board boardObject){
+        char[][] board = boardObject.getBoard();
+        int score;
+
+        if(boardObject.isBlackToMove()){
+            //only threat that white can defend on the next move
+            score = -5;
+        }else{
+            //checkmate for black on the next move -> punishment for white
+            score = -1000;
+        }
+        int x = kingSquare[0];
+        int y = kingSquare[1];
+
+        if(onThrone){
+            if(board[x - 1][y] == 's' && board[x + 1][y] == 's'){
+                if(board[x][y - 1] == 's'){
+                    if((board[x][y + 1] == '-') && (isSquareDirectlyThreatenedBy(board, 's', x, y, 0, 1) ||
+                            isSquareDirectlyThreatenedBy(board, 's', x, y + 1, -1, 0)||
+                            isSquareDirectlyThreatenedBy(board, 's', x, y + 1, 1, 0))){
+                        return score;
+                    }
+                }else if(board[x][y + 1] == 's'){
+                    if((board[x][y - 1] == '-') && (isSquareDirectlyThreatenedBy(board, 's', x, y, 0, -1) ||
+                            isSquareDirectlyThreatenedBy(board, 's', x, y - 1, -1, 0)||
+                            isSquareDirectlyThreatenedBy(board, 's', x, y - 1, 1, 0))){
+                        return score;
+                    }
+                }
+            }else if(board[x][y - 1] == 's' && board[x][y + 1] == 's'){
+                if(board[x - 1][y] == 's'){
+                    if((board[x + 1][y] == '-') && (isSquareDirectlyThreatenedBy(board, 's', x, y, 1, 0) ||
+                            isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, -1)||
+                            isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, 1))){
+                        return score;
+                    }
+                }else if(board[x + 1][y] == 's'){
+                    if((board[x - 1][y] == '-') && (isSquareDirectlyThreatenedBy(board, 's', x, y, -1, 0) ||
+                            isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, -1)||
+                            isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, 1))){
+                        return score;
+                    }
+                }
+            }
+
+        }else {
+            if (y > 0 && y + 1 < board.length){
+                if((board[x][y - 1] == 's' || BLOCKED[x][y - 1]) && board[x][y + 1] != 'w' && !BLOCKED[x][y + 1]){
+                    if(isSquareDirectlyThreatenedBy(board, 's', x, y, 0, 1) ||
+                            isSquareDirectlyThreatenedBy(board, 's', x, y + 1, -1, 0)||
+                            isSquareDirectlyThreatenedBy(board, 's', x, y + 1, 1, 0)){
+                        return (board[x][y + 1] == 's') ? -5 : score;
+                    }
+                }else if((board[x][y + 1] == 's' || BLOCKED[x][y + 1]) && board[x][y - 1] != 'w' && !BLOCKED[x][y - 1]){
+                    if(isSquareDirectlyThreatenedBy(board, 's', x, y, 0, -1) ||
+                            isSquareDirectlyThreatenedBy(board, 's', x, y - 1, -1, 0)||
+                            isSquareDirectlyThreatenedBy(board, 's', x, y - 1, 1, 0)){
+                        return (board[x][y - 1] == 's') ? -5 : score;
+                    }
+                }
+            }
+            if (x > 0 && x + 1 < board.length){
+                if((board[x - 1][y] == 's' || BLOCKED[x - 1][y]) && board[x + 1][y] != 'w' && !BLOCKED[x + 1][y]) {
+                    if(isSquareDirectlyThreatenedBy(board, 's', x, y, 1, 0) ||
+                            isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, -1)||
+                            isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, 1)){
+                        return (board[x + 1][y] == 's') ? -5 : score;
+                    }
+                }else if((board[x + 1][y] == 's' || BLOCKED[x + 1][y]) && board[x - 1][y] != 'w' && !BLOCKED[x - 1][y]){
+                    if(isSquareDirectlyThreatenedBy(board, 's', x, y, -1, 0) ||
+                            isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, -1)||
+                            isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, 1)){
+                        return (board[x - 1][y] == 's') ? -5 : score;
+                    }
+                }
+            }
+        }
+        return 0;
     }
 
     //TODO: Teils redundant mit kingEscapeScore!
@@ -564,7 +663,10 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     }
 
     //Function that checks if black checkmated white's king, may be replaced in the future by implementing logic from board class
-    private int checkmateScore(char[][] board){
+    private int checkmateScore(Board boardObject){
+        if(!(boardObject.isBlackToMove())) return 0;
+
+        char[][] board = boardObject.getBoard();
         int score = 1000;
 
         if(onThrone){
@@ -578,12 +680,14 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             if((    (kingSquare[0] - 1 >= 0 && kingSquare[0] + 1 < board.length) && //without check array out of bound error on top/bottom edge!
                     (board[kingSquare[0] - 1][kingSquare[1]] == 's' || BLOCKED[kingSquare[0] - 1][kingSquare[1]]) &&
                     (board[kingSquare[0] + 1][kingSquare[1]] == 's' || BLOCKED[kingSquare[0] + 1][kingSquare[1]]) &&
-                    (lastMove.getToX() == (kingSquare[0] - 1) || lastMove.getToX() == (kingSquare[0] + 1))) ||
+                    (lastMove.getToX() == (kingSquare[0] - 1) || lastMove.getToX() == (kingSquare[0] + 1)) &&
+                    lastMove.getToY() == kingSquare[1]) ||
                     //Mated horizontally?:
                     ((kingSquare[1] - 1 >= 0 && kingSquare[1] + 1 < board.length) && //without check array out of bound error on left/right edge!
                             (board[kingSquare[0]][kingSquare[1] - 1] == 's' || BLOCKED[kingSquare[0]][kingSquare[1] - 1]) &&
                             (board[kingSquare[0]][kingSquare[1] + 1] == 's' || BLOCKED[kingSquare[0]][kingSquare[1] + 1]) &&
-                            (lastMove.getToY() == (kingSquare[1] - 1) || lastMove.getToY() == (kingSquare[1] + 1)))
+                            (lastMove.getToY() == (kingSquare[1] - 1) || lastMove.getToY() == (kingSquare[1] + 1)) &&
+                            lastMove.getToX() == kingSquare[0])
 
             ){
                 return score;
@@ -632,6 +736,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
                 }
             }else if(y == y_min + 1){
                 if (!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, 1)) {
+                    //TODO: missing logic
                     score += 10;
                 }
             }
