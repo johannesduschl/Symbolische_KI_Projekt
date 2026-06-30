@@ -46,6 +46,7 @@ public class Spiel {
                 System.out.println("Reached depth: " + ki.lastCompletedDepth +"\n");
 
                 System.out.println("Schwarz hat gerade gezogen? " + !board.blackMovesNext());
+                bf.evaluate(this.board);
                 bf.debugEvaluation(this.board);
                 break;
             }
@@ -53,6 +54,7 @@ public class Spiel {
             this.board.printBoard();
             System.out.println("Reached depth: " + ki.lastCompletedDepth +"\n");
             System.out.println("Schwarz hat gerade gezogen? " + !board.blackMovesNext());
+            bf.evaluate(this.board);
             bf.debugEvaluation(this.board);
 
             isWhiteToMove = !board.blackMovesNext();

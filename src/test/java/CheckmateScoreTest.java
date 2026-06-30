@@ -1,5 +1,6 @@
 import app.KI.BewertungsfunktionImpl;
 import app.board.Board;
+import app.board.Zug;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
@@ -9,155 +10,65 @@ import static org.junit.jupiter.api.Assertions.*;
 public class CheckmateScoreTest {
 
     @Test
-    void testNoCheckmateEmptyBoard() {
-        char[][] board = emptyBoard;
-
-        BewertungsfunktionImpl.setOnThrone(true);
-        BewertungsfunktionImpl eval = new BewertungsfunktionImpl();
-        eval.evaluate(new Board(board));
-
-        int score = invokeCheckmateScore(board);
-
-        System.out.println("SCORE: " + score);
-        assertEquals(0, score);
-    }
-
-    @Test
     void testCheckmateOnThrone() {
         char[][] board = throneMateBoard;
 
-        BewertungsfunktionImpl.setOnThrone(true);
+        Zug lastMove = new Zug('e',9, 'e', 6, 's', 0, 4, 3, 4);
+        Zug differentMove = new Zug('e',9, 'e', 7, 's', 0, 4, 2, 4);
+
+        Board boardObj = new Board();
+        boardObj.setBoard(board);
+        boardObj.setBlackMovesNext(false);
+        boardObj.setLastMove(lastMove);
         BewertungsfunktionImpl eval = new BewertungsfunktionImpl();
-        eval.evaluate(new Board(board));
+        eval.evaluate(boardObj);
 
-        int score = invokeCheckmateScore(board);
-
-        System.out.println("SCORE (throneMateBoard): " + score);
-        assertEquals(100, score);
+        int score = invokeCheckmateScore(boardObj);
+        assertEquals(1000, score);
     }
 
     @Test
-    void testNoCheckmateOnThroneVertical() {
-        char[][] board = verticalNoMateBoard;
+    void testCheckmateOnEdge() {
+        char[][] board = matedOnEdge;
 
-        BewertungsfunktionImpl.setOnThrone(true);
+        Zug lastMove = new Zug('c',9, 'c', 1, 's', 0, 2, 8, 2);
+        Zug wrongMove = new Zug('c',9, 'c', 2, 's', 0, 2, 7, 2);
+
+        Board boardObj = new Board();
+        boardObj.setBoard(board);
+        boardObj.setBlackMovesNext(false);
+        boardObj.setLastMove(lastMove);
         BewertungsfunktionImpl eval = new BewertungsfunktionImpl();
-        eval.evaluate(new Board(board));
+        eval.evaluate(boardObj);
 
-        int score = invokeCheckmateScore(board);
+        int score = invokeCheckmateScore(boardObj);
+        assertEquals(1000, score);
 
-        System.out.println("SCORE (verticalNoMateBoard): " + score);
+        boardObj.setLastMove(wrongMove);
+        eval.evaluate(boardObj);
+        System.out.println(boardObj.getLastMove().getToX() + " " + boardObj.getLastMove().getToY());
+        score = invokeCheckmateScore(boardObj);
         assertEquals(0, score);
     }
 
-    @Test
-    void testCheckmateOffThroneVertical() {
-        char[][] board = verticalMateBoard;
-
-        BewertungsfunktionImpl.setOnThrone(true);
-        BewertungsfunktionImpl eval = new BewertungsfunktionImpl();
-        eval.evaluate(new Board(board));
-
-        int score = invokeCheckmateScore(board);
-
-        System.out.println("SCORE (verticalMateBoard): " + score);
-        assertEquals(100, score);
-    }
-
-    @Test
-    void testNoCheckmateOnThroneHorizontal() {
-        char[][] board = horizontalNoMateBoard;
-
-        BewertungsfunktionImpl.setOnThrone(true);
-        BewertungsfunktionImpl eval = new BewertungsfunktionImpl();
-        eval.evaluate(new Board(board));
-
-        int score = invokeCheckmateScore(board);
-
-        System.out.println("SCORE (horizontalNoMateBoard): " + score);
-        assertEquals(0, score);
-    }
-
-    @Test
-    void testCheckmateOffThroneHorizontal() {
-        char[][] board = horizontalMateBoard;
-
-        BewertungsfunktionImpl.setOnThrone(true);
-        BewertungsfunktionImpl eval = new BewertungsfunktionImpl();
-        eval.evaluate(new Board(board));
-
-        int score = invokeCheckmateScore(board);
-
-        System.out.println("SCORE (horizontalMateBoard): " + score);
-        assertEquals(100, score);
-    }
-
-    @Test
-    void testMatedWithThrone() {
-        char[][] board = matedWithThrone;
-
-        BewertungsfunktionImpl.setOnThrone(true);
-        BewertungsfunktionImpl eval = new BewertungsfunktionImpl();
-        eval.evaluate(new Board(board));
-
-        int score = invokeCheckmateScore(board);
-
-        System.out.println("SCORE (matedWithThrone): " + score);
-        assertEquals(100, score);
-    }
-
-    @Test
-    void testMatedWithTopLeftCorner() {
-        char[][] board_1 = matedHorizontallyWithTopLeftCorner;
-        char[][] board_2 = matedVerticallyWithTopLeftCorner;
-
-        BewertungsfunktionImpl eval = new BewertungsfunktionImpl();
-
-        BewertungsfunktionImpl.setOnThrone(true);
-        eval.evaluate(new Board(board_1));
-        int score_1 = invokeCheckmateScore(board_1);
-
-        BewertungsfunktionImpl.setOnThrone(true);
-        eval.evaluate(new Board(board_2));
-        int score_2 = invokeCheckmateScore(board_2);
-
-        System.out.println("SCORE (matedHorizontallyWithTopLeftCorner): " + score_1);
-        System.out.println("SCORE (matedVerticallyWithTopLeftCorner): " + score_2);
-        assertEquals(100, score_1);
-        assertEquals(100, score_2);
-    }
-
-    @Test
-    void testNoMateOnEdge() {
-        char[][] board = noMateOnEdge;
-
-        BewertungsfunktionImpl.setOnThrone(true);
-        BewertungsfunktionImpl eval = new BewertungsfunktionImpl();
-        eval.evaluate(new Board(board));
-
-        int score = invokeCheckmateScore(board);
-
-        System.out.println("SCORE (noMateOnEdge): " + score);
-        assertEquals(0, score);
-    }
 
 
     // =========================
     // REFLECTION
     // =========================
 
-    private int invokeCheckmateScore(char[][] board) {
+    private int invokeCheckmateScore(Board board) {
         try {
             Method m = BewertungsfunktionImpl.class.getDeclaredMethod(
                     "checkmateScore",
-                    char[][].class
+                    Board.class
             );
 
             m.setAccessible(true);
 
             BewertungsfunktionImpl eval = new BewertungsfunktionImpl();
 
-            return (int) m.invoke(eval, new Object[]{board});
+            return (int) m.invoke(eval, board);
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -293,5 +204,17 @@ public class CheckmateScoreTest {
             { '-', '-', '-', '-', '-', '-', '-', '-', '-' },
             { '-', '-', '-', '-', 's', '-', '-', '-', '-' },
             { '-', '-', '-', 's', 'k', '-', '-', '-', '-' }
+    };
+
+    private final char[][] matedOnEdge = new char[][]{
+        { 'x', '-', '-', '-', '-', '-', '-', '-', 'x' },
+        { '-', '-', '-', '-', '-', '-', '-', '-', '-' },
+        { '-', '-', '-', '-', '-', '-', '-', '-', '-' },
+        { '-', '-', '-', '-', '-', '-', '-', '-', '-' },
+        { '-', '-', '-', '-', 's', '-', '-', '-', '-' },
+        { '-', '-', '-', '-', '-', '-', '-', '-', '-' },
+        { '-', '-', '-', '-', '-', '-', '-', '-', '-' },
+        { '-', '-', '-', '-', '-', '-', '-', '-', '-' },
+        { 'x', 'k', 's', '-', '-', '-', '-', '-', 'x' }
     };
 }

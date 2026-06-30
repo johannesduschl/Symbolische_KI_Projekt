@@ -803,28 +803,31 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private int checkmateScore(Board boardObject){
         boolean isBlackToMove = !boardObject.blackMovesNext();
         if(!isBlackToMove) return 0;
+
         char[][] board = boardObject.getBoard();
         int score = 1000;
+        int x = kingSquare[0];
+        int y = kingSquare[1];
 
         if(onThrone){
             //No array out of bound possible!
-            if(board[kingSquare[0] - 1][kingSquare[1]] == 's' && board[kingSquare[0] + 1][kingSquare[1]] == 's' &&
-                    board[kingSquare[0]][kingSquare[1] - 1] == 's' && board[kingSquare[0]][kingSquare[1] + 1] == 's'){
+            if(board[x - 1][y] == 's' && board[x + 1][y] == 's' &&
+                    board[x][y - 1] == 's' && board[x][y + 1] == 's'){
                 return score;
             }
         }else{
             //Mated vertically?:
-            if((    (kingSquare[0] - 1 >= 0 && kingSquare[0] + 1 < board.length) && //without check array out of bound error on top/bottom edge!
-                    (board[kingSquare[0] - 1][kingSquare[1]] == 's' || BLOCKED[kingSquare[0] - 1][kingSquare[1]]) &&
-                    (board[kingSquare[0] + 1][kingSquare[1]] == 's' || BLOCKED[kingSquare[0] + 1][kingSquare[1]]) &&
-                    (lastMove.getToX() == (kingSquare[0] - 1) || lastMove.getToX() == (kingSquare[0] + 1)) &&
-                    lastMove.getToY() == kingSquare[1]) ||
+            if((    (x - 1 >= 0 && x + 1 < board.length) && //without check array out of bound error on top/bottom edge!
+                    (board[x - 1][y] == 's' || BLOCKED[x - 1][y]) &&
+                    (board[x + 1][y] == 's' || BLOCKED[x + 1][y]) &&
+                    (lastMove.getToX() == (x - 1) || lastMove.getToX() == (x + 1)) &&
+                    lastMove.getToY() == y) ||
                     //Mated horizontally?:
-                    ((kingSquare[1] - 1 >= 0 && kingSquare[1] + 1 < board.length) && //without check array out of bound error on left/right edge!
-                            (board[kingSquare[0]][kingSquare[1] - 1] == 's' || BLOCKED[kingSquare[0]][kingSquare[1] - 1]) &&
-                            (board[kingSquare[0]][kingSquare[1] + 1] == 's' || BLOCKED[kingSquare[0]][kingSquare[1] + 1]) &&
-                            (lastMove.getToY() == (kingSquare[1] - 1) || lastMove.getToY() == (kingSquare[1] + 1)) &&
-                            lastMove.getToX() == kingSquare[0])
+                    ((y - 1 >= 0 && y + 1 < board.length) && //without check array out of bound error on left/right edge!
+                            (board[x][y - 1] == 's' || BLOCKED[x][y - 1]) &&
+                            (board[x][y + 1] == 's' || BLOCKED[x][y + 1]) &&
+                            (lastMove.getToY() == (y - 1) || lastMove.getToY() == (y + 1)) &&
+                            lastMove.getToX() == x)
 
             ){
                 return score;
