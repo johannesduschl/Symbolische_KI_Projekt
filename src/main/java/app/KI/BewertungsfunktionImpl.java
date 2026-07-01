@@ -114,7 +114,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private static final int W_KING_PROGRESS = 1;
     private static final int W_CORNER = 1;
     private static final int W_KING_MOBILITY = 1;
-    private static final int W_WHITE_MATERIAL = 1;
+    private static final int W_WHITE_MATERIAL = 4;
     private static final int W_WHITE_PST = 1;
     private static final int W_WHITE_PST_THREAT = 1;
     private static final int W_KING_EDGE_ACCESS = 1;
@@ -128,7 +128,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private static final int W_EDGES_ACCESS_BLOCKED = 1;
     private static final int W_CHECKMATE_SCORE = 1;
     private static final int W_CHECKMATE_THREAT = 1;
-    private static final int W_BLACK_MATERIAL = 1;
+    private static final int W_BLACK_MATERIAL = 4;
     private static final int W_BLACK_PST = 1;
     private static final int W_BLACK_PST_THREAT = 1;
 
@@ -228,7 +228,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
         return blackPST(board) //also includes threat pst
                 + W_BLACK_MATERIAL * blackMaterial()
-                + W_EDGES_SECURE_SCORE * edgesSecureScore(board) //simplify those functions to be more efficient, fix edge case where king can capture white piece in front of x square
+                //+ W_EDGES_SECURE_SCORE * edgesSecureScore(board) //simplify those functions to be more efficient, fix edge case where king can capture white piece in front of x square
                 + W_EDGES_ACCESS_BLOCKED * edgesAccessBlocked(board)  //over-engineering might be counter-intuitive!
                 + W_CHECKMATE_THREAT * threatensCheckmate(boardObject)
                 + W_CHECKMATE_SCORE * checkmateScore(boardObject);
@@ -423,10 +423,25 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         int y_max = 8;
 
         if(isPieceOnTopEdge(x)){
+            if(!isRowRestrictedInBothDirections(board, x, y)) {
+                if(isBlackToMove) return winning;
+                if(y == y_min + 1){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y + 1, 1, 0)){
+                        return winning;
+                    }
+                } else if (y == y_max - 1) {
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y - 1, 1, 0)){
+                        return winning;
+                    }
+                }
+            }
             //left
             if(!isSquareRestricted(board, x, y, 0, -1)){
                 //regular case
                 if(y > (y_min + 2)) {
+                    if(isBlackToMove){
+                        return winning;
+                    }
                     //anstatt ändern den case abfangen?
                     if(!canAnyPieceInSourceReachTarget(board, 's', -1, 0, x_min + 1, x_max, y_min + 2, y - 1, x_min, x_min, y_min + 2, y - 1)){
                         if(!isSquareDirectlyThreatenedBy(board, 's', x, y_min + 1, 1, 0)){
@@ -460,6 +475,9 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             }else if(!isSquareRestricted(board, x, y, 0, 1)){
                 //regular case
                 if(y < (y_max - 2) ){
+                    if(isBlackToMove){
+                        return winning;
+                    }
                     if(!canAnyPieceInSourceReachTarget(board, 's', -1, 0, x_min + 1, x_max, y + 1, y_max - 2, x_min, x_min, y + 1, y_max - 2)){
                         if(!isSquareDirectlyThreatenedBy(board, 's', x, y_max - 1, 1, 0)){
                             return winning;
@@ -492,10 +510,25 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         }
 
         if(isPieceOnBottomEdge(x)){
+            if(!isRowRestrictedInBothDirections(board, x, y)){
+                if(isBlackToMove) return winning;
+                if(y == y_min + 1){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y + 1, -1, 0)){
+                        return winning;
+                    }
+                } else if (y == y_max - 1) {
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y - 1, -1, 0)){
+                        return winning;
+                    }
+                }
+            }
             //left
             if(!isSquareRestricted(board, x, y, 0, -1)){
                 //regular case
                 if(y > (y_min + 2)) {
+                    if(isBlackToMove){
+                        return winning;
+                    }
                     if(!canAnyPieceInSourceReachTarget(board, 's', 1, 0, x_min, x_max - 1, y_min + 2, y - 1, x_max, x_max, y_min + 2, y - 1)){
                         if(!isSquareDirectlyThreatenedBy(board, 's', x, y_min + 1, -1, 0)){
                             return winning;
@@ -528,6 +561,9 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             }else if(!isSquareRestricted(board, x, y, 0, 1)){
                 //regular case
                 if(y < (y_max - 2) ){
+                    if(isBlackToMove){
+                        return winning;
+                    }
                     if(!canAnyPieceInSourceReachTarget(board, 's', 1, 0, x_min, x_max - 1, y + 1, y_max - 2, x_max, x_max, y + 1, y_max - 2)){
                         if(!isSquareDirectlyThreatenedBy(board, 's', x, y_max - 1, -1, 0)){
                             return winning;
@@ -560,10 +596,25 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         }
 
         if(isPieceOnLeftEdge(y)){
+            if(!isColumnRestrictedInBothDirections(board, x, y)){
+                if(isBlackToMove) return winning;
+                if(x == x_min + 1){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, 1)){
+                        return winning;
+                    }
+                }else if(x == x_max - 1){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, 1)){
+                        return winning;
+                    }
+                }
+            }
             //up
             if(!isSquareRestricted(board, x, y, -1, 0)){
                 //regular case
                 if(x > (x_min + 2)){
+                    if(isBlackToMove){
+                        return winning;
+                    }
                     if(!canAnyPieceInSourceReachTarget(board, 's', 0, -1, x_min + 2, x - 1, y_min + 1, y_max, x_min + 2, x - 1, y_min, y_min)){
                         if(!isSquareDirectlyThreatenedBy(board, 's', x_min + 1, y, 0, 1)){
                             return winning;
@@ -596,6 +647,9 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             }else if(!isSquareRestricted(board, x, y, 1, 0)){
                 //regular case
                 if(x < (x_max - 2)){
+                    if(isBlackToMove){
+                        return winning;
+                    }
                     if(!canAnyPieceInSourceReachTarget(board, 's', 0, -1, x + 1, x_max - 2, y_min + 1, y_max, x + 1, x_max - 2, y_min, y_min)){
                         if(!isSquareDirectlyThreatenedBy(board, 's', x_max - 1, y, 0, 1)){
                             return winning;
@@ -628,10 +682,24 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         }
 
         if(isPieceOnRightEdge(y)){
-            //up
+            if(!isColumnRestrictedInBothDirections(board, x, y)){
+                if(isBlackToMove) return winning;
+                if(x == x_min + 1){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, -1)){
+                        return winning;
+                    }
+                }else if(x == x_max - 1){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, -1)){
+                        return winning;
+                    }
+                }
+            }            //up
             if(!isSquareRestricted(board, x, y, -1, 0)){
                 //regular case
                 if(x > (x_min + 2)){
+                    if(isBlackToMove){
+                        return winning;
+                    }
                     if(!canAnyPieceInSourceReachTarget(board, 's', 0, 1, x_min + 2, x - 1, y_min, y_max - 1, x_min + 2, x - 1, y_max, y_max)){
                         if(!isSquareDirectlyThreatenedBy(board, 's', x_min + 1, y, 0, -1)){
                             return winning;
@@ -663,6 +731,9 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             }else if(!isSquareRestricted(board, x, y, 1, 0)){
                 //regular case
                 if(x < (x_max - 2)){
+                    if(isBlackToMove){
+                        return winning;
+                    }
                     if(!canAnyPieceInSourceReachTarget(board, 's', 0, 1, x + 1, x_max - 2, y_min, y_max - 1, x + 1, x_max - 2, y_max, y_max)){
                         if(!isSquareDirectlyThreatenedBy(board, 's', x_max - 1, y, 0, -1)){
                             return winning;
