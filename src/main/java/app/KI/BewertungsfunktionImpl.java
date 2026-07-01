@@ -119,7 +119,6 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private static final int W_WHITE_PST_THREAT = 1;
     private static final int W_KING_EDGE_ACCESS = 1;
     private static final int W_KING_EDGE_SECURE = 1;
-    private static final int W_CHECKMATE_THREAT = 1;
     private static final int W_WINNING_THREAT = 1;
 
     // =========================
@@ -128,6 +127,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private static final int W_EDGES_SECURE_SCORE = 1;
     private static final int W_EDGES_ACCESS_BLOCKED = 1;
     private static final int W_CHECKMATE_SCORE = 1;
+    private static final int W_CHECKMATE_THREAT = 1;
     private static final int W_BLACK_MATERIAL = 1;
     private static final int W_BLACK_PST = 1;
     private static final int W_BLACK_PST_THREAT = 1;
@@ -414,43 +414,78 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         int x = kingSquare[0];
         int y = kingSquare[1];
 
+        int winning = 1000;
+        int threat = 10;
+
         int x_min = 0;
         int x_max = 8;
         int y_min = 0;
         int y_max = 8;
-        int score;
-
-        if(isBlackToMove){
-            score = 1000;
-        }else{
-            score = 5;
-        }
 
         if(isPieceOnTopEdge(x)){
             //left
             if(!isSquareRestricted(board, x, y, 0, -1)){
                 //regular case
-                if(y > (y_min + 1)) {
-                    if(!canAnyPieceInSourceReachTarget(board, 's', -1, 0, x_min + 1, x_max, y_min + 1, y - 1, x_min, x_min, y_min + 1, y - 1)){
-                        return score;
+                if(y > (y_min + 2)) {
+                    //anstatt ändern den case abfangen?
+                    if(!canAnyPieceInSourceReachTarget(board, 's', -1, 0, x_min + 1, x_max, y_min + 2, y - 1, x_min, x_min, y_min + 2, y - 1)){
+                        if(!isSquareDirectlyThreatenedBy(board, 's', x, y_min + 1, 1, 0)){
+                            return winning;
+                        }else{
+                            return threat;
+                        }
                     }
-                    //edge case
+                    //edge case: unstoppable win
                 }else if(y == y_min + 1){
-                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, 1) && !isSquareDirectlyThreatenedBy(board, 's', x, y + 1, 1, 0)){
-                        return score;
+                    if(!isBlackToMove){
+                        if((!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, 1) && !isSquareDirectlyThreatenedBy(board, 's', x, y + 1, 1, 0)) ||
+                                board[x][y + 1] == 's'){
+                            return winning;
+                        }
+                    }else{
+                        if((!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, 1) && !isSquareDirectlyThreatenedBy(board, 's', x, y + 1, 1, 0)) ||
+                                (board[x][y + 1] == 's' && lastMove.getToX() != x && lastMove.getToY() != y + 1)){
+                            return winning;
+                        }
+                    }
+                    //edge case: stoppable winning threat
+                }else if(y == y_min + 2){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x_min, y_min + 1, 1, 0)){
+                        return winning;
+                    }else{
+                        return threat;
                     }
                 }
                 //right
             }else if(!isSquareRestricted(board, x, y, 0, 1)){
                 //regular case
-                if(y < (y_max - 1) ){
-                    if(!canAnyPieceInSourceReachTarget(board, 's', -1, 0, x_min + 1, x_max, y + 1, y_max - 1, x_min, x_min, y + 1, y_max - 1)){
-                        return score;
+                if(y < (y_max - 2) ){
+                    if(!canAnyPieceInSourceReachTarget(board, 's', -1, 0, x_min + 1, x_max, y + 1, y_max - 2, x_min, x_min, y + 1, y_max - 2)){
+                        if(!isSquareDirectlyThreatenedBy(board, 's', x, y_max - 1, 1, 0)){
+                            return winning;
+                        }else{
+                            return threat;
+                        }
                     }
-                    //edge case
+                    //edge case: unstoppable win
                 }else if(y == y_max - 1){
-                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, -1) && !isSquareDirectlyThreatenedBy(board, 's', x, y - 1, 1, 0)){
-                        return score;
+                    if(!isBlackToMove){
+                        if((!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, -1) && !isSquareDirectlyThreatenedBy(board, 's', x, y - 1, 1, 0)) ||
+                                board[x][y - 1] == 's'){
+                            return winning;
+                        }
+                    }else{
+                        if((!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, -1) && !isSquareDirectlyThreatenedBy(board, 's', x, y - 1, 1, 0)) ||
+                                (board[x][y - 1] == 's' && lastMove.getToX() != x && lastMove.getToY() != y - 1)){
+                            return winning;
+                        }
+                    }
+                    //edge case: stoppable winning threat
+                }else if(y == y_max - 2){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x_min, y_max - 1, 1, 0)){
+                        return winning;
+                    }else{
+                        return threat;
                     }
                 }
             }
@@ -460,28 +495,65 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             //left
             if(!isSquareRestricted(board, x, y, 0, -1)){
                 //regular case
-                if(y > (y_min + 1)) {
-                    if(!canAnyPieceInSourceReachTarget(board, 's', 1, 0, x_min, x_max - 1, y_min + 1, y - 1, x_max, x_max, y_min + 1, y - 1)){
-                        return score;
+                if(y > (y_min + 2)) {
+                    if(!canAnyPieceInSourceReachTarget(board, 's', 1, 0, x_min, x_max - 1, y_min + 2, y - 1, x_max, x_max, y_min + 2, y - 1)){
+                        if(!isSquareDirectlyThreatenedBy(board, 's', x, y_min + 1, -1, 0)){
+                            return winning;
+                        }else{
+                            return threat;
+                        }
                     }
-                    //edge case
+                    //edge case: unstoppable win
                 }else if(y == y_min + 1){
-                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, 1) && !isSquareDirectlyThreatenedBy(board, 's', x, y + 1, -1, 0)){
-                        return score;
+                    if(!isBlackToMove){
+                        if((!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, 1) && !isSquareDirectlyThreatenedBy(board, 's', x, y + 1, -1, 0)) ||
+                                board[x][y + 1] == 's'){
+                            return winning;
+                        }
+                    }else{
+                        if((!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, 1) && !isSquareDirectlyThreatenedBy(board, 's', x, y + 1, -1, 0)) ||
+                                (board[x][y + 1] == 's' && lastMove.getToX() != x && lastMove.getToY() != y +1)){
+                            return winning;
+                        }
+                    }
+                    //edge case: stoppable winning threat
+                }else if(y == y_min + 2){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y_min + 1, -1, 0)){
+                        return winning;
+                    }else{
+                        return threat;
                     }
                 }
-
                 //right
             }else if(!isSquareRestricted(board, x, y, 0, 1)){
                 //regular case
-                if(y < (y_max - 1) ){
-                    if(!canAnyPieceInSourceReachTarget(board, 's', 1, 0, x_min, x_max - 1, y + 1, y_max - 1, x_max, x_max, y + 1, y_max - 1)){
-                        return score;
+                if(y < (y_max - 2) ){
+                    if(!canAnyPieceInSourceReachTarget(board, 's', 1, 0, x_min, x_max - 1, y + 1, y_max - 2, x_max, x_max, y + 1, y_max - 2)){
+                        if(!isSquareDirectlyThreatenedBy(board, 's', x, y_max - 1, -1, 0)){
+                            return winning;
+                        }else{
+                            return threat;
+                        }
                     }
-                    //edge case
+                    //edge case: unstoppable win
                 }else if(y == y_max - 1){
-                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, -1) && !isSquareDirectlyThreatenedBy(board, 's', x, y - 1, -1, 0)){
-                        return score;
+                    if(!isBlackToMove){
+                        if((!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, -1) && !isSquareDirectlyThreatenedBy(board, 's', x, y - 1, -1, 0)) ||
+                                board[x][y - 1] == 's'){
+                            return winning;
+                        }
+                    }else{
+                        if((!isSquareDirectlyThreatenedBy(board, 's', x, y, 0, -1) && !isSquareDirectlyThreatenedBy(board, 's', x, y - 1, -1, 0)) ||
+                                (board[x][y - 1] == 's' && lastMove.getToX() != x && lastMove.getToY() != y - 1)){
+                            return threat;
+                        }
+                    }
+                    //edge case: stoppable winning threat
+                }else if(y == y_max - 2){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y_max - 1, -1, 0)){
+                        return winning;
+                    }else{
+                        return threat;
                     }
                 }
             }
@@ -491,27 +563,65 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             //up
             if(!isSquareRestricted(board, x, y, -1, 0)){
                 //regular case
-                if(x > (x_min + 1)){
-                    if(!canAnyPieceInSourceReachTarget(board, 's', 0, -1, x_min + 1, x - 1, y_min + 1, y_max, x_min + 1, x - 1, y_min, y_min)){
-                        return score;
+                if(x > (x_min + 2)){
+                    if(!canAnyPieceInSourceReachTarget(board, 's', 0, -1, x_min + 2, x - 1, y_min + 1, y_max, x_min + 2, x - 1, y_min, y_min)){
+                        if(!isSquareDirectlyThreatenedBy(board, 's', x_min + 1, y, 0, 1)){
+                            return winning;
+                        }else{
+                            return threat;
+                        }
                     }
-                    //edge case
+                    //edge case: unstoppable win
                 }else if(x == x_min + 1){
-                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y, 1, 0) && !isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, 1)){
-                        return score;
+                    if(!isBlackToMove){
+                        if((!isSquareDirectlyThreatenedBy(board, 's', x, y, 1, 0) && !isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, 1)) ||
+                                board[x + 1][y] == 's'){
+                            return winning;
+                        }
+                    }else{
+                        if((!isSquareDirectlyThreatenedBy(board, 's', x, y, 1, 0) && !isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, 1)) ||
+                                (board[x + 1][y] == 's' && lastMove.getToX() != x + 1 && lastMove.getToY() != y)){
+                            return winning;
+                        }
+                    }
+                    //edge case: stoppable winning threat
+                }else if(x == x_min + 2){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x_min + 1, y, 0, 1)){
+                        return winning;
+                    }else{
+                        return threat;
                     }
                 }
                 //down
             }else if(!isSquareRestricted(board, x, y, 1, 0)){
                 //regular case
-                if(x < (x_max - 1)){
-                    if(!canAnyPieceInSourceReachTarget(board, 's', 0, -1, x + 1, x_max - 1, y_min + 1, y_max, x + 1, x_max - 1, y_min, y_min)){
-                        return score;
+                if(x < (x_max - 2)){
+                    if(!canAnyPieceInSourceReachTarget(board, 's', 0, -1, x + 1, x_max - 2, y_min + 1, y_max, x + 1, x_max - 2, y_min, y_min)){
+                        if(!isSquareDirectlyThreatenedBy(board, 's', x_max - 1, y, 0, 1)){
+                            return winning;
+                        }else{
+                            return threat;
+                        }
                     }
-                    //edge case
+                    //edge case: unstoppable win
                 }else if(x == x_max - 1){
-                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y, -1, 0) && !isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, 1)){
-                        return score;
+                    if(!isBlackToMove){
+                        if((!isSquareDirectlyThreatenedBy(board, 's', x, y, -1, 0) && !isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, 1)) ||
+                                board[x - 1][y] == 's'){
+                            return winning;
+                        }
+                    }else{
+                        if((!isSquareDirectlyThreatenedBy(board, 's', x, y, -1, 0) && !isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, 1)) ||
+                                (board[x - 1][y] == 's' && lastMove.getToX() != x - 1 && lastMove.getToY() != y)){
+                            return winning;
+                        }
+                    }
+                    //edge case: stoppable winning threat
+                }else if(x == x_max - 2){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x_max - 1, y, 0, 1)){
+                        return winning;
+                    }else{
+                        return threat;
                     }
                 }
             }
@@ -521,27 +631,64 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             //up
             if(!isSquareRestricted(board, x, y, -1, 0)){
                 //regular case
-                if(x > (x_min + 1)){
-                    if(!canAnyPieceInSourceReachTarget(board, 's', 0, 1, x_min + 1, x - 1, y_min, y_max - 1, x_min + 1, x - 1, y_max, y_max)){
-                        return score;
+                if(x > (x_min + 2)){
+                    if(!canAnyPieceInSourceReachTarget(board, 's', 0, 1, x_min + 2, x - 1, y_min, y_max - 1, x_min + 2, x - 1, y_max, y_max)){
+                        if(!isSquareDirectlyThreatenedBy(board, 's', x_min + 1, y, 0, -1)){
+                            return winning;
+                        }else{
+                            return threat;
+                        }
                     }
-                    //edge case
+                    //edge case: unstoppable win
                 }else if(x == x_min + 1){
-                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y, 1, 0) && !isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, -1)){
-                        return score;
+                    if(!isBlackToMove){
+                        if((!isSquareDirectlyThreatenedBy(board, 's', x, y, 1, 0) && !isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, -1)) ||
+                                board[x + 1][y] == 's'){
+                            return winning;
+                        }
+                    }else{
+                        if((!isSquareDirectlyThreatenedBy(board, 's', x, y, 1, 0) && !isSquareDirectlyThreatenedBy(board, 's', x + 1, y, 0, -1)) ||
+                                (board[x + 1][y] == 's' && lastMove.getToX() != x + 1 && lastMove.getToY() != y)){
+                            return winning;
+                        }
+                    }
+                }else if(x == x_min + 2){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x_min + 1, y, 0, -1)){
+                        return winning;
+                    }else{
+                        return threat;
                     }
                 }
                 //down
             }else if(!isSquareRestricted(board, x, y, 1, 0)){
                 //regular case
-                if(x < (x_max - 1)){
-                    if(!canAnyPieceInSourceReachTarget(board, 's', 0, 1, x + 1, x_max - 1, y_min, y_max - 1, x + 1, x_max - 1, y_max, y_max)){
-                        return score;
+                if(x < (x_max - 2)){
+                    if(!canAnyPieceInSourceReachTarget(board, 's', 0, 1, x + 1, x_max - 2, y_min, y_max - 1, x + 1, x_max - 2, y_max, y_max)){
+                        if(!isSquareDirectlyThreatenedBy(board, 's', x_max - 1, y, 0, -1)){
+                            return winning;
+                        }else{
+                            return threat;
+                        }
                     }
-                    //edge case
+                    //edge case: unstoppable win
                 }else if(x == x_max - 1){
-                    if(!isSquareDirectlyThreatenedBy(board, 's', x, y, -1, 0) && !isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, -1)){
-                        return score;
+                    if(!isBlackToMove){
+                        if((!isSquareDirectlyThreatenedBy(board, 's', x, y, -1, 0) && !isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, -1)) ||
+                                board[x - 1][y] == 's'){
+                            return winning;
+                        }
+                    }else{
+                        if((!isSquareDirectlyThreatenedBy(board, 's', x, y, -1, 0) && !isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, -1)) ||
+                                (board[x - 1][y] == 's' && lastMove.getToX() != x - 1 && lastMove.getToY() != y)){
+                            return winning;
+                        }
+                    }
+                    //edge case: stoppable winning threat
+                }else if(x == x_max - 2){
+                    if(!isSquareDirectlyThreatenedBy(board, 's', x_max - 1, y, 0, -1)){
+                        return winning;
+                    }else{
+                        return threat;
                     }
                 }
             }
