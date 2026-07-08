@@ -11,6 +11,7 @@ import java.util.Comparator;
 
 public class EvoBF implements Bewertungsfunktion {
     //Klasse um Bewertungsfunktionen mit Parametern zu verwalten
+    @Getter
     private EvoKi evoKi;
 
     public EvoBF(EvoKi evoKi){

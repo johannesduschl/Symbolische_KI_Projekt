@@ -19,6 +19,9 @@ public class EvoMain {
         EvoGame game = new EvoGame(b1,w1);
         game.startGame();
 
+        System.out.println(b1.getEvoKi().getWinrate());
+        System.out.println(w1.getEvoKi().getWinrate());
+
     }
 }
 
