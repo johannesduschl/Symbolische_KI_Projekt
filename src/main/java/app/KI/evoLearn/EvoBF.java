@@ -9,12 +9,47 @@ import lombok.Setter;
 import java.util.Arrays;
 import java.util.Comparator;
 
-public class EvoBF {
+public class EvoBF implements Bewertungsfunktion {
     //Klasse um Bewertungsfunktionen mit Parametern zu verwalten
     private EvoKi evoKi;
 
     public EvoBF(EvoKi evoKi){
         this.evoKi = evoKi;
+
+        KING_PST =this.evoKi.genom.getKING_PST_9x9();
+        WHITE_PST = this.evoKi.genom.getWHITE_PST_9x9();
+        BLACK_PST = this.evoKi.genom.getBLACK_PST_9x9();
+
+        // =========================
+        // HIGH-LEVEL WEIGHTS
+        // =========================
+        int W_WHITE_GOAL = this.evoKi.genom.getW_WHITE_GOAL();
+        int W_BLACK_GOAL = this.evoKi.genom.getW_BLACK_GOAL();
+
+        // =========================
+        // WHITE FEATURE WEIGHTS
+        // =========================
+        int W_KING_PROGRESS = this.evoKi.genom.getW_KING_PROGRESS();
+        int W_CORNER = this.evoKi.genom.getW_CORNER();
+        int W_KING_MOBILITY = this.evoKi.genom.getW_KING_MOBILITY();
+        int W_WHITE_MATERIAL = this.evoKi.genom.getW_WHITE_MATERIAL();
+        int W_WHITE_PST = this.evoKi.genom.getW_WHITE_PST();
+        int W_WHITE_PST_THREAT = this.evoKi.genom.getW_WHITE_PST_THREAT();
+        int W_KING_EDGE_ACCESS = this.evoKi.genom.getW_KING_EDGE_ACCESS();
+        int W_KING_EDGE_SECURE = this.evoKi.genom.getW_KING_EDGE_SECURE();
+        int W_WINNING_THREAT = this.evoKi.genom.getW_CHECKMATE_THREAT();
+
+        // =========================
+        // BLACK FEATURE WEIGHTS
+        // =========================
+        int W_EDGES_SECURE_SCORE = this.evoKi.genom.getW_EDGES_SECURE_SCORE();
+        int W_EDGES_ACCESS_BLOCKED = this.evoKi.genom.getW_EDGES_ACCESS_BLOCKED();
+        int W_CHECKMATE_SCORE = this.evoKi.genom.getW_CHECKMATE_SCORE();
+        int W_CHECKMATE_THREAT = this.evoKi.genom.getW_CHECKMATE_THREAT();
+        int W_BLACK_MATERIAL = this.evoKi.genom.getW_BLACK_MATERIAL();
+        int W_BLACK_PST = this.evoKi.genom.getW_BLACK_PST();
+        int W_BLACK_PST_THREAT = this.evoKi.genom.getW_BLACK_PST_THREAT();
+
     }
 
 
@@ -42,9 +77,9 @@ public class EvoBF {
                 { false, false, false, false, false, false, false, false, false }
         };
 
-        private int [][] KING_PST =this.evoKi.genom.getKING_PST_9x9();
-        private int [][] WHITE_PST = this.evoKi.genom.getWHITE_PST_9x9();
-        private int [][] BLACK_PST = this.evoKi.genom.getBLACK_PST_9x9();
+        private int [][] KING_PST;
+        private int [][] WHITE_PST;
+        private int [][] BLACK_PST;
 /**
         private static final int[][] KING_PST = {
                 {  999,   4,   3,   3,   3,   3,   3,   4,  999 },
@@ -112,66 +147,35 @@ public class EvoBF {
                 {0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0}
         };
 
-    // =========================
-    // HIGH-LEVEL WEIGHTS
-    // =========================
-    private final int W_WHITE_GOAL = this.evoKi.genom.getW_WHITE_GOAL();
-    private final int W_BLACK_GOAL = this.evoKi.genom.getW_BLACK_GOAL();
-
-    // =========================
-    // WHITE FEATURE WEIGHTS
-    // =========================
-    private final int W_KING_PROGRESS = this.evoKi.genom.getW_KING_PROGRESS();
-    private final int W_CORNER = this.evoKi.genom.getW_CORNER();
-    private final int W_KING_MOBILITY = this.evoKi.genom.getW_KING_MOBILITY();
-    private final int W_WHITE_MATERIAL = this.evoKi.genom.getW_WHITE_MATERIAL();
-    private final int W_WHITE_PST = this.evoKi.genom.getW_WHITE_PST();
-    private final int W_WHITE_PST_THREAT = this.evoKi.genom.getW_WHITE_PST_THREAT();
-    private final int W_KING_EDGE_ACCESS = this.evoKi.genom.getW_KING_EDGE_ACCESS();
-    private final int W_KING_EDGE_SECURE = this.evoKi.genom.getW_KING_EDGE_SECURE();
-    private final int W_WINNING_THREAT = this.evoKi.genom.getW_CHECKMATE_THREAT();
-
-    // =========================
-    // BLACK FEATURE WEIGHTS
-    // =========================
-    private final int W_EDGES_SECURE_SCORE = this.evoKi.genom.getW_EDGES_SECURE_SCORE();
-    private final int W_EDGES_ACCESS_BLOCKED = this.evoKi.genom.getW_EDGES_ACCESS_BLOCKED();
-    private final int W_CHECKMATE_SCORE = this.evoKi.genom.getW_CHECKMATE_SCORE();
-    private final int W_CHECKMATE_THREAT = this.evoKi.genom.getW_CHECKMATE_THREAT();
-    private final int W_BLACK_MATERIAL = this.evoKi.genom.getW_BLACK_MATERIAL();
-    private final int W_BLACK_PST = this.evoKi.genom.getW_BLACK_PST();
-    private final int W_BLACK_PST_THREAT = this.evoKi.genom.getW_BLACK_PST_THREAT();
-        /**
         // =========================
         // HIGH-LEVEL WEIGHTS
         // =========================
-        private static final int W_WHITE_GOAL = 1;
-        private static final int W_BLACK_GOAL = 1;
+        private static int W_WHITE_GOAL = 1;
+        private static int W_BLACK_GOAL = 1;
 
         // =========================
         // WHITE FEATURE WEIGHTS
         // =========================
-        private static final int W_KING_PROGRESS = 1;
-        private static final int W_CORNER = 1;
-        private static final int W_KING_MOBILITY = 1;
-        private static final int W_WHITE_MATERIAL = 1;
-        private static final int W_WHITE_PST = 1;
-        private static final int W_WHITE_PST_THREAT = 1;
-        private static final int W_KING_EDGE_ACCESS = 1;
-        private static final int W_KING_EDGE_SECURE = 1;
-        private static final int W_WINNING_THREAT = 1;
+        private static int W_KING_PROGRESS = 1;
+        private static int W_CORNER = 1;
+        private static int W_KING_MOBILITY = 1;
+        private static int W_WHITE_MATERIAL = 1;
+        private static int W_WHITE_PST = 1;
+        private static int W_WHITE_PST_THREAT = 1;
+        private static int W_KING_EDGE_ACCESS = 1;
+        private static int W_KING_EDGE_SECURE = 1;
+        private static int W_WINNING_THREAT = 1;
 
         // =========================
         // BLACK FEATURE WEIGHTS
         // =========================
-        private static final int W_EDGES_SECURE_SCORE = 1;
-        private static final int W_EDGES_ACCESS_BLOCKED = 1;
-        private static final int W_CHECKMATE_SCORE = 1;
-        private static final int W_CHECKMATE_THREAT = 1;
-        private static final int W_BLACK_MATERIAL = 1;
-        private static final int W_BLACK_PST = 1;
-        private static final int W_BLACK_PST_THREAT = 1;
-        */
+        private static int W_EDGES_SECURE_SCORE = 1;
+        private static int W_EDGES_ACCESS_BLOCKED = 1;
+        private static int W_CHECKMATE_SCORE = 1;
+        private static int W_CHECKMATE_THREAT = 1;
+        private static int W_BLACK_MATERIAL = 1;
+        private static int W_BLACK_PST = 1;
+        private static int W_BLACK_PST_THREAT = 1;
 
         // =========================
         // PIECE SQUARES

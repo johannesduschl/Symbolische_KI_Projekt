@@ -27,21 +27,21 @@ public class Genom {
     // 2. Die 75 einzelnen Feld-Variablen
     // ==========================================
     // KING_PST Felder
-    private final int KING_PST_R0C0, KING_PST_R0C1, KING_PST_R0C2, KING_PST_R0C3, KING_PST_R0C4;
+    private final int KING_PST_R0C1, KING_PST_R0C2, KING_PST_R0C3, KING_PST_R0C4;
     private final int KING_PST_R1C1, KING_PST_R1C2, KING_PST_R1C3, KING_PST_R1C4;
     private final int KING_PST_R2C2, KING_PST_R2C3, KING_PST_R2C4;
     private final int KING_PST_R3C3, KING_PST_R3C4;
     private final int KING_PST_R4C4;
 
     // WHITE_PST Felder
-    private final int WHITE_PST_R0C0, WHITE_PST_R0C1, WHITE_PST_R0C2, WHITE_PST_R0C3, WHITE_PST_R0C4;
+    private final int WHITE_PST_R0C1, WHITE_PST_R0C2, WHITE_PST_R0C3, WHITE_PST_R0C4;
     private final int WHITE_PST_R1C1, WHITE_PST_R1C2, WHITE_PST_R1C3, WHITE_PST_R1C4;
     private final int WHITE_PST_R2C2, WHITE_PST_R2C3, WHITE_PST_R2C4;
     private final int WHITE_PST_R3C3, WHITE_PST_R3C4;
     private final int WHITE_PST_R4C4;
 
     // BLACK_PST Felder
-    private final int BLACK_PST_R0C0, BLACK_PST_R0C1, BLACK_PST_R0C2, BLACK_PST_R0C3, BLACK_PST_R0C4;
+    private final int BLACK_PST_R0C1, BLACK_PST_R0C2, BLACK_PST_R0C3, BLACK_PST_R0C4;
     private final int BLACK_PST_R1C1, BLACK_PST_R1C2, BLACK_PST_R1C3, BLACK_PST_R1C4;
     private final int BLACK_PST_R2C2, BLACK_PST_R2C3, BLACK_PST_R2C4;
     private final int BLACK_PST_R3C3, BLACK_PST_R3C4;
@@ -99,25 +99,25 @@ public class Genom {
     // ==========================================
     public Genom(
             // Parameter für KING_PST (25 Werte)
-            int king_r0c0, int king_r0c1, int king_r0c2, int king_r0c3, int king_r0c4,
-            int king_r1c0, int king_r1c1, int king_r1c2, int king_r1c3, int king_r1c4,
-            int king_r2c0, int king_r2c1, int king_r2c2, int king_r2c3, int king_r2c4,
-            int king_r3c0, int king_r3c1, int king_r3c2, int king_r3c3, int king_r3c4,
-            int king_r4c0, int king_r4c1, int king_r4c2, int king_r4c3, int king_r4c4,
+            int king_r0c1, int king_r0c2, int king_r0c3, int king_r0c4,
+            int king_r1c1, int king_r1c2, int king_r1c3, int king_r1c4,
+            int king_r2c2, int king_r2c3, int king_r2c4,
+            int king_r3c3, int king_r3c4,
+            int king_r4c4,
 
             // Parameter für WHITE_PST (25 Werte)
-            int white_r0c0, int white_r0c1, int white_r0c2, int white_r0c3, int white_r0c4,
-            int white_r1c0, int white_r1c1, int white_r1c2, int white_r1c3, int white_r1c4,
-            int white_r2c0, int white_r2c1, int white_r2c2, int white_r2c3, int white_r2c4,
-            int white_r3c0, int white_r3c1, int white_r3c2, int white_r3c3, int white_r3c4,
-            int white_r4c0, int white_r4c1, int white_r4c2, int white_r4c3, int white_r4c4,
+            int white_r0c1, int white_r0c2, int white_r0c3, int white_r0c4,
+            int white_r1c1, int white_r1c2, int white_r1c3, int white_r1c4,
+            int white_r2c2, int white_r2c3, int white_r2c4,
+            int white_r3c3, int white_r3c4,
+            int white_r4c4,
 
             // Parameter für BLACK_PST (25 Werte)
-            int black_r0c0, int black_r0c1, int black_r0c2, int black_r0c3, int black_r0c4,
-            int black_r1c0, int black_r1c1, int black_r1c2, int black_r1c3, int black_r1c4,
-            int black_r2c0, int black_r2c1, int black_r2c2, int black_r2c3, int black_r2c4,
-            int black_r3c0, int black_r3c1, int black_r3c2, int black_r3c3, int black_r3c4,
-            int black_r4c0, int black_r4c1, int black_r4c2, int black_r4c3, int black_r4c4,
+            int black_r0c1, int black_r0c2, int black_r0c3, int black_r0c4,
+            int black_r1c1, int black_r1c2, int black_r1c3, int black_r1c4,
+            int black_r2c2, int black_r2c3, int black_r2c4,
+            int black_r3c3, int black_r3c4,
+            int black_r4c4,
 
             // Allgemeine Gewichte
             int w_white_goal, int w_black_goal,
@@ -132,7 +132,6 @@ public class Genom {
             int w_checkmate_threat, int w_black_material, int w_black_pst, int w_black_pst_threat
     ) {
         // Zuweisung an die 75 einzelnen Variablen
-        this.KING_PST_R0C0 = king_r0c0;
         this.KING_PST_R0C1 = king_r0c1;
         this.KING_PST_R0C2 = king_r0c2;
         this.KING_PST_R0C3 = king_r0c3;
@@ -148,7 +147,6 @@ public class Genom {
         this.KING_PST_R3C4 = king_r3c4;
         this.KING_PST_R4C4 = king_r4c4;
 
-        this.WHITE_PST_R0C0 = white_r0c0;
         this.WHITE_PST_R0C1 = white_r0c1;
         this.WHITE_PST_R0C2 = white_r0c2;
         this.WHITE_PST_R0C3 = white_r0c3;
@@ -164,7 +162,6 @@ public class Genom {
         this.WHITE_PST_R3C4 = white_r3c4;
         this.WHITE_PST_R4C4 = white_r4c4;
 
-        this.BLACK_PST_R0C0 = black_r0c0;
         this.BLACK_PST_R0C1 = black_r0c1;
         this.BLACK_PST_R0C2 = black_r0c2;
         this.BLACK_PST_R0C3 = black_r0c3;
@@ -182,7 +179,7 @@ public class Genom {
 
         // Erstellung der 5x5 Arrays
         this.KING_PST = new Bewertungsarray(
-                KING_PST_R0C0, KING_PST_R0C1, KING_PST_R0C2, KING_PST_R0C3, KING_PST_R0C4,
+                999, KING_PST_R0C1, KING_PST_R0C2, KING_PST_R0C3, KING_PST_R0C4,
                 0, KING_PST_R1C1, KING_PST_R1C2, KING_PST_R1C3, KING_PST_R1C4,
                 0, 0, KING_PST_R2C2, KING_PST_R2C3, KING_PST_R2C4,
                 0, 0, 0, KING_PST_R3C3, KING_PST_R3C4,
@@ -190,14 +187,14 @@ public class Genom {
         );
 
         this.WHITE_PST = new Bewertungsarray(
-                WHITE_PST_R0C0, WHITE_PST_R0C1, WHITE_PST_R0C2, WHITE_PST_R0C3, WHITE_PST_R0C4,
+                -999, WHITE_PST_R0C1, WHITE_PST_R0C2, WHITE_PST_R0C3, WHITE_PST_R0C4,
                 0, WHITE_PST_R1C1, WHITE_PST_R1C2, WHITE_PST_R1C3, WHITE_PST_R1C4,
                 0, 0, WHITE_PST_R2C2, WHITE_PST_R2C3, WHITE_PST_R2C4,
                 0, 0, 0, WHITE_PST_R3C3, WHITE_PST_R3C4,
                 0, 0, 0, 0, WHITE_PST_R4C4);
 
         this.BLACK_PST = new Bewertungsarray(
-                BLACK_PST_R0C0, BLACK_PST_R0C1, BLACK_PST_R0C2, BLACK_PST_R0C3, BLACK_PST_R0C4,
+                -999, BLACK_PST_R0C1, BLACK_PST_R0C2, BLACK_PST_R0C3, BLACK_PST_R0C4,
                 0, BLACK_PST_R1C1, BLACK_PST_R1C2, BLACK_PST_R1C3, BLACK_PST_R1C4,
                 0, 0, BLACK_PST_R2C2, BLACK_PST_R2C3, BLACK_PST_R2C4,
                 0, 0, 0, BLACK_PST_R3C3, BLACK_PST_R3C4,

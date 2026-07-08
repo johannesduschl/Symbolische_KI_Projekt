@@ -1,31 +1,44 @@
 package app.KI.evoLearn;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class EvoMain {
+
+    List<EvoKi> kisWeiß = new ArrayList<>();
+    List<EvoKi> kisSchwarz = new ArrayList<>();
+
+    //es folgen 30 weiße und 30 schwarze KI Objekte
+    static EvoBF w1 = new EvoBF( new EvoKi(new Genom(4,3,3,3,2,1,1,1,-1,-1,-1,-1,-3,5,0,0,1,1,1,1,2,2,2,3,3,3,4,0,0,2,2,2,0,0,1,2,0,1,3,3,5,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1)));
+
+    static EvoBF b1 = new EvoBF(new EvoKi(new Genom(4,3,3,3,2,1,1,1,-1,-1,-1,-1,-3,5,0,0,1,1,1,1,2,2,2,3,3,3,4,0,0,2,2,2,0,0,1,2,0,1,3,3,5,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1)));
+
     public static void main(String[] args) {
-        int [][] board = {
-                {1,2,3,4,5},
-                {99,6,7,8,9},
-                {99,99,10,11,12},
-                {99,99,99,13,14},
-                {99,99,99,99,15}
-        };
-        int [][] result = EvoMain.flipIt(flipItHalf(board));
-        String ergebnis = Arrays.stream(result)
-                .map(Arrays::toString)
-                .collect(Collectors.joining("\n"));
+        EvoGame game = new EvoGame(b1,w1);
+        game.startGame();
+
+    }
+}
+
+
+/**
+ * alter Main Inhalt:
+    int [][] board = {
+            {1,2,3,4,5},
+            {99,6,7,8,9},
+            {99,99,10,11,12},
+            {99,99,99,13,14},
+            {99,99,99,99,15}
+    };
+    int [][] result = EvoMain.flipIt(flipItHalf(board));
+    String ergebnis = Arrays.stream(result)
+            .map(Arrays::toString)
+            .collect(Collectors.joining("\n"));
 
         System.out.println(ergebnis);
-    }
 
-
-    /**
-     * nimmt ein gevierteltes 9x9 array in form eines 5x5 wo die untere seite einer diagonale von [0][0] bis [4][4] leer ist und verfollständigt diese
-     * @param flipper
-     * @return
-     */
     public static int[][] flipItHalf(int[][] flipper){
         int[][] result = new int[5][5];
         for( int x =0; x < 5; x++){
@@ -37,11 +50,6 @@ public class EvoMain {
         return result;
     }
 
-    /**
-     * Flip the board from a 5x5 to a 9x9
-     * @param flipper original board 5x5
-     * @return 9x9 board mirrored on x and y axes
-     */
     public static int[][] flipIt(int[][] flipper){
         int [][] result = new int[9][9];
         for( int x =0; x < 9; x++){
@@ -62,5 +70,5 @@ public class EvoMain {
         }
         return result;
     }
-}
+    */
 
