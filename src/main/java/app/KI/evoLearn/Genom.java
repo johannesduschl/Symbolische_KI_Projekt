@@ -253,9 +253,9 @@ public class Genom {
         this.W_BLACK_PST = w_black_pst;
         this.W_BLACK_PST_THREAT = w_black_pst_threat;
 
-        this.BLACK_PST_9x9 = Bewertungsarray.flipIt(BLACK_PST.getGrid());
-        this.WHITE_PST_9x9 = Bewertungsarray.flipIt(WHITE_PST.getGrid());
-        this.KING_PST_9x9 = Bewertungsarray.flipIt(KING_PST.getGrid());
+        this.BLACK_PST_9x9 = Bewertungsarray.flipIt(Bewertungsarray.flipItHalf(BLACK_PST.getGrid()));
+        this.WHITE_PST_9x9 = Bewertungsarray.flipIt(Bewertungsarray.flipItHalf(WHITE_PST.getGrid()));
+        this.KING_PST_9x9 = Bewertungsarray.flipIt(Bewertungsarray.flipItHalf(KING_PST.getGrid()));
 
     }
 }

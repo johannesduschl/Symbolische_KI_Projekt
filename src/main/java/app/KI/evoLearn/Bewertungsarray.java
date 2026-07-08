@@ -38,6 +38,22 @@ public class Bewertungsarray {
                 { r4c0, r4c1, r4c2, r4c3, r4c4 }
         };
     }
+
+    /**
+     * nimmt ein gevierteltes 9x9 array in form eines 5x5 wo die untere seite einer diagonale von [0][0] bis [4][4] leer ist und verfollständigt diese
+     * @param flipper
+     * @return
+     */
+    public static int[][] flipItHalf(int[][] flipper){
+        int[][] result = new int[5][5];
+        for( int x =0; x < 5; x++){
+            for(int y = 0; y < 5; y++){
+                if(x>y) result[x][y] = flipper[y][x];
+                else result[x][y] = flipper[x][y];
+            }
+        }
+        return result;
+    }
     /**
      * Flip the board from a 5x5 to a 9x9
      * @param flipper original board 5x5
