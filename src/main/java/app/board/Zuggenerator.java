@@ -45,7 +45,10 @@ public class Zuggenerator {
 
                 char target = board[runningX][runningY];
                 if (target == 's' || target == 'w' || target == 'k') break;
-                if (target == 'x' && piece != 'k') break;
+
+                // Minimalinvasive Anpassung: Ecken über Koordinaten prüfen, nicht über das Zeichen 'x'
+                boolean isCorner = (runningX == 0 || runningX == size - 1) && (runningY == 0 || runningY == size - 1);
+                if (isCorner && piece != 'k') break;
 
                 if (runningX == throneX && runningY == throneY) {
                     runningX += dir[0];
