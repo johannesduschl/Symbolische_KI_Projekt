@@ -298,7 +298,7 @@ public class SpielGameserver {
             char piece = board.getBoard()[fromRowIdx][fromColIdx];
             if (piece == '-' || piece == 'x') piece = isWhiteToMove ? 's' : 'w'; // Fallback
 
-            return new Zug(fromCol, fromRow, toCol, toRow, piece);
+            return new Zug(fromCol, fromRow, toCol, toRow, piece,fromRowIdx,fromColIdx,toRowIdx,toColIdx);
         } catch (NumberFormatException e) {
             return null;
         }
