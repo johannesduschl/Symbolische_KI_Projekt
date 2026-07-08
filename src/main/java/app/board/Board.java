@@ -19,6 +19,10 @@ public class Board {
     private int nullMoveStack = 0;
     private long zobristHash = 0L;
     private char bewegt= ' ';
+    private boolean blackToMove = true; // Schwarz beginnt
+    //Felder für fix in online game
+    private int lastToX = -1;
+    private int lastToY = -1;
     private boolean blackMovesNext = true; // Schwarz beginnt
     private Zug lastMove;
 
@@ -157,7 +161,6 @@ public class Board {
 
         return isGameOver();
     }
-
     private void captureWithUndo(char[][] board, char piece, int toX, int toY, UndoInfo ui) {
 
         int size = board.length;
@@ -250,8 +253,8 @@ public class Board {
         // restore hash exakt wie vorheriger Zustand
         zobristHash = ZOBRIST.compute(this);
     }
-
-    public boolean isCheckMate(int x, int y){
+    @Deprecated
+    public boolean isCheckMateOld(int x, int y){
         //prüfen ob shcwarz überhaupt am Zug ist
         Zug lastMove = this.getLastMove();
         if(this.bewegt!='s'){ return false;}
@@ -279,6 +282,46 @@ public class Board {
                             lastMove.toX == x);
 
         }
+    }
+    public boolean isCheckMate(int x, int y) {
+        if (this.bewegt != 's') return false;
+
+        char[][] board = this.board;
+        boolean onThrone = (x == 4 && y == 4);
+        int size = board.length;
+
+        if (onThrone) {
+            return board[x - 1][y] == 's' && board[x + 1][y] == 's' &&
+                    board[x][y - 1] == 's' && board[x][y + 1] == 's';
+        }
+
+        // Prüfe ob der König in mindestens einer Richtung vom zuletzt
+        // gezogenen Stein (lastToX/lastToY) aktiv eingeschlossen wird
+        // Nur dann ist es ein echtes Schachmatt
+
+        // Vertikal eingeschlossen?
+        boolean matedVertically = (x - 1 >= 0 && x + 1 < size) &&
+                isBlocker(board, x - 1, y) &&
+                isBlocker(board, x + 1, y) &&
+                (isAdjacentToLastMove(x - 1, y) || isAdjacentToLastMove(x + 1, y));
+
+        // Horizontal eingeschlossen?
+        boolean matedHorizontally = (y - 1 >= 0 && y + 1 < size) &&
+                isBlocker(board, x, y - 1) &&
+                isBlocker(board, x, y + 1) &&
+                (isAdjacentToLastMove(x, y - 1) || isAdjacentToLastMove(x, y + 1));
+
+        return matedVertically || matedHorizontally;
+    }
+
+    // Ist ein Feld ein gültiger Blocker für den König?
+    private boolean isBlocker(char[][] board, int x, int y) {
+        return board[x][y] == 's' || BLOCKED[x][y]; // Ecke oder Thron
+    }
+
+    // Liegt dieses Feld direkt neben dem zuletzt gezogenen Stein?
+    private boolean isAdjacentToLastMove(int x, int y) {
+        return x == lastToX && y == lastToY;
     }
 
 
