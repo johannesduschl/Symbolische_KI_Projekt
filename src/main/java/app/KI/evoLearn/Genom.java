@@ -28,24 +28,24 @@ public class Genom {
     // ==========================================
     // KING_PST Felder
     private final int KING_PST_R0C0, KING_PST_R0C1, KING_PST_R0C2, KING_PST_R0C3, KING_PST_R0C4;
-    private final int KING_PST_R1C0, KING_PST_R1C1, KING_PST_R1C2, KING_PST_R1C3, KING_PST_R1C4;
-    private final int KING_PST_R2C0, KING_PST_R2C1, KING_PST_R2C2, KING_PST_R2C3, KING_PST_R2C4;
-    private final int KING_PST_R3C0, KING_PST_R3C1, KING_PST_R3C2, KING_PST_R3C3, KING_PST_R3C4;
-    private final int KING_PST_R4C0, KING_PST_R4C1, KING_PST_R4C2, KING_PST_R4C3, KING_PST_R4C4;
+    private final int KING_PST_R1C1, KING_PST_R1C2, KING_PST_R1C3, KING_PST_R1C4;
+    private final int KING_PST_R2C2, KING_PST_R2C3, KING_PST_R2C4;
+    private final int KING_PST_R3C3, KING_PST_R3C4;
+    private final int KING_PST_R4C4;
 
     // WHITE_PST Felder
     private final int WHITE_PST_R0C0, WHITE_PST_R0C1, WHITE_PST_R0C2, WHITE_PST_R0C3, WHITE_PST_R0C4;
-    private final int WHITE_PST_R1C0, WHITE_PST_R1C1, WHITE_PST_R1C2, WHITE_PST_R1C3, WHITE_PST_R1C4;
-    private final int WHITE_PST_R2C0, WHITE_PST_R2C1, WHITE_PST_R2C2, WHITE_PST_R2C3, WHITE_PST_R2C4;
-    private final int WHITE_PST_R3C0, WHITE_PST_R3C1, WHITE_PST_R3C2, WHITE_PST_R3C3, WHITE_PST_R3C4;
-    private final int WHITE_PST_R4C0, WHITE_PST_R4C1, WHITE_PST_R4C2, WHITE_PST_R4C3, WHITE_PST_R4C4;
+    private final int WHITE_PST_R1C1, WHITE_PST_R1C2, WHITE_PST_R1C3, WHITE_PST_R1C4;
+    private final int WHITE_PST_R2C2, WHITE_PST_R2C3, WHITE_PST_R2C4;
+    private final int WHITE_PST_R3C3, WHITE_PST_R3C4;
+    private final int WHITE_PST_R4C4;
 
     // BLACK_PST Felder
     private final int BLACK_PST_R0C0, BLACK_PST_R0C1, BLACK_PST_R0C2, BLACK_PST_R0C3, BLACK_PST_R0C4;
-    private final int BLACK_PST_R1C0, BLACK_PST_R1C1, BLACK_PST_R1C2, BLACK_PST_R1C3, BLACK_PST_R1C4;
-    private final int BLACK_PST_R2C0, BLACK_PST_R2C1, BLACK_PST_R2C2, BLACK_PST_R2C3, BLACK_PST_R2C4;
-    private final int BLACK_PST_R3C0, BLACK_PST_R3C1, BLACK_PST_R3C2, BLACK_PST_R3C3, BLACK_PST_R3C4;
-    private final int BLACK_PST_R4C0, BLACK_PST_R4C1, BLACK_PST_R4C2, BLACK_PST_R4C3, BLACK_PST_R4C4;
+    private final int BLACK_PST_R1C1, BLACK_PST_R1C2, BLACK_PST_R1C3, BLACK_PST_R1C4;
+    private final int BLACK_PST_R2C2, BLACK_PST_R2C3, BLACK_PST_R2C4;
+    private final int BLACK_PST_R3C3, BLACK_PST_R3C4;
+    private final int BLACK_PST_R4C4;
 
     // ==========================================
     // 3. Allgemeine Gewichte
@@ -137,25 +137,15 @@ public class Genom {
         this.KING_PST_R0C2 = king_r0c2;
         this.KING_PST_R0C3 = king_r0c3;
         this.KING_PST_R0C4 = king_r0c4;
-        this.KING_PST_R1C0 = king_r1c0;
         this.KING_PST_R1C1 = king_r1c1;
         this.KING_PST_R1C2 = king_r1c2;
         this.KING_PST_R1C3 = king_r1c3;
         this.KING_PST_R1C4 = king_r1c4;
-        this.KING_PST_R2C0 = king_r2c0;
-        this.KING_PST_R2C1 = king_r2c1;
         this.KING_PST_R2C2 = king_r2c2;
         this.KING_PST_R2C3 = king_r2c3;
         this.KING_PST_R2C4 = king_r2c4;
-        this.KING_PST_R3C0 = king_r3c0;
-        this.KING_PST_R3C1 = king_r3c1;
-        this.KING_PST_R3C2 = king_r3c2;
         this.KING_PST_R3C3 = king_r3c3;
         this.KING_PST_R3C4 = king_r3c4;
-        this.KING_PST_R4C0 = king_r4c0;
-        this.KING_PST_R4C1 = king_r4c1;
-        this.KING_PST_R4C2 = king_r4c2;
-        this.KING_PST_R4C3 = king_r4c3;
         this.KING_PST_R4C4 = king_r4c4;
 
         this.WHITE_PST_R0C0 = white_r0c0;
@@ -163,25 +153,15 @@ public class Genom {
         this.WHITE_PST_R0C2 = white_r0c2;
         this.WHITE_PST_R0C3 = white_r0c3;
         this.WHITE_PST_R0C4 = white_r0c4;
-        this.WHITE_PST_R1C0 = white_r1c0;
         this.WHITE_PST_R1C1 = white_r1c1;
         this.WHITE_PST_R1C2 = white_r1c2;
         this.WHITE_PST_R1C3 = white_r1c3;
         this.WHITE_PST_R1C4 = white_r1c4;
-        this.WHITE_PST_R2C0 = white_r2c0;
-        this.WHITE_PST_R2C1 = white_r2c1;
         this.WHITE_PST_R2C2 = white_r2c2;
         this.WHITE_PST_R2C3 = white_r2c3;
         this.WHITE_PST_R2C4 = white_r2c4;
-        this.WHITE_PST_R3C0 = white_r3c0;
-        this.WHITE_PST_R3C1 = white_r3c1;
-        this.WHITE_PST_R3C2 = white_r3c2;
         this.WHITE_PST_R3C3 = white_r3c3;
         this.WHITE_PST_R3C4 = white_r3c4;
-        this.WHITE_PST_R4C0 = white_r4c0;
-        this.WHITE_PST_R4C1 = white_r4c1;
-        this.WHITE_PST_R4C2 = white_r4c2;
-        this.WHITE_PST_R4C3 = white_r4c3;
         this.WHITE_PST_R4C4 = white_r4c4;
 
         this.BLACK_PST_R0C0 = black_r0c0;
@@ -189,49 +169,39 @@ public class Genom {
         this.BLACK_PST_R0C2 = black_r0c2;
         this.BLACK_PST_R0C3 = black_r0c3;
         this.BLACK_PST_R0C4 = black_r0c4;
-        this.BLACK_PST_R1C0 = black_r1c0;
         this.BLACK_PST_R1C1 = black_r1c1;
         this.BLACK_PST_R1C2 = black_r1c2;
         this.BLACK_PST_R1C3 = black_r1c3;
         this.BLACK_PST_R1C4 = black_r1c4;
-        this.BLACK_PST_R2C0 = black_r2c0;
-        this.BLACK_PST_R2C1 = black_r2c1;
         this.BLACK_PST_R2C2 = black_r2c2;
         this.BLACK_PST_R2C3 = black_r2c3;
         this.BLACK_PST_R2C4 = black_r2c4;
-        this.BLACK_PST_R3C0 = black_r3c0;
-        this.BLACK_PST_R3C1 = black_r3c1;
-        this.BLACK_PST_R3C2 = black_r3c2;
         this.BLACK_PST_R3C3 = black_r3c3;
         this.BLACK_PST_R3C4 = black_r3c4;
-        this.BLACK_PST_R4C0 = black_r4c0;
-        this.BLACK_PST_R4C1 = black_r4c1;
-        this.BLACK_PST_R4C2 = black_r4c2;
-        this.BLACK_PST_R4C3 = black_r4c3;
         this.BLACK_PST_R4C4 = black_r4c4;
 
         // Erstellung der 5x5 Arrays
         this.KING_PST = new Bewertungsarray(
                 KING_PST_R0C0, KING_PST_R0C1, KING_PST_R0C2, KING_PST_R0C3, KING_PST_R0C4,
-                KING_PST_R1C0, KING_PST_R1C1, KING_PST_R1C2, KING_PST_R1C3, KING_PST_R1C4,
-                KING_PST_R2C0, KING_PST_R2C1, KING_PST_R2C2, KING_PST_R2C3, KING_PST_R2C4,
-                KING_PST_R3C0, KING_PST_R3C1, KING_PST_R3C2, KING_PST_R3C3, KING_PST_R3C4,
-                KING_PST_R4C0, KING_PST_R4C1, KING_PST_R4C2, KING_PST_R4C3, KING_PST_R4C4
+                0, KING_PST_R1C1, KING_PST_R1C2, KING_PST_R1C3, KING_PST_R1C4,
+                0, 0, KING_PST_R2C2, KING_PST_R2C3, KING_PST_R2C4,
+                0, 0, 0, KING_PST_R3C3, KING_PST_R3C4,
+                0, 0, 0, 0, KING_PST_R4C4
         );
 
         this.WHITE_PST = new Bewertungsarray(
                 WHITE_PST_R0C0, WHITE_PST_R0C1, WHITE_PST_R0C2, WHITE_PST_R0C3, WHITE_PST_R0C4,
-                WHITE_PST_R1C0, WHITE_PST_R1C1, WHITE_PST_R1C2, WHITE_PST_R1C3, WHITE_PST_R1C4,
-                WHITE_PST_R2C0, WHITE_PST_R2C1, WHITE_PST_R2C2, WHITE_PST_R2C3, WHITE_PST_R2C4,
-                WHITE_PST_R3C0, WHITE_PST_R3C1, WHITE_PST_R3C2, WHITE_PST_R3C3, WHITE_PST_R3C4,
-                WHITE_PST_R4C0, WHITE_PST_R4C1, WHITE_PST_R4C2, WHITE_PST_R4C3, WHITE_PST_R4C4);
+                0, WHITE_PST_R1C1, WHITE_PST_R1C2, WHITE_PST_R1C3, WHITE_PST_R1C4,
+                0, 0, WHITE_PST_R2C2, WHITE_PST_R2C3, WHITE_PST_R2C4,
+                0, 0, 0, WHITE_PST_R3C3, WHITE_PST_R3C4,
+                0, 0, 0, 0, WHITE_PST_R4C4);
 
         this.BLACK_PST = new Bewertungsarray(
                 BLACK_PST_R0C0, BLACK_PST_R0C1, BLACK_PST_R0C2, BLACK_PST_R0C3, BLACK_PST_R0C4,
-                BLACK_PST_R1C0, BLACK_PST_R1C1, BLACK_PST_R1C2, BLACK_PST_R1C3, BLACK_PST_R1C4,
-                BLACK_PST_R2C0, BLACK_PST_R2C1, BLACK_PST_R2C2, BLACK_PST_R2C3, BLACK_PST_R2C4,
-                BLACK_PST_R3C0, BLACK_PST_R3C1, BLACK_PST_R3C2, BLACK_PST_R3C3, BLACK_PST_R3C4,
-                BLACK_PST_R4C0, BLACK_PST_R4C1, BLACK_PST_R4C2, BLACK_PST_R4C3, BLACK_PST_R4C4);
+                0, BLACK_PST_R1C1, BLACK_PST_R1C2, BLACK_PST_R1C3, BLACK_PST_R1C4,
+                0, 0, BLACK_PST_R2C2, BLACK_PST_R2C3, BLACK_PST_R2C4,
+                0, 0, 0, BLACK_PST_R3C3, BLACK_PST_R3C4,
+                0, 0, 0, 0, BLACK_PST_R4C4);
 
         // Gewichte zuweisen
         this.W_WHITE_GOAL = w_white_goal;
