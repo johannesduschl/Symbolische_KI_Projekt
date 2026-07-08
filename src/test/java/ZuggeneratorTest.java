@@ -223,6 +223,43 @@ public class ZuggeneratorTest {
             assertEquals('-', board[x][y]);
         }
     }
+    @Test
+    void normalPieceNextToCornerCannotEnterCorner() {
+        char[][] board = {
+                {'x','w','-','-','-','-','-','-','x'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'x','-','-','-','-','-','-','-','x'}
+        };
+
+        List<Zug> moves = gen.getAllLegalMoves(board, true);
+
+        assertFalse(containsMove(moves, 'b',9,'a',9));
+    }
+    @Test
+    void kingNextToCornerCanEnterCorner() {
+        char[][] board = {
+                {'x','k','-','-','-','-','-','-','x'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'-','-','-','-','-','-','-','-','-'},
+                {'x','-','-','-','-','-','-','-','x'}
+        };
+
+        List<Zug> moves = gen.getAllLegalMoves(board, true);
+
+        assertTrue(containsMove(moves, 'b',9,'a',9));
+    }
+
 
     private boolean containsMove(List<Zug> moves, char fc, int fr, char tc, int tr){
         return moves.stream().anyMatch(z ->
