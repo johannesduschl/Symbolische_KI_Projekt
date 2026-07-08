@@ -114,7 +114,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private static final int W_KING_PROGRESS = 1;
     private static final int W_CORNER = 1;
     private static final int W_KING_MOBILITY = 1;
-    private static final int W_WHITE_MATERIAL = 4;
+    private static final int W_WHITE_MATERIAL = 1;
     private static final int W_WHITE_PST = 1;
     private static final int W_WHITE_PST_THREAT = 1;
     private static final int W_KING_EDGE_ACCESS = 1;
@@ -128,7 +128,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     private static final int W_EDGES_ACCESS_BLOCKED = 1;
     private static final int W_CHECKMATE_SCORE = 1;
     private static final int W_CHECKMATE_THREAT = 1;
-    private static final int W_BLACK_MATERIAL = 4;
+    private static final int W_BLACK_MATERIAL = 1;
     private static final int W_BLACK_PST = 1;
     private static final int W_BLACK_PST_THREAT = 1;
 
@@ -228,7 +228,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
         return blackPST(board) //also includes threat pst
                 + W_BLACK_MATERIAL * blackMaterial()
-                //+ W_EDGES_SECURE_SCORE * edgesSecureScore(board) //simplify those functions to be more efficient, fix edge case where king can capture white piece in front of x square
+                + W_EDGES_SECURE_SCORE * edgesSecureScore(board) //simplify those functions to be more efficient, fix edge case where king can capture white piece in front of x square
                 + W_EDGES_ACCESS_BLOCKED * edgesAccessBlocked(board)  //over-engineering might be counter-intuitive!
                 + W_CHECKMATE_THREAT * threatensCheckmate(boardObject)
                 + W_CHECKMATE_SCORE * checkmateScore(boardObject);
@@ -414,7 +414,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
         int x = kingSquare[0];
         int y = kingSquare[1];
 
-        int winning = 1000;
+        int winning = 500;
         int threat = 10;
 
         int x_min = 0;
@@ -861,7 +861,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
             score = 5;
         }else{
             //checkmate for black on the next move -> punishment for white
-            score = 1000;
+            score = 500;
         }
         int x = kingSquare[0];
         int y = kingSquare[1];
