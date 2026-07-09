@@ -4,11 +4,11 @@ public class Main {
 
     public static void main(String[] args) {
 
-        //SpielDummy spielDummy = new SpielDummy();
-        //spielDummy.startGame();
+        SpielDummy spielDummy = new SpielDummy();
+        spielDummy.startGame();
 
-        SpielGameserver spielGameserver = new SpielGameserver();
-        spielGameserver.startGame();
+        //SpielGameserver spielGameserver = new SpielGameserver();
+        //spielGameserver.startGame();
 
     }
 }
