@@ -112,12 +112,10 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     // WHITE FEATURE WEIGHTS
     // =========================
     private static final int W_KING_PROGRESS = 1;
-    private static final int W_CORNER = 1;
     private static final int W_KING_MOBILITY = 1;
     private static final int W_WHITE_MATERIAL = 1;
     private static final int W_WHITE_PST = 1;
     private static final int W_WHITE_PST_THREAT = 1;
-    private static final int W_KING_EDGE_ACCESS = 1;
     private static final int W_KING_EDGE_SECURE = 1;
     private static final int W_WINNING_THREAT = 1;
 
@@ -433,6 +431,8 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
                     if(!isSquareDirectlyThreatenedBy(board, 's', x, y - 1, 1, 0)){
                         return winning;
                     }
+                }else{
+                    return winning;
                 }
             }
             //left
@@ -520,6 +520,8 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
                     if(!isSquareDirectlyThreatenedBy(board, 's', x, y - 1, -1, 0)){
                         return winning;
                     }
+                }else{
+                    return winning;
                 }
             }
             //left
@@ -606,6 +608,8 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
                     if(!isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, 1)){
                         return winning;
                     }
+                }else{
+                    return winning;
                 }
             }
             //up
@@ -692,6 +696,8 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
                     if(!isSquareDirectlyThreatenedBy(board, 's', x - 1, y, 0, -1)){
                         return winning;
                     }
+                }else{
+                    return winning;
                 }
             }            //up
             if(!isSquareRestricted(board, x, y, -1, 0)){

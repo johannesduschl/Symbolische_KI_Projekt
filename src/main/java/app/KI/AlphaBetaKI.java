@@ -21,9 +21,9 @@ public class AlphaBetaKI {
 
     // Schalter für die Benchmark-Konfiguration
     public boolean useAlphaBeta = true;
-    public boolean useTranspositionTable = false;
+    public boolean useTranspositionTable = true;
     public boolean useMoveOrdering = true;
-    public boolean useNullMovePruning = false;
+    public boolean useNullMovePruning = true;
 
     private final Zuggenerator zuggenerator = new Zuggenerator();
     private Zugsortierer zugsortierer;
