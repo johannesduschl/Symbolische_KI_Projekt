@@ -216,7 +216,12 @@ public class Board {
         char[][] board = this.board;
 
         // 1. Zug zurücksetzen
-        board[ui.toX][ui.toY] = '-';
+        boolean isCorner = (ui.toX == 0 || ui.toX == board.length - 1) && (ui.toY == 0 || ui.toY == board.length - 1);
+        if (isCorner){
+            board[ui.toX][ui.toY] = 'x';
+        } else {
+            board[ui.toX][ui.toY] = '-';
+        }
         board[ui.fromX][ui.fromY] = ui.move.getPiece();
 
         // 2. geschlagene Figuren wiederherstellen
