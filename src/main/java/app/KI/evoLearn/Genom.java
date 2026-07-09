@@ -1,7 +1,7 @@
 package app.KI.evoLearn;
 
 import lombok.Getter;
-
+@Getter
 public class Genom {
 
     // ==========================================

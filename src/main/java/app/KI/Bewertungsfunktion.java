@@ -9,4 +9,9 @@ public interface Bewertungsfunktion {
     int pieceCount(Board board);
 
     boolean kingHasDirectEdgeSight(Board board);
+
+    void debugEvaluation(Board board);
+
+    //fürs Bestimmen der Fitness unserer KIs beim Evolutionären Lernen
+    int getScore();
 }

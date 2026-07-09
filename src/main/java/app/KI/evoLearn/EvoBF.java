@@ -11,45 +11,47 @@ import java.util.Comparator;
 
 public class EvoBF implements Bewertungsfunktion {
     //Klasse um Bewertungsfunktionen mit Parametern zu verwalten
+    //für Fitness der EvoKi´s
+    public int finalGameScore = 0;
     @Getter
-    private EvoKi evoKi;
+    private Genom genom;
 
-    public EvoBF(EvoKi evoKi){
-        this.evoKi = evoKi;
+    public EvoBF(Genom genom){
+        this.genom = genom;
 
-        KING_PST =this.evoKi.genom.getKING_PST_9x9();
-        WHITE_PST = this.evoKi.genom.getWHITE_PST_9x9();
-        BLACK_PST = this.evoKi.genom.getBLACK_PST_9x9();
+        KING_PST =this.genom.getKING_PST_9x9();
+        WHITE_PST = this.genom.getWHITE_PST_9x9();
+        BLACK_PST = this.genom.getBLACK_PST_9x9();
 
         // =========================
         // HIGH-LEVEL WEIGHTS
         // =========================
-        int W_WHITE_GOAL = this.evoKi.genom.getW_WHITE_GOAL();
-        int W_BLACK_GOAL = this.evoKi.genom.getW_BLACK_GOAL();
+        int W_WHITE_GOAL = this.genom.getW_WHITE_GOAL();
+        int W_BLACK_GOAL = this.genom.getW_BLACK_GOAL();
 
         // =========================
         // WHITE FEATURE WEIGHTS
         // =========================
-        int W_KING_PROGRESS = this.evoKi.genom.getW_KING_PROGRESS();
-        int W_CORNER = this.evoKi.genom.getW_CORNER();
-        int W_KING_MOBILITY = this.evoKi.genom.getW_KING_MOBILITY();
-        int W_WHITE_MATERIAL = this.evoKi.genom.getW_WHITE_MATERIAL();
-        int W_WHITE_PST = this.evoKi.genom.getW_WHITE_PST();
-        int W_WHITE_PST_THREAT = this.evoKi.genom.getW_WHITE_PST_THREAT();
-        int W_KING_EDGE_ACCESS = this.evoKi.genom.getW_KING_EDGE_ACCESS();
-        int W_KING_EDGE_SECURE = this.evoKi.genom.getW_KING_EDGE_SECURE();
-        int W_WINNING_THREAT = this.evoKi.genom.getW_CHECKMATE_THREAT();
+        int W_KING_PROGRESS = this.genom.getW_KING_PROGRESS();
+        int W_CORNER = this.genom.getW_CORNER();
+        int W_KING_MOBILITY = this.genom.getW_KING_MOBILITY();
+        int W_WHITE_MATERIAL = this.genom.getW_WHITE_MATERIAL();
+        int W_WHITE_PST = this.genom.getW_WHITE_PST();
+        int W_WHITE_PST_THREAT = this.genom.getW_WHITE_PST_THREAT();
+        int W_KING_EDGE_ACCESS = this.genom.getW_KING_EDGE_ACCESS();
+        int W_KING_EDGE_SECURE = this.genom.getW_KING_EDGE_SECURE();
+        int W_WINNING_THREAT = this.genom.getW_CHECKMATE_THREAT();
 
         // =========================
         // BLACK FEATURE WEIGHTS
         // =========================
-        int W_EDGES_SECURE_SCORE = this.evoKi.genom.getW_EDGES_SECURE_SCORE();
-        int W_EDGES_ACCESS_BLOCKED = this.evoKi.genom.getW_EDGES_ACCESS_BLOCKED();
-        int W_CHECKMATE_SCORE = this.evoKi.genom.getW_CHECKMATE_SCORE();
-        int W_CHECKMATE_THREAT = this.evoKi.genom.getW_CHECKMATE_THREAT();
-        int W_BLACK_MATERIAL = this.evoKi.genom.getW_BLACK_MATERIAL();
-        int W_BLACK_PST = this.evoKi.genom.getW_BLACK_PST();
-        int W_BLACK_PST_THREAT = this.evoKi.genom.getW_BLACK_PST_THREAT();
+        int W_EDGES_SECURE_SCORE = this.genom.getW_EDGES_SECURE_SCORE();
+        int W_EDGES_ACCESS_BLOCKED = this.genom.getW_EDGES_ACCESS_BLOCKED();
+        int W_CHECKMATE_SCORE = this.genom.getW_CHECKMATE_SCORE();
+        int W_CHECKMATE_THREAT = this.genom.getW_CHECKMATE_THREAT();
+        int W_BLACK_MATERIAL = this.genom.getW_BLACK_MATERIAL();
+        int W_BLACK_PST = this.genom.getW_BLACK_PST();
+        int W_BLACK_PST_THREAT = this.genom.getW_BLACK_PST_THREAT();
 
     }
 
@@ -1744,5 +1746,12 @@ public class EvoBF implements Bewertungsfunktion {
 
             System.out.printf("FINAL SCORE (W - B)  : %6d%n", finalScore);
             System.out.println("======================================\n");
+
+            finalGameScore = finalScore;
         }
+
+    @Override
+    public int getScore() {
+        return finalGameScore;
+    }
     }
