@@ -3,6 +3,7 @@ package app.KI.evoLearn;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 
 public class EvoMain {
@@ -16,11 +17,25 @@ public class EvoMain {
     static EvoBF b1 = new EvoBF(new EvoKi(new Genom(4,3,3,3,2,1,1,1,-1,-1,-1,-1,-3,5,0,0,1,1,1,1,2,2,2,3,3,3,4,0,0,2,2,2,0,0,1,2,0,1,3,3,5,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1)));
 
     public static void main(String[] args) {
-        EvoGame game = new EvoGame(b1,w1);
-        game.startGame();
+        Scanner scanner = new Scanner(System.in);
+        String input = "";
+        while(true) {
+            System.out.println("neue Runde \n press 1 to start: \n 2 to get AI Info \n 3 to stop");
+            input = scanner.nextLine();
+            if (input.equals("3")) break;
+            else if (input.equals("2")) {
+                System.out.println(b1.getEvoKi().getWinrate());
+                System.out.println(w1.getEvoKi().getWinrate());
+            }
+            else if (input.equals("1")) {
+                EvoGame game = new EvoGame(b1, w1);
+                game.startGame();
 
-        System.out.println(b1.getEvoKi().getWinrate());
-        System.out.println(w1.getEvoKi().getWinrate());
+                System.out.println(b1.getEvoKi().getWinrate());
+                System.out.println(w1.getEvoKi().getWinrate());
+            }
+            else System.out.println("ungültiger Input Try again:");
+        }
 
     }
 }
