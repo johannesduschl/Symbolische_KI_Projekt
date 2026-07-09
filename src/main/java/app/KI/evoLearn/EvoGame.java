@@ -84,7 +84,7 @@ public class EvoGame {
             }
 
             this.board.printBoard();
-            /**
+
             System.out.println("Reached depth: weiß:" + kiWeiß.lastCompletedDepth +" schwarz"+ kiSchwarz.lastCompletedDepth+"\n");
             System.out.println("Schwarz hat gerade gezogen? " + !board.blackMovesNext());
             if(board.blackMovesNext()) {
@@ -95,7 +95,7 @@ public class EvoGame {
                 bfWeiß.evaluate(this.board);
                 bfWeiß.debugEvaluation(this.board);
             }
-             */
+
             isWhiteToMove = !board.blackMovesNext();
         }
     }
