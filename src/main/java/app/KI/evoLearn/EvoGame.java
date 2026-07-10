@@ -9,41 +9,37 @@ import lombok.Getter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EvoGame {
-    public final Board board = new Board();
+public class EvoGame extends Thread{
+    public Board board = new Board();
     Zuggenerator zuggenerator = new Zuggenerator();
 
-    //später relevant um zu kontrollieren ob die KI weiß oder schwarz optimiert
-    Boolean isWhite;
-    public final EvoKi MainKi;
-    public List<EvoKi> KIList = new ArrayList<>();
 
-    public List<AlphaBetaKI> KIListAlphaBeta = new ArrayList<>();
+    public final EvoKi Ki1;
+    public final EvoKi Ki2;
+
+    public AlphaBetaKI Ki;
     @Getter
     public int fitness = 0;
 
-    public EvoGame(EvoKi KIMain, List<EvoKi> KIList, Boolean isWhite) {
-        this.isWhite = isWhite;
-        if (KIMain == null || KIList == null) {
+    public EvoGame(EvoKi KI1, EvoKi KI2) {
+        if (KI1 == null || KI2 == null) {
             throw new IllegalArgumentException("Evaluation functions must not be null.");
         }
-        this.MainKi = KIMain;
+        this.Ki1 = KI1;
+        this.Ki2 = KI2;
 
-        if(isWhite) {
-            for(EvoKi ki : KIList) {
-                KIListAlphaBeta.add(new AlphaBetaKI(new EvoBF(createGenom(KIMain, ki))));
-            }
-        } else {
-            for(EvoKi ki : KIList) {
-                KIListAlphaBeta.add(new AlphaBetaKI(new EvoBF(createGenom(ki, KIMain))));
-            }
-        }
 
+        this.Ki = new AlphaBetaKI(new EvoBF(createGenom(Ki1, Ki2)));
+
+
+    }
+    @Override
+    public void run() {
+        this.startGame();
     }
 
     public void startGame() {
 
-        for (AlphaBetaKI ki : KIListAlphaBeta) {
             boolean isWhiteToMove = false;
             boolean isGameOver = false;
             int x = 0;
@@ -59,7 +55,7 @@ public class EvoGame {
                 }
                 Zug chosenMove;
 
-                chosenMove = ki.findBestMove(this.board, isWhiteToMove);
+                chosenMove = this.Ki.findBestMove(this.board, isWhiteToMove);
 
                 System.out.println("Move for " + (isWhiteToMove ? "White" : "Black") + ": " + chosenMove);
                 isGameOver = board.move(chosenMove);
@@ -77,33 +73,33 @@ public class EvoGame {
                     String winner = isWhiteToMove ? "White" : "Black";
 
                     System.out.printf("Game is over. %s has won.", winner);
-                    System.out.println("\nMoves played:" + ki.moveCounter );
+                    System.out.println("\nMoves played:" + this.Ki.moveCounter );
                     System.out.println("Last move: " + board.getLastMove().toString());
-                    System.out.println("Reached depth: " + ki.lastCompletedDepth);
+                    System.out.println("Reached depth: " + this.Ki.lastCompletedDepth);
 
                     System.out.println("Schwarz hat gerade gezogen? " + !board.blackMovesNext());
-                    ki.bf.evaluate(this.board);
-                    ki.bf.debugEvaluation(this.board);
-                    finalScore += ki.bf.getScore();
+                    this.Ki.bf.evaluate(this.board);
+                    this.Ki.bf.debugEvaluation(this.board);
+                    finalScore += this.Ki.bf.getScore();
 
-                    if (winner.equals("White") && isWhite) {
-                        MainKi.winrate += 1;
-                        fitness += finalScore;
+                    if (winner.equals("White")) {
+                        Ki1.winrate.addAndGet(1);
                     } else {
-                        fitness += finalScore;
+                        Ki2.winrate.addAndGet(1);
                     }
+                    Ki1.fitness.addAndGet(finalScore);
+                    Ki2.fitness.addAndGet(-finalScore);
                     break;
                 }
 
                 this.board.printBoard();
-
+                /**
                 System.out.println("Reached depth: " + ki.lastCompletedDepth + "\n");
                 System.out.println("Schwarz hat gerade gezogen? " + !board.blackMovesNext());
                     ki.bf.evaluate(this.board);
                     ki.bf.debugEvaluation(this.board);
-
+                **/
                 isWhiteToMove = !board.blackMovesNext();
-            }
         }
     }
 

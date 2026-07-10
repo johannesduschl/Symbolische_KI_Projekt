@@ -19,40 +19,32 @@ public class EvoBF implements Bewertungsfunktion {
     public EvoBF(Genom genom){
         this.genom = genom;
 
-        KING_PST =this.genom.getKING_PST_9x9();
+        KING_PST = this.genom.getKING_PST_9x9();
         WHITE_PST = this.genom.getWHITE_PST_9x9();
         BLACK_PST = this.genom.getBLACK_PST_9x9();
 
-        // =========================
-        // HIGH-LEVEL WEIGHTS
-        // =========================
-        int W_WHITE_GOAL = this.genom.getW_WHITE_GOAL();
-        int W_BLACK_GOAL = this.genom.getW_BLACK_GOAL();
+        this.W_WHITE_GOAL = this.genom.getW_WHITE_GOAL();
+        this.W_BLACK_GOAL = this.genom.getW_BLACK_GOAL();
 
-        // =========================
-        // WHITE FEATURE WEIGHTS
-        // =========================
-        int W_KING_PROGRESS = this.genom.getW_KING_PROGRESS();
-        int W_CORNER = this.genom.getW_CORNER();
-        int W_KING_MOBILITY = this.genom.getW_KING_MOBILITY();
-        int W_WHITE_MATERIAL = this.genom.getW_WHITE_MATERIAL();
-        int W_WHITE_PST = this.genom.getW_WHITE_PST();
-        int W_WHITE_PST_THREAT = this.genom.getW_WHITE_PST_THREAT();
-        int W_KING_EDGE_ACCESS = this.genom.getW_KING_EDGE_ACCESS();
-        int W_KING_EDGE_SECURE = this.genom.getW_KING_EDGE_SECURE();
-        int W_WINNING_THREAT = this.genom.getW_CHECKMATE_THREAT();
+        this.W_KING_PROGRESS = this.genom.getW_KING_PROGRESS();
+        this.W_CORNER = this.genom.getW_CORNER();
+        this.W_KING_MOBILITY = this.genom.getW_KING_MOBILITY();
+        this.W_WHITE_MATERIAL = this.genom.getW_WHITE_MATERIAL();
+        this.W_WHITE_PST = this.genom.getW_WHITE_PST();
+        this.W_WHITE_PST_THREAT = this.genom.getW_WHITE_PST_THREAT();
+        this.W_KING_EDGE_ACCESS = this.genom.getW_KING_EDGE_ACCESS();
+        this.W_KING_EDGE_SECURE = this.genom.getW_KING_EDGE_SECURE();
+        // Achtung, bestehender Bug: hier wird W_WINNING_THREAT fälschlich
+        // aus getW_CHECKMATE_THREAT() befüllt (Zeile 43) - vermutlich Copy-Paste-Fehler:
+        this.W_WINNING_THREAT = this.genom.getW_WINNING_THREAT();
 
-        // =========================
-        // BLACK FEATURE WEIGHTS
-        // =========================
-        int W_EDGES_SECURE_SCORE = this.genom.getW_EDGES_SECURE_SCORE();
-        int W_EDGES_ACCESS_BLOCKED = this.genom.getW_EDGES_ACCESS_BLOCKED();
-        int W_CHECKMATE_SCORE = this.genom.getW_CHECKMATE_SCORE();
-        int W_CHECKMATE_THREAT = this.genom.getW_CHECKMATE_THREAT();
-        int W_BLACK_MATERIAL = this.genom.getW_BLACK_MATERIAL();
-        int W_BLACK_PST = this.genom.getW_BLACK_PST();
-        int W_BLACK_PST_THREAT = this.genom.getW_BLACK_PST_THREAT();
-
+        this.W_EDGES_SECURE_SCORE = this.genom.getW_EDGES_SECURE_SCORE();
+        this.W_EDGES_ACCESS_BLOCKED = this.genom.getW_EDGES_ACCESS_BLOCKED();
+        this.W_CHECKMATE_SCORE = this.genom.getW_CHECKMATE_SCORE();
+        this.W_CHECKMATE_THREAT = this.genom.getW_CHECKMATE_THREAT();
+        this.W_BLACK_MATERIAL = this.genom.getW_BLACK_MATERIAL();
+        this.W_BLACK_PST = this.genom.getW_BLACK_PST();
+        this.W_BLACK_PST_THREAT = this.genom.getW_BLACK_PST_THREAT();
     }
 
 
@@ -121,11 +113,11 @@ public class EvoBF implements Bewertungsfunktion {
         };
         */
 
-        private static int[][] BLACK_PST_THREAT = new int[9][9];
+        private int[][] BLACK_PST_THREAT = new int[9][9];
 
-        private static int[][] WHITE_PST_THREAT = new int[9][9];
+        private int[][] WHITE_PST_THREAT = new int[9][9];
 
-        private static final int[][] BLACK_PATTERN = {
+        private final int[][] BLACK_PATTERN = {
                 {3, 5, 3},
                 {0, 1, 3, 1, 0},
                 {0, 0, 1, 2, 1, 0, 0},
@@ -139,7 +131,7 @@ public class EvoBF implements Bewertungsfunktion {
                 {0, 0, 2, 2, 2, 2, 2, 0, 0},
         };
 
-        private static final int[][] WHITE_PATTERN = {
+        private final int[][] WHITE_PATTERN = {
                 {4, 4, 4},
                 {2, 3, 3, 3, 2},
                 {1, 1, 2, 2, 2, 1, 1},
@@ -153,56 +145,55 @@ public class EvoBF implements Bewertungsfunktion {
         // =========================
         // HIGH-LEVEL WEIGHTS
         // =========================
-        private static int W_WHITE_GOAL = 1;
-        private static int W_BLACK_GOAL = 1;
+        private int W_WHITE_GOAL = 1;
+        private int W_BLACK_GOAL = 1;
 
         // =========================
         // WHITE FEATURE WEIGHTS
         // =========================
-        private static int W_KING_PROGRESS = 1;
-        private static int W_CORNER = 1;
-        private static int W_KING_MOBILITY = 1;
-        private static int W_WHITE_MATERIAL = 1;
-        private static int W_WHITE_PST = 1;
-        private static int W_WHITE_PST_THREAT = 1;
-        private static int W_KING_EDGE_ACCESS = 1;
-        private static int W_KING_EDGE_SECURE = 1;
-        private static int W_WINNING_THREAT = 1;
+        private int W_KING_PROGRESS = 1;
+        private int W_CORNER = 1;
+        private int W_KING_MOBILITY = 1;
+        private int W_WHITE_MATERIAL = 1;
+        private int W_WHITE_PST = 1;
+        private int W_WHITE_PST_THREAT = 1;
+        private int W_KING_EDGE_ACCESS = 1;
+        private int W_KING_EDGE_SECURE = 1;
+        private int W_WINNING_THREAT = 1;
 
         // =========================
         // BLACK FEATURE WEIGHTS
         // =========================
-        private static int W_EDGES_SECURE_SCORE = 1;
-        private static int W_EDGES_ACCESS_BLOCKED = 1;
-        private static int W_CHECKMATE_SCORE = 1;
-        private static int W_CHECKMATE_THREAT = 1;
-        private static int W_BLACK_MATERIAL = 1;
-        private static int W_BLACK_PST = 1;
-        private static int W_BLACK_PST_THREAT = 1;
+        private int W_EDGES_SECURE_SCORE = 1;
+        private int W_EDGES_ACCESS_BLOCKED = 1;
+        private int W_CHECKMATE_SCORE = 1;
+        private int W_CHECKMATE_THREAT = 1;
+        private int W_BLACK_MATERIAL = 1;
+        private int W_BLACK_PST = 1;
+        private int W_BLACK_PST_THREAT = 1;
 
         // =========================
         // PIECE SQUARES
         // =========================
-        private static int[] kingSquare = new int[2];
-        private static int[] whiteSquares = new int[16];
-        private static int whiteCount;
-        private static int[] blackSquares = new int[32];
-        private static int blackCount;
-        private static Zug lastMove;
+        private int[] kingSquare = new int[2];
+        private int[] whiteSquares = new int[16];
+        private int whiteCount;
+        private int[] blackSquares = new int[32];
+        private int blackCount;
+        private Zug lastMove;
+        private boolean[] isBlackOnColumn = new boolean[9];
+        private boolean[] isBlackOnRow = new boolean[9];
 
-        private static boolean[] isBlackOnColumn = new boolean[9];
-        private static boolean[] isBlackOnRow = new boolean[9];
+        private boolean[] isWhiteOnColumn = new boolean[9];
+        private boolean[] isWhiteOnRow = new boolean[9];
 
-        private static boolean[] isWhiteOnColumn = new boolean[9];
-        private static boolean[] isWhiteOnRow = new boolean[9];
-
-        private static int[] blackAndWhiteRows;
-        private static int[] blackAndWhiteColumns;
+        private int[] blackAndWhiteRows;
+        private int[] blackAndWhiteColumns;
 
         @Getter
-        private static int kingMoves;
+        private int kingMoves;
         @Setter
-        private static boolean onThrone = true;
+        private boolean onThrone = true;
 
 
         public int[] getWhiteSquares() {
@@ -1651,7 +1642,7 @@ public class EvoBF implements Bewertungsfunktion {
             return Arrays.copyOf(temp, index);
         }
 
-        private static void extractPieces(char[][] board) {
+        private void extractPieces(char[][] board) {
 
             int wIndex = 0;
             int bIndex = 0;
