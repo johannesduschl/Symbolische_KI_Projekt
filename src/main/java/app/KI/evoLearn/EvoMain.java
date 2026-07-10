@@ -1,30 +1,36 @@
 package app.KI.evoLearn;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
-import java.util.stream.Collectors;
+import java.util.*;
 
 public class EvoMain {
+    static EvoLog log = new EvoLog("logs/tablut_evolution.log");
 
     static List<EvoKi> kisWeiß = new ArrayList<>();
     static List<EvoKi> kisSchwarz = new ArrayList<>();
 
-    //es folgen 30 weiße und 30 schwarze KI Objekte
+    //enthält die 5 besten KIs der letzten Generation White, die die weiß spielen und Black, die die schwarz spielen
+    static List<EvoKi> bestFiveOfAllTimeWhite = new ArrayList<>();
+    static List<EvoKi> bestFiveOfAllTimeBlack = new ArrayList<>();
+
+    static int generationsCounter = 0;
+
+    //es folgen 15 weiße und 15 schwarze KI-Objekte
     /** Weiße */
-    static EvoKi w1 = new EvoKi(new Genom(4,3,3,3,2,1,1,1,-1,-1,-1,-1,-3,5,0,0,1,1,1,1,2,2,2,3,3,3,4,0,0,2,2,2,0,0,1,2,0,1,3,3,5,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1));
-    static EvoKi w2 = new EvoKi(new Genom(7,5,5,5,4,3,3,3,-2,-2,-2,-2,-4,7,0,0,1,1,1,1,2,2,2,3,3,3,4,0,0,2,2,2,0,0,1,2,0,1,3,3,5,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1));
+    static EvoKi w1 = new EvoKi(new Genom(4,3,3,3,2,1,1,1,-1,-1,-1,-1,-3,5,0,0,1,1,1,1,2,2,2,3,3,3,4,0,2,2,2,0,0,1,2,0,1,3,3,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1));
+    static EvoKi w2 = new EvoKi(new Genom(7,5,5,5,4,3,3,1,-2,-2,-2,-2,-4,7,0,0,1,1,1,1,2,2,2,3,3,3,4,0,2,2,2,0,0,1,2,0,1,3,3,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1));
+    static EvoKi w3 = new EvoKi(new Genom(9,7,7,7,6,5,5,5,-3,-3,-3,-3,-5,6,0,0,1,1,1,1,2,2,2,3,3,3,4,0,2,2,2,0,0,1,2,0,1,3,3,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1));
+    static EvoKi w4 = new EvoKi(new Genom(11,9,9,9,8,7,3,3,-2,-2,-2,-2,-4,7,0,0,1,1,1,1,2,2,2,3,3,3,4,0,2,2,2,0,0,1,2,0,1,3,3,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1));
+    static EvoKi w5 = new EvoKi(new Genom(13,11,11,11,10,9,1,1,-1,-1,-1,-1,-3,5,0,0,1,1,1,1,2,2,2,3,3,3,4,0,2,2,2,0,0,1,2,0,1,3,3,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1));
 
     /** Schwarze */
-    static EvoKi b1 = new EvoKi(new Genom(4,3,3,3,2,1,1,1,-1,-1,-1,-1,-3,5,0,0,1,1,1,1,2,2,2,3,3,3,4,0,0,2,2,2,0,0,1,2,0,1,3,3,5,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1));
+    static EvoKi b1 = new EvoKi(new Genom(4,3,3,3,2,1,1,1,-1,-1,-1,-1,-3,5,0,0,1,1,1,1,2,2,2,3,3,3,4,0,2,2,2,0,0,1,2,0,1,3,3,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1));
 
     public static void main(String[] args) {
         kisSchwarz.add(b1);
         kisWeiß.add(w1);
         kisWeiß.add(w2);
         Scanner scanner = new Scanner(System.in);
-        String input = "";
+        String input;
         while(true) {
             System.out.println("neue Runde \n press 1 to start: \n 2 to get AI Info \n 3 to stop \n 4 to start Evolutions-Simulation");
             input = scanner.nextLine();
@@ -44,28 +50,91 @@ public class EvoMain {
             } else if (input.equals("4")) {
                 boolean abbruch = false;
                 while(!abbruch) {
-                    int generationsCounter = 0;
-                    //aktuelle generation loggen
-                    EvoLog log = new EvoLog("logs/tablut_evolution.log");
+                    //aktuelle Generation loggen
 
                     log.writeText("=== Generation "+generationsCounter+" gestartet ===");
                     EvoContest contest = new EvoContest(kisWeiß, kisSchwarz);
                     log.log(kisWeiß, kisSchwarz);
                     log.writeText("Generation "+generationsCounter+" abgeschlossen, starte Selektion...");
                     //stats nach contest
-                    //prüfen ob abbruch
+                    sortAILists(kisSchwarz);
+                    sortAILists(kisWeiß);
+                    //Prüfen, ob Abbruch
+                    abbruch = checkAbbruch();
+                    if(abbruch) {
+                        break;
+                    }
+                    //beste 5 der letzten Generation speichern und akutalisieren
+                    updateBestFiveOfAllTime();
+                    //neue Generation erstellen
+                    newPop();
                     //weiter machen
                     generationsCounter++;
+                    for (int x = 0; x < kisWeiß.size(); x++) {
+                        System.out.println("Weiße Ki Nummer: "+x+"\n winrate: "+ kisWeiß.get(x).winrate.get()+"\n fitness: "+kisWeiß.get(x).fitness.get());
+                    }
+                    for (int x = 0; x < kisSchwarz.size(); x++) {
+                        System.out.println("Schwarze Ki Nummer: "+x+"\n winrate: "+kisSchwarz.get(x).winrate.get()+"\n fitness: "+kisSchwarz.get(x).fitness.get());
+                    }
                 }
             } else System.out.println("ungültiger Input Try again:");
         }
 
     }
+    //Todo Evolutions-Logik implementieren, wie vermehren sich KIs und wie kommt es zu Mutationen
+    public static void newPop(){
+
+    }
+    //Todo abbruchlogik und logging für ergebnisse der Prüfung
+    public static boolean checkAbbruch(){
+        //Schwellenwert
+        if (kisWeiß.get(0).winrate.get() >= 15){
+            log.writeText("Abbruch durch Winrate Weiß");
+            return true;
+        }
+        if (kisSchwarz.get(0).winrate.get() >= 15){
+            log.writeText("Abbruch durch Winrate Weiß");
+            return true;
+        }
+        //maximale Generationenanzahl
+        if(generationsCounter > 100){
+            log.writeText("Abbruch durch max. Generationenanzahl von 100");
+            return true;
+        }
+        //Abbruch durch Verschlechterung der KI (Vgl spielen gegen vorherige Generation anhand Fitness der Top 5
+
+        return false;
+    }
+    //ToDo beste 5 der letzten Generationen speichern (Vergleich aktuell beste mit denen der letzen und ggf aktualisieren
+    public static void updateBestFiveOfAllTime(){
+        for (int x = 0; x<kisSchwarz.size(); x++) {
+            bestFiveOfAllTimeBlack.add(kisSchwarz.get(0));
+        }
+        sortAILists(bestFiveOfAllTimeBlack);
+        while(bestFiveOfAllTimeBlack.size() > 5){
+            bestFiveOfAllTimeBlack.remove(bestFiveOfAllTimeBlack.size()-1);
+        }
+        for (int x = 0; x<kisWeiß.size(); x++) {
+            bestFiveOfAllTimeWhite.add(kisWeiß.get(0));
+        }
+        sortAILists(bestFiveOfAllTimeWhite);
+        while(bestFiveOfAllTimeWhite.size() > 5){
+            bestFiveOfAllTimeWhite.remove(bestFiveOfAllTimeWhite.size()-1);
+        }
+    }
+
+    public static void sortAILists(List<EvoKi> sortierMich){
+        sortierMich.sort(
+                Comparator
+                        .comparingInt((EvoKi ki) -> ki.winrate.get())
+                        .thenComparingInt(ki -> ki.fitness.get())
+                        .reversed()
+        );
+    }
 }
 
 
-/**
- * alter Main Inhalt:
+/** alter Main Inhalt:
     int [][] board = {
             {1,2,3,4,5},
             {99,6,7,8,9},

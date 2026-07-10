@@ -38,14 +38,12 @@ public class Genom {
     private final int WHITE_PST_R1C1, WHITE_PST_R1C2, WHITE_PST_R1C3, WHITE_PST_R1C4;
     private final int WHITE_PST_R2C2, WHITE_PST_R2C3, WHITE_PST_R2C4;
     private final int WHITE_PST_R3C3, WHITE_PST_R3C4;
-    private final int WHITE_PST_R4C4;
 
     // BLACK_PST Felder
     private final int BLACK_PST_R0C1, BLACK_PST_R0C2, BLACK_PST_R0C3, BLACK_PST_R0C4;
     private final int BLACK_PST_R1C1, BLACK_PST_R1C2, BLACK_PST_R1C3, BLACK_PST_R1C4;
     private final int BLACK_PST_R2C2, BLACK_PST_R2C3, BLACK_PST_R2C4;
     private final int BLACK_PST_R3C3, BLACK_PST_R3C4;
-    private final int BLACK_PST_R4C4;
 
     // ==========================================
     // 3. Allgemeine Gewichte
@@ -110,14 +108,12 @@ public class Genom {
             int white_r1c1, int white_r1c2, int white_r1c3, int white_r1c4,
             int white_r2c2, int white_r2c3, int white_r2c4,
             int white_r3c3, int white_r3c4,
-            int white_r4c4,
 
             // Parameter für BLACK_PST (25 Werte)
             int black_r0c1, int black_r0c2, int black_r0c3, int black_r0c4,
             int black_r1c1, int black_r1c2, int black_r1c3, int black_r1c4,
             int black_r2c2, int black_r2c3, int black_r2c4,
             int black_r3c3, int black_r3c4,
-            int black_r4c4,
 
             // Allgemeine Gewichte
             int w_white_goal, int w_black_goal,
@@ -160,7 +156,6 @@ public class Genom {
         this.WHITE_PST_R2C4 = white_r2c4;
         this.WHITE_PST_R3C3 = white_r3c3;
         this.WHITE_PST_R3C4 = white_r3c4;
-        this.WHITE_PST_R4C4 = white_r4c4;
 
         this.BLACK_PST_R0C1 = black_r0c1;
         this.BLACK_PST_R0C2 = black_r0c2;
@@ -175,15 +170,14 @@ public class Genom {
         this.BLACK_PST_R2C4 = black_r2c4;
         this.BLACK_PST_R3C3 = black_r3c3;
         this.BLACK_PST_R3C4 = black_r3c4;
-        this.BLACK_PST_R4C4 = black_r4c4;
 
-        // Erstellung der 5x5 Arrays
+// Erstellung der 5x5 Arrays
         this.KING_PST = new Bewertungsarray(
                 999, KING_PST_R0C1, KING_PST_R0C2, KING_PST_R0C3, KING_PST_R0C4,
                 0, KING_PST_R1C1, KING_PST_R1C2, KING_PST_R1C3, KING_PST_R1C4,
                 0, 0, KING_PST_R2C2, KING_PST_R2C3, KING_PST_R2C4,
                 0, 0, 0, KING_PST_R3C3, KING_PST_R3C4,
-                0, 0, 0, 0, KING_PST_R4C4
+                0, 0, 0, 0, KING_PST_R4C4        // König darf auf den Thron -> bleibt variabel
         );
 
         this.WHITE_PST = new Bewertungsarray(
@@ -191,14 +185,14 @@ public class Genom {
                 0, WHITE_PST_R1C1, WHITE_PST_R1C2, WHITE_PST_R1C3, WHITE_PST_R1C4,
                 0, 0, WHITE_PST_R2C2, WHITE_PST_R2C3, WHITE_PST_R2C4,
                 0, 0, 0, WHITE_PST_R3C3, WHITE_PST_R3C4,
-                0, 0, 0, 0, WHITE_PST_R4C4);
+                0, 0, 0, 0, -999);              // Bauer darf nicht auf den Thron -> fest
 
         this.BLACK_PST = new Bewertungsarray(
                 -999, BLACK_PST_R0C1, BLACK_PST_R0C2, BLACK_PST_R0C3, BLACK_PST_R0C4,
                 0, BLACK_PST_R1C1, BLACK_PST_R1C2, BLACK_PST_R1C3, BLACK_PST_R1C4,
                 0, 0, BLACK_PST_R2C2, BLACK_PST_R2C3, BLACK_PST_R2C4,
                 0, 0, 0, BLACK_PST_R3C3, BLACK_PST_R3C4,
-                0, 0, 0, 0, BLACK_PST_R4C4);
+                0, 0, 0, 0, -999);              // Bauer darf nicht auf den Thron -> fest
 
         // Gewichte zuweisen
         this.W_WHITE_GOAL = w_white_goal;
@@ -224,5 +218,68 @@ public class Genom {
         this.WHITE_PST_9x9 = Bewertungsarray.flipIt(Bewertungsarray.flipItHalf(WHITE_PST.getGrid()));
         this.KING_PST_9x9 = Bewertungsarray.flipIt(Bewertungsarray.flipItHalf(KING_PST.getGrid()));
 
+    }
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Genom {\n");
+
+        sb.append("  KING_PST  : [")
+                .append(KING_PST_R0C1).append(", ").append(KING_PST_R0C2).append(", ")
+                .append(KING_PST_R0C3).append(", ").append(KING_PST_R0C4).append(", ")
+                .append(KING_PST_R1C1).append(", ").append(KING_PST_R1C2).append(", ")
+                .append(KING_PST_R1C3).append(", ").append(KING_PST_R1C4).append(", ")
+                .append(KING_PST_R2C2).append(", ").append(KING_PST_R2C3).append(", ")
+                .append(KING_PST_R2C4).append(", ").append(KING_PST_R3C3).append(", ")
+                .append(KING_PST_R3C4).append(", ").append(KING_PST_R4C4)
+                .append("]\n");
+
+        sb.append("  WHITE_PST : [")
+                .append(WHITE_PST_R0C1).append(", ").append(WHITE_PST_R0C2).append(", ")
+                .append(WHITE_PST_R0C3).append(", ").append(WHITE_PST_R0C4).append(", ")
+                .append(WHITE_PST_R1C1).append(", ").append(WHITE_PST_R1C2).append(", ")
+                .append(WHITE_PST_R1C3).append(", ").append(WHITE_PST_R1C4).append(", ")
+                .append(WHITE_PST_R2C2).append(", ").append(WHITE_PST_R2C3).append(", ")
+                .append(WHITE_PST_R2C4).append(", ").append(WHITE_PST_R3C3).append(", ")
+                .append(WHITE_PST_R3C4).append(", ")
+                .append("]\n");
+
+        sb.append("  BLACK_PST : [")
+                .append(BLACK_PST_R0C1).append(", ").append(BLACK_PST_R0C2).append(", ")
+                .append(BLACK_PST_R0C3).append(", ").append(BLACK_PST_R0C4).append(", ")
+                .append(BLACK_PST_R1C1).append(", ").append(BLACK_PST_R1C2).append(", ")
+                .append(BLACK_PST_R1C3).append(", ").append(BLACK_PST_R1C4).append(", ")
+                .append(BLACK_PST_R2C2).append(", ").append(BLACK_PST_R2C3).append(", ")
+                .append(BLACK_PST_R2C4).append(", ").append(BLACK_PST_R3C3).append(", ")
+                .append(BLACK_PST_R3C4).append(", ")
+                .append("]\n");
+
+        sb.append("  GOAL      : W_WHITE_GOAL=").append(W_WHITE_GOAL)
+                .append(", W_BLACK_GOAL=").append(W_BLACK_GOAL).append("\n");
+
+        sb.append("  WHITE_W   : ")
+                .append("KING_PROGRESS=").append(W_KING_PROGRESS).append(", ")
+                .append("CORNER=").append(W_CORNER).append(", ")
+                .append("KING_MOBILITY=").append(W_KING_MOBILITY).append(", ")
+                .append("MATERIAL=").append(W_WHITE_MATERIAL).append(", ")
+                .append("PST=").append(W_WHITE_PST).append(", ")
+                .append("PST_THREAT=").append(W_WHITE_PST_THREAT).append(", ")
+                .append("EDGE_ACCESS=").append(W_KING_EDGE_ACCESS).append(", ")
+                .append("EDGE_SECURE=").append(W_KING_EDGE_SECURE).append(", ")
+                .append("WINNING_THREAT=").append(W_WINNING_THREAT)
+                .append("\n");
+
+        sb.append("  BLACK_W   : ")
+                .append("EDGES_SECURE=").append(W_EDGES_SECURE_SCORE).append(", ")
+                .append("EDGES_BLOCKED=").append(W_EDGES_ACCESS_BLOCKED).append(", ")
+                .append("CHECKMATE_SCORE=").append(W_CHECKMATE_SCORE).append(", ")
+                .append("CHECKMATE_THREAT=").append(W_CHECKMATE_THREAT).append(", ")
+                .append("MATERIAL=").append(W_BLACK_MATERIAL).append(", ")
+                .append("PST=").append(W_BLACK_PST).append(", ")
+                .append("PST_THREAT=").append(W_BLACK_PST_THREAT)
+                .append("\n");
+
+        sb.append("}");
+        return sb.toString();
     }
 }
