@@ -2,11 +2,15 @@ package app.KI.evoLearn;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class EvoContest {
+    //Logik zur Durchführung der Contests zwischen den KIs der aktuellen Pop um Winrate(Fitness) zu bestimmen
     List<EvoKi> kisWeiß = new ArrayList<>();
     List<EvoKi> kisSchwarz = new ArrayList<>();
-    List<EvoGame> games = new ArrayList<>();
 
     public EvoContest(List<EvoKi> kisWeiß, List<EvoKi> kisSchwarz) {
         this.kisWeiß = kisWeiß;
@@ -15,26 +19,33 @@ public class EvoContest {
     }
 
     public void contest() {
-        for (EvoKi ki1 : this.kisWeiß) {
-            for (EvoKi ki2 : this.kisSchwarz) {
-                EvoGame game = new EvoGame(ki1, ki2);
-                games.add(game);
-                game.start();
+        int cores = Runtime.getRuntime().availableProcessors();
+        ExecutorService executor = Executors.newFixedThreadPool(cores);
+
+        try {
+            List<Future<?>> futures = new ArrayList<>();
+
+            for (EvoKi ki1 : this.kisWeiß) {
+                for (EvoKi ki2 : this.kisSchwarz) {
+                    EvoGame game = new EvoGame(ki1, ki2);
+                    futures.add(executor.submit(game::startGame));
+                }
             }
+
+            for (Future<?> f : futures) {
+                try {
+                    f.get();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Warten auf EvoGame wurde unterbrochen", e);
+                } catch (ExecutionException e) {
+                    throw new RuntimeException("Fehler in EvoGame", e.getCause());
+                }
+            }
+        } finally {
+            executor.shutdown();
         }
 
-        // Warten, bis ALLE Spiele fertig sind
-        for (EvoGame game : games) {
-            try {
-                game.join();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt(); // Interrupt-Status wiederherstellen
-                throw new RuntimeException("Warten auf EvoGame wurde unterbrochen", e);
-            }
-        }
-
-        // Ab hier ist garantiert: alle Spiele sind beendet,
-        // alle fitness/winrate Werte sind final und sichtbar.
-        System.out.println("Alle Spiele beendet, starte Auswertung...");
+        System.out.println("Alle Spiele beendet.");
     }
 }
