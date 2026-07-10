@@ -3,6 +3,10 @@ package app.KI.evoLearn;
 import java.util.*;
 
 public class EvoMain {
+
+    static int abbruchCounterFitnessGotWorseWhite = 0;
+    static int abbruchCounterFitnessGotWorseBlack = 0;
+
     static EvoLog log = new EvoLog("logs/tablut_evolution.log");
 
     static List<EvoKi> kisWeiß = new ArrayList<>();
@@ -102,20 +106,68 @@ public class EvoMain {
             return true;
         }
         //Abbruch durch Verschlechterung der KI (Vgl spielen gegen vorherige Generation anhand Fitness der Top 5
+        //Contest von jeweils bester KI gegen die besten 5 der letzten Generationen wenn winrate unter 3 dann abbruch
+        EvoKi bestBlackCurrentPop = new EvoKi(kisSchwarz.get(0).genom);
+        EvoKi bestWhiteCurrentPop = new EvoKi(kisWeiß.get(0).genom);
+
+        //Listen für Contestdurchführung zum Vergleich der Fitness-Werte
+        List<EvoKi> bestBlackCurrentPopList = new ArrayList<>();
+        List<EvoKi> bestWhiteCurrentPopList = new ArrayList<>();
+
+        //hinzufügen, spielen gegeneinander, sortieren und prüfen ob unsere Ki mindestens in top 3, sonst counter um 1 erhöhen wenn counter == 3 abbruch
+        bestBlackCurrentPopList.add(bestBlackCurrentPop);
+        bestWhiteCurrentPopList.add(bestWhiteCurrentPop);
+        for (EvoKi ki : bestFiveOfAllTimeBlack) {
+            bestBlackCurrentPopList.add(ki);
+        }
+        for (EvoKi ki : bestFiveOfAllTimeWhite) {
+            bestWhiteCurrentPopList.add(ki);
+        }
+
+        EvoContest contest = new EvoContest(bestBlackCurrentPopList, bestWhiteCurrentPopList);
+
+        if (checkAbbruchHelp(bestBlackCurrentPopList, bestBlackCurrentPop)) abbruchCounterFitnessGotWorseBlack++;
+        if (checkAbbruchHelp(bestWhiteCurrentPopList, bestWhiteCurrentPop)) abbruchCounterFitnessGotWorseWhite++;
+
+        if (bestBlackCurrentPop.winrate.get() >= 3) {
+            log.writeText("Abbruch da schwarze Ki über 3 Generationen schlechter geworden ist");
+            return true;}
+        if (bestWhiteCurrentPop.winrate.get() >= 3) {
+            log.writeText("Abbruch da weiße Ki über 3 Generationen schlechter geworden ist");
+            return true;
+        }
+
+
+
+
 
         return false;
     }
+
+    public static boolean checkAbbruchHelp(List<EvoKi> list, EvoKi ki){
+        boolean abbruch = true;
+        //könnte einen Fehler verursachen wenn Ki durch contest falsch aktualisiert wird, sollte aber richtig funktionieren und das tatsächliche KI Objekt in der Liste suchen und vergleichen
+        for(int x = 0; x < list.size()&&x<3; x++){
+            if (list.get(x).equals(ki)) {
+                abbruch = false;
+                break;
+            }
+        }
+
+        return abbruch;
+    }
+
     //ToDo beste 5 der letzten Generationen speichern (Vergleich aktuell beste mit denen der letzen und ggf aktualisieren
     public static void updateBestFiveOfAllTime(){
         for (int x = 0; x<kisSchwarz.size(); x++) {
-            bestFiveOfAllTimeBlack.add(kisSchwarz.get(0));
+            bestFiveOfAllTimeBlack.add(new EvoKi(kisSchwarz.get(0).genom));
         }
         sortAILists(bestFiveOfAllTimeBlack);
         while(bestFiveOfAllTimeBlack.size() > 5){
             bestFiveOfAllTimeBlack.remove(bestFiveOfAllTimeBlack.size()-1);
         }
         for (int x = 0; x<kisWeiß.size(); x++) {
-            bestFiveOfAllTimeWhite.add(kisWeiß.get(0));
+            bestFiveOfAllTimeWhite.add(new EvoKi(kisWeiß.get(0).genom));
         }
         sortAILists(bestFiveOfAllTimeWhite);
         while(bestFiveOfAllTimeWhite.size() > 5){
