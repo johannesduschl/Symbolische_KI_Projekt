@@ -76,11 +76,12 @@ public class EvoGame extends Thread{
                     System.out.println("\nMoves played:" + this.Ki.moveCounter );
                     System.out.println("Last move: " + board.getLastMove().toString());
                     System.out.println("Reached depth: " + this.Ki.lastCompletedDepth);
-
+/**
                     System.out.println("Schwarz hat gerade gezogen? " + !board.blackMovesNext());
                     this.Ki.bf.evaluate(this.board);
                     this.Ki.bf.debugEvaluation(this.board);
-                    finalScore += this.Ki.bf.getScore();
+ */
+                    finalScore += this.Ki.bf.getScore(this.board);
 
                     if (winner.equals("White")) {
                         Ki1.winrate.addAndGet(1);

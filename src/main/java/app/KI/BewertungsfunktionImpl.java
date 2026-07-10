@@ -1713,7 +1713,7 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
     }
 
     @Override
-    public int getScore() {
+    public int getScore(Board board) {
         return finalGameScore;
     }
 }

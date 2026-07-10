@@ -26,7 +26,7 @@ public class EvoMain {
         Scanner scanner = new Scanner(System.in);
         String input = "";
         while(true) {
-            System.out.println("neue Runde \n press 1 to start: \n 2 to get AI Info \n 3 to stop");
+            System.out.println("neue Runde \n press 1 to start: \n 2 to get AI Info \n 3 to stop \n 4 to start Evolutions-Simulation");
             input = scanner.nextLine();
             if (input.equals("3")) break;
             else if (input.equals("2")) {
@@ -40,8 +40,24 @@ public class EvoMain {
             }
             else if (input.equals("1")) {
                 EvoContest contest = new EvoContest(kisWeiß,kisSchwarz);
-            }
-            else System.out.println("ungültiger Input Try again:");
+                System.out.println("test ob die ausgabe wirklich erst am ende erfolgt");
+            } else if (input.equals("4")) {
+                boolean abbruch = false;
+                while(!abbruch) {
+                    int generationsCounter = 0;
+                    //aktuelle generation loggen
+                    EvoLog log = new EvoLog("logs/tablut_evolution.log");
+
+                    log.writeText("=== Generation "+generationsCounter+" gestartet ===");
+                    EvoContest contest = new EvoContest(kisWeiß, kisSchwarz);
+                    log.log(kisWeiß, kisSchwarz);
+                    log.writeText("Generation "+generationsCounter+" abgeschlossen, starte Selektion...");
+                    //stats nach contest
+                    //prüfen ob abbruch
+                    //weiter machen
+                    generationsCounter++;
+                }
+            } else System.out.println("ungültiger Input Try again:");
         }
 
     }

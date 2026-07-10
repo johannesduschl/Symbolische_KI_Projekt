@@ -13,5 +13,5 @@ public interface Bewertungsfunktion {
     void debugEvaluation(Board board);
 
     //fürs Bestimmen der Fitness unserer KIs beim Evolutionären Lernen
-    int getScore();
+    int getScore(Board board);
 }
