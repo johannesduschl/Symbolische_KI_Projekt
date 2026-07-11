@@ -8,8 +8,13 @@ import java.util.List;
 
 public class AlphaBetaKI {
 
+    public AlphaBetaKI(Bewertungsfunktion bf){
+        this.zugsortierer = new Zugsortierer(maxDepth);
+        this.bf = bf;
+    }
+
     // Bewertungsfunktion
-    public BewertungsfunktionImpl bf = new BewertungsfunktionImpl();
+    public Bewertungsfunktion bf;
 
     // Suchparameter
     public int maxDepth = 8;
@@ -44,6 +49,7 @@ public class AlphaBetaKI {
 
     public AlphaBetaKI() {
         this.zugsortierer = new Zugsortierer(maxDepth);
+        this.bf = new BewertungsfunktionImpl();
     }
 
     public Zug findBestMove(Board board, boolean isWhiteToMove) {

@@ -9,6 +9,9 @@ import java.util.Arrays;
 
 public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
+    //für Fitness der EvoKi´s
+    public int finalGameScore = 0;
+
     private static final boolean[][] BLOCKED = {
             {  true, false, false, false, false, false, false, false,  true },
             { false, false, false, false, false, false, false, false, false },
@@ -1632,5 +1635,12 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
         System.out.printf("FINAL SCORE (W - B)  : %6d%n", finalScore);
         System.out.println("======================================\n");
+
+        finalGameScore = finalScore;
+    }
+
+    @Override
+    public int getScore(Board board) {
+        return finalGameScore;
     }
 }
