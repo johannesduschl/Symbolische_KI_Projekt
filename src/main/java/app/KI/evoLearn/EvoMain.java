@@ -19,20 +19,72 @@ public class EvoMain {
     static int generationsCounter = 0;
 
     //es folgen 15 weiße und 15 schwarze KI-Objekte
-    /** Weiße */
-    static EvoKi w1 = new EvoKi(new Genom(4,3,3,3,2,1,1,1,-1,-1,-1,-1,-3,5,0,0,1,1,1,1,2,2,2,3,3,3,4,0,2,2,2,0,0,1,2,0,1,3,3,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1));
-    static EvoKi w2 = new EvoKi(new Genom(7,5,5,5,4,3,3,1,-2,-2,-2,-2,-4,7,0,0,1,1,1,1,2,2,2,3,3,3,4,0,2,2,2,0,0,1,2,0,1,3,3,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1));
-    static EvoKi w3 = new EvoKi(new Genom(9,7,7,7,6,5,5,5,-3,-3,-3,-3,-5,6,0,0,1,1,1,1,2,2,2,3,3,3,4,0,2,2,2,0,0,1,2,0,1,3,3,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1));
-    static EvoKi w4 = new EvoKi(new Genom(11,9,9,9,8,7,3,3,-2,-2,-2,-2,-4,7,0,0,1,1,1,1,2,2,2,3,3,3,4,0,2,2,2,0,0,1,2,0,1,3,3,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1));
-    static EvoKi w5 = new EvoKi(new Genom(13,11,11,11,10,9,1,1,-1,-1,-1,-1,-3,5,0,0,1,1,1,1,2,2,2,3,3,3,4,0,2,2,2,0,0,1,2,0,1,3,3,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1));
+    //static EvoKi w1 = new EvoKi(new Genom(4,3,3,3,2,1,1,1,-1,-1,-1,-1,-3,5,0,0,1,1,1,1,2,2,2,3,3,3,4,0,2,2,2,0,0,1,2,0,1,3,3,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1));
+    // ===== WEISS: 15 Startgenome (58 Parameter) =====
+    static EvoKi w1 = new EvoKi(new Genom(9,6,5,6,7,5,4,3,6,3,4,4,3,0,5,3,1,0,2,1,0,1,2,-1,1,-1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,35,0,5,12,3,5,-1,2,4,2,11,0,0,0,0,0,0,0));
+    static EvoKi w2 = new EvoKi(new Genom(7,8,6,5,7,5,4,4,4,3,3,2,2,1,5,3,1,2,3,3,0,0,0,1,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,53,0,6,9,3,3,3,-1,0,5,6,0,0,0,0,0,0,0));
+    static EvoKi w3 = new EvoKi(new Genom(7,6,5,5,7,6,6,4,4,4,3,2,3,1,5,4,3,0,4,3,0,1,2,-1,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,38,0,2,12,4,6,-1,4,2,6,11,0,0,0,0,0,0,0));
+    static EvoKi w4 = new EvoKi(new Genom(7,6,6,5,7,5,4,5,6,4,2,4,2,1,5,3,1,1,2,1,2,1,2,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,38,0,4,10,1,3,-1,3,3,0,11,0,0,0,0,0,0,0));
+    static EvoKi w5 = new EvoKi(new Genom(7,6,7,4,8,6,6,3,5,4,4,3,3,1,5,2,3,2,2,3,2,0,2,0,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,67,0,1,10,-1,7,3,1,4,6,6,0,0,0,0,0,0,0));
+    static EvoKi w6 = new EvoKi(new Genom(7,8,6,6,8,7,4,3,5,3,4,4,1,2,4,3,1,0,3,2,0,-1,0,1,-1,-1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,65,0,3,13,-1,8,2,5,1,1,10,0,0,0,0,0,0,0));
+    static EvoKi w7 = new EvoKi(new Genom(9,6,6,6,8,6,4,5,6,5,2,4,2,1,5,4,2,1,4,2,0,-1,0,-1,0,-1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,49,0,4,8,3,3,-2,-1,5,5,5,0,0,0,0,0,0,0));
+    static EvoKi w8 = new EvoKi(new Genom(7,6,6,4,8,5,5,5,5,3,4,2,3,2,5,3,1,1,3,1,0,-1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,60,0,3,13,4,2,3,4,5,0,5,0,0,0,0,0,0,0));
+    static EvoKi w9 = new EvoKi(new Genom(9,7,5,4,6,5,6,4,4,4,2,3,2,0,3,3,3,0,2,3,2,-1,0,-1,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,51,0,3,8,5,5,-2,0,3,0,8,0,0,0,0,0,0,0));
+    static EvoKi w10 = new EvoKi(new Genom(8,7,6,6,8,7,6,5,5,3,2,3,1,0,5,4,3,0,4,2,0,-1,2,0,1,1,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,50,0,0,11,-1,8,-1,-1,4,0,10,0,0,0,0,0,0,0));
+    static EvoKi w11 = new EvoKi(new Genom(8,6,7,4,8,7,4,5,4,4,4,4,3,2,4,3,1,2,4,2,0,0,1,-1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,39,0,3,9,5,2,-2,2,4,4,5,0,0,0,0,0,0,0));
+    static EvoKi w12 = new EvoKi(new Genom(9,6,7,5,6,6,4,3,5,4,2,3,3,2,4,4,3,2,2,3,2,0,2,-1,-1,0,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,56,0,0,12,3,3,0,1,4,1,10,0,0,0,0,0,0,0));
+    static EvoKi w13 = new EvoKi(new Genom(7,8,7,5,8,6,5,3,4,5,3,3,1,0,4,2,3,1,2,3,1,1,2,0,1,-1,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,44,0,0,12,0,6,-2,5,2,4,9,0,0,0,0,0,0,0));
+    static EvoKi w14 = new EvoKi(new Genom(8,6,5,5,7,5,5,3,6,3,4,2,2,2,4,4,3,0,2,1,0,0,0,-1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,41,0,6,12,5,7,4,0,2,1,11,0,0,0,0,0,0,0));
+    static EvoKi w15 = new EvoKi(new Genom(8,6,6,4,6,6,5,4,4,3,2,4,1,1,4,3,1,1,3,3,2,0,2,1,0,-1,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,55,0,2,8,3,4,-2,-1,4,3,7,0,0,0,0,0,0,0));
 
-    /** Schwarze */
-    static EvoKi b1 = new EvoKi(new Genom(4,3,3,3,2,1,1,1,-1,-1,-1,-1,-3,5,0,0,1,1,1,1,2,2,2,3,3,3,4,0,2,2,2,0,0,1,2,0,1,3,3,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1));
+    // ===== SCHWARZ: 15 Startgenome (58 Parameter) =====
+    static EvoKi b1 = new EvoKi(new Genom(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,4,3,0,3,3,0,0,0,1,0,-1,1,0,47,0,0,0,0,0,0,0,0,0,6,4,12,8,7,3,4));
+    static EvoKi b2 = new EvoKi(new Genom(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,3,1,2,3,3,1,1,0,1,0,1,0,0,43,0,0,0,0,0,0,0,0,0,5,3,9,6,7,0,3));
+    static EvoKi b3 = new EvoKi(new Genom(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,3,1,4,3,0,1,2,0,0,1,-1,0,55,0,0,0,0,0,0,0,0,0,2,2,8,6,8,2,3));
+    static EvoKi b4 = new EvoKi(new Genom(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,3,2,2,2,3,1,1,0,1,-1,0,1,0,50,0,0,0,0,0,0,0,0,0,5,5,11,5,2,4,5));
+    static EvoKi b5 = new EvoKi(new Genom(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,3,1,0,2,1,0,-1,1,1,-1,0,0,0,60,0,0,0,0,0,0,0,0,0,5,4,8,8,7,1,2));
+    static EvoKi b6 = new EvoKi(new Genom(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,2,3,2,2,1,1,-1,0,1,1,0,-1,0,64,0,0,0,0,0,0,0,0,0,4,1,13,3,5,-1,5));
+    static EvoKi b7 = new EvoKi(new Genom(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,4,3,2,3,2,2,1,2,0,1,0,-1,0,52,0,0,0,0,0,0,0,0,0,5,6,10,6,4,4,0));
+    static EvoKi b8 = new EvoKi(new Genom(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,3,3,0,3,2,0,1,1,-1,0,0,0,0,44,0,0,0,0,0,0,0,0,0,4,0,8,4,3,1,4));
+    static EvoKi b9 = new EvoKi(new Genom(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,2,1,1,3,2,2,0,1,-1,-1,0,0,0,59,0,0,0,0,0,0,0,0,0,6,4,12,3,8,4,3));
+    static EvoKi b10 = new EvoKi(new Genom(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,2,2,1,3,2,2,1,2,1,1,-1,0,0,60,0,0,0,0,0,0,0,0,0,1,2,10,6,2,1,1));
+    static EvoKi b11 = new EvoKi(new Genom(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,2,2,0,4,3,0,0,2,1,1,-1,-1,0,51,0,0,0,0,0,0,0,0,0,5,3,8,9,5,-1,-1));
+    static EvoKi b12 = new EvoKi(new Genom(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,3,1,1,3,2,1,0,1,0,-1,0,-1,0,37,0,0,0,0,0,0,0,0,0,5,4,7,5,3,3,-1));
+    static EvoKi b13 = new EvoKi(new Genom(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,2,1,0,4,1,0,-1,1,1,-1,1,-1,0,42,0,0,0,0,0,0,0,0,0,3,5,9,9,4,-1,3));
+    static EvoKi b14 = new EvoKi(new Genom(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,1,2,2,2,2,1,1,0,1,-1,-1,0,54,0,0,0,0,0,0,0,0,0,4,5,13,8,3,-2,4));
+    static EvoKi b15 = new EvoKi(new Genom(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,4,1,2,2,2,2,0,2,0,-1,1,1,0,62,0,0,0,0,0,0,0,0,0,2,0,13,6,8,1,-1));
 
     public static void main(String[] args) {
         kisSchwarz.add(b1);
+        kisSchwarz.add(b2);
+        kisSchwarz.add(b3);
+        kisSchwarz.add(b4);
+        kisSchwarz.add(b5);
+        kisSchwarz.add(b6);
+        kisSchwarz.add(b7);
+        kisSchwarz.add(b8);
+        kisSchwarz.add(b9);
+        kisSchwarz.add(b10);
+        kisSchwarz.add(b11);
+        kisSchwarz.add(b12);
+        kisSchwarz.add(b13);
+        kisSchwarz.add(b14);
+        kisSchwarz.add(b15);
         kisWeiß.add(w1);
         kisWeiß.add(w2);
+        kisWeiß.add(w3);
+        kisWeiß.add(w4);
+        kisWeiß.add(w5);
+        kisWeiß.add(w6);
+        kisWeiß.add(w7);
+        kisWeiß.add(w8);
+        kisWeiß.add(w9);
+        kisWeiß.add(w10);
+        kisWeiß.add(w11);
+        kisWeiß.add(w12);
+        kisWeiß.add(w13);
+        kisWeiß.add(w14);
+        kisWeiß.add(w15);
         Scanner scanner = new Scanner(System.in);
         String input;
         while(true) {
@@ -68,8 +120,8 @@ public class EvoMain {
                     if(abbruch) {
                         break;
                     }
-                    //beste 5 der letzten Generation speichern und akutalisieren
-                    updateBestFiveOfAllTime();
+                    //beste 5 der letzten Generation speichern und akutalisieren jetzt in abbruch()
+                    //updateBestFiveOfAllTime();
                     //neue Generation erstellen
                     newPop();
                     //weiter machen
@@ -87,6 +139,11 @@ public class EvoMain {
     }
     //Todo Evolutions-Logik implementieren, wie vermehren sich KIs und wie kommt es zu Mutationen
     public static void newPop(){
+        int eliteCount = 3;
+        int breedingPoolSize = 6; // beste 6 dürfen sich fortpflanzen
+
+        kisWeiß = EvoBreeder.breedGeneration(kisWeiß, true, eliteCount, breedingPoolSize);
+        kisSchwarz = EvoBreeder.breedGeneration(kisSchwarz, false, eliteCount, breedingPoolSize);
 
     }
     //Todo abbruchlogik und logging für ergebnisse der Prüfung
@@ -114,9 +171,10 @@ public class EvoMain {
         List<EvoKi> bestBlackCurrentPopList = new ArrayList<>();
         List<EvoKi> bestWhiteCurrentPopList = new ArrayList<>();
 
+        bestFiveOfAllTimeWhite.add(bestWhiteCurrentPop);
+        bestFiveOfAllTimeBlack.add(bestBlackCurrentPop);
+
         //hinzufügen, spielen gegeneinander, sortieren und prüfen ob unsere Ki mindestens in top 3, sonst counter um 1 erhöhen wenn counter == 3 abbruch
-        bestBlackCurrentPopList.add(bestBlackCurrentPop);
-        bestWhiteCurrentPopList.add(bestWhiteCurrentPop);
         for (EvoKi ki : bestFiveOfAllTimeBlack) {
             bestBlackCurrentPopList.add(ki);
         }
@@ -124,22 +182,23 @@ public class EvoMain {
             bestWhiteCurrentPopList.add(ki);
         }
 
-        EvoContest contest = new EvoContest(bestBlackCurrentPopList, bestWhiteCurrentPopList);
+        EvoContest contest = new EvoContest(bestWhiteCurrentPopList,bestBlackCurrentPopList);
+
+        updateBestFiveOfAllTime();
+
+        sortAILists(bestBlackCurrentPopList);
+        sortAILists(bestWhiteCurrentPopList);
 
         if (checkAbbruchHelp(bestBlackCurrentPopList, bestBlackCurrentPop)) abbruchCounterFitnessGotWorseBlack++;
         if (checkAbbruchHelp(bestWhiteCurrentPopList, bestWhiteCurrentPop)) abbruchCounterFitnessGotWorseWhite++;
 
-        if (bestBlackCurrentPop.winrate.get() >= 3) {
+        if (abbruchCounterFitnessGotWorseBlack >= 3) {
             log.writeText("Abbruch da schwarze Ki über 3 Generationen schlechter geworden ist");
             return true;}
-        if (bestWhiteCurrentPop.winrate.get() >= 3) {
+        if (abbruchCounterFitnessGotWorseWhite >= 3) {
             log.writeText("Abbruch da weiße Ki über 3 Generationen schlechter geworden ist");
             return true;
         }
-
-
-
-
 
         return false;
     }
@@ -159,17 +218,32 @@ public class EvoMain {
 
     //ToDo beste 5 der letzten Generationen speichern (Vergleich aktuell beste mit denen der letzen und ggf aktualisieren
     public static void updateBestFiveOfAllTime(){
-        for (int x = 0; x<kisSchwarz.size(); x++) {
-            bestFiveOfAllTimeBlack.add(new EvoKi(kisSchwarz.get(0).genom));
-        }
+        List<EvoKi> helpBlack = new ArrayList<>();
+        List<EvoKi> helpWhite = new ArrayList<>();
+
         sortAILists(bestFiveOfAllTimeBlack);
+        for (EvoKi ki : bestFiveOfAllTimeBlack){
+            helpBlack.add(new EvoKi(ki.genom));
+        }
+        bestFiveOfAllTimeBlack.clear();
+        for (EvoKi ki : helpBlack){
+            bestFiveOfAllTimeBlack.add(ki);
+        }
+
         while(bestFiveOfAllTimeBlack.size() > 5){
             bestFiveOfAllTimeBlack.remove(bestFiveOfAllTimeBlack.size()-1);
         }
-        for (int x = 0; x<kisWeiß.size(); x++) {
-            bestFiveOfAllTimeWhite.add(new EvoKi(kisWeiß.get(0).genom));
-        }
+
         sortAILists(bestFiveOfAllTimeWhite);
+        for (EvoKi ki : bestFiveOfAllTimeWhite){
+            helpWhite.add(new EvoKi(ki.genom));
+        }
+        bestFiveOfAllTimeWhite.clear();
+        for (EvoKi ki : helpWhite){
+            bestFiveOfAllTimeWhite.add(ki);
+        }
+
+
         while(bestFiveOfAllTimeWhite.size() > 5){
             bestFiveOfAllTimeWhite.remove(bestFiveOfAllTimeWhite.size()-1);
         }
