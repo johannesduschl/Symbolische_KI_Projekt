@@ -1641,6 +1641,40 @@ public class BewertungsfunktionImpl implements Bewertungsfunktion {
 
     @Override
     public int getScore(Board board) {
-        return finalGameScore;
+        char[][] b = board.getBoard();
+        int whitePST = whitePST(b);
+        int whiteMaterial = W_WHITE_MATERIAL * whiteMaterial();
+        int kingProgress = W_KING_PROGRESS * kingEscapeScore(b);
+        int kingEdgeSecure = W_KING_EDGE_SECURE * secureKingOnEdge(b);
+        int winningThreat = W_WINNING_THREAT * threatensWin(board);
+        int kingMobility = W_KING_MOBILITY * kingMobility();
+
+        int totalWhite =
+                whitePST +
+                        whiteMaterial +
+                        kingProgress +
+                        kingEdgeSecure +
+                        winningThreat +
+                        kingMobility;
+
+        // ===== BLACK =====
+        int blackPST = blackPST(b);
+        int blackMaterial = W_BLACK_MATERIAL * blackMaterial();
+        int edgesSecure = W_EDGES_SECURE_SCORE * edgesSecureScore(b);
+        int edgesBlocked = W_EDGES_ACCESS_BLOCKED * edgesAccessBlocked(b);
+        int checkmateThreat = W_CHECKMATE_THREAT * threatensCheckmate(board);
+        int checkmateScore = W_CHECKMATE_SCORE * checkmateScore(board);
+
+        int totalBlack =
+                blackPST +
+                        blackMaterial +
+                        edgesSecure +
+                        edgesBlocked +
+                        checkmateThreat +
+                        checkmateScore;
+
+        int finalScore = totalWhite - totalBlack;
+        finalGameScore = finalScore;
+        return finalScore;
     }
 }

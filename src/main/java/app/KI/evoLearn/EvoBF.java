@@ -1684,11 +1684,11 @@ public class EvoBF implements Bewertungsfunktion {
     public int getScore(Board board) {
         char[][] b = board.getBoard();
         int whitePST = whitePST(b);
-        int whiteMaterial = W_WHITE_MATERIAL * whiteMaterial();
-        int kingProgress = W_KING_PROGRESS * kingEscapeScore(b);
-        int kingEdgeSecure = W_KING_EDGE_SECURE * secureKingOnEdge(b);
-        int winningThreat = W_WINNING_THREAT * threatensWin(board);
-        int kingMobility = W_KING_MOBILITY * kingMobility();
+        int whiteMaterial = 1 * whiteMaterial();
+        int kingProgress = 1 * kingEscapeScore(b);
+        int kingEdgeSecure = 1 * secureKingOnEdge(b);
+        int winningThreat = 500 * threatensWin(board);
+        int kingMobility = 1 * kingMobility();
 
         int totalWhite =
                 whitePST +
@@ -1700,11 +1700,11 @@ public class EvoBF implements Bewertungsfunktion {
 
         // ===== BLACK =====
         int blackPST = blackPST(b);
-        int blackMaterial = W_BLACK_MATERIAL * blackMaterial();
-        int edgesSecure = W_EDGES_SECURE_SCORE * edgesSecureScore(b);
-        int edgesBlocked = W_EDGES_ACCESS_BLOCKED * edgesAccessBlocked(b);
-        int checkmateThreat = W_CHECKMATE_THREAT * threatensCheckmate(board);
-        int checkmateScore = W_CHECKMATE_SCORE * checkmateScore(board);
+        int blackMaterial = 1 * blackMaterial();
+        int edgesSecure = 1 * edgesSecureScore(b);
+        int edgesBlocked = 1 * edgesAccessBlocked(b);
+        int checkmateThreat = 500 * threatensCheckmate(board);
+        int checkmateScore = 1000 * checkmateScore(board);
 
         int totalBlack =
                 blackPST +
@@ -1715,6 +1715,6 @@ public class EvoBF implements Bewertungsfunktion {
                         checkmateScore;
 
         int finalScore = totalWhite - totalBlack;
-        return finalGameScore;
+        return finalScore;
     }
     }

@@ -29,6 +29,18 @@ public class EvoBreeder {
     private static final double BIG_MUTATION_RATE = 0.02;
     private static final int BIG_MUTATION_STRENGTH = 10;
 
+    // Mindestwert für Gewichte, die direkt Sieg-/Schach-Situationen bewerten.
+    // Diese Gewichte werden sowohl in EvoBF.evaluate() (aktive Alpha-Beta-Suche)
+    // als auch in getScore() (Fitness) verwendet - ein negativer Wert würde die
+    // Suche aktiv dazu bringen, drohende Siege/Schachs zu MEIDEN statt anzustreben.
+    // Daher werden diese drei Gewichte nach jeder Mutation auf mindestens 1 geklemmt.
+    private static final int MIN_CRITICAL_WEIGHT = 1;
+    // Index von w_winning_threat im Weiß-Gene-Array (siehe toWhiteGeneArray)
+    private static final int WHITE_IDX_WINNING_THREAT = 36;
+    // Indizes von w_checkmate_score / w_checkmate_threat im Schwarz-Gene-Array (siehe toBlackGeneArray)
+    private static final int BLACK_IDX_CHECKMATE_SCORE = 16;
+    private static final int BLACK_IDX_CHECKMATE_THREAT = 17;
+
     // ==========================================
     // Öffentliche Einstiegspunkte
     // ==========================================
@@ -36,12 +48,15 @@ public class EvoBreeder {
     public static Genom breedWhite(Genom parentA, Genom parentB) {
         int[] childGenes = crossover(toWhiteGeneArray(parentA), toWhiteGeneArray(parentB));
         mutate(childGenes);
+        childGenes[WHITE_IDX_WINNING_THREAT] = Math.max(MIN_CRITICAL_WEIGHT, childGenes[WHITE_IDX_WINNING_THREAT]);
         return buildWhiteGenom(childGenes);
     }
 
     public static Genom breedBlack(Genom parentA, Genom parentB) {
         int[] childGenes = crossover(toBlackGeneArray(parentA), toBlackGeneArray(parentB));
         mutate(childGenes);
+        childGenes[BLACK_IDX_CHECKMATE_SCORE] = Math.max(MIN_CRITICAL_WEIGHT, childGenes[BLACK_IDX_CHECKMATE_SCORE]);
+        childGenes[BLACK_IDX_CHECKMATE_THREAT] = Math.max(MIN_CRITICAL_WEIGHT, childGenes[BLACK_IDX_CHECKMATE_THREAT]);
         return buildBlackGenom(childGenes);
     }
 

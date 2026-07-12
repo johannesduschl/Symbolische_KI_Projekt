@@ -39,8 +39,10 @@ public class EvoGame extends Thread{
     }
 
     public void startGame() {
+        long deadline = System.currentTimeMillis() + 5 * 60 * 1000; // 5 Minuten Gesamtlimit
 
-            boolean isWhiteToMove = false;
+
+        boolean isWhiteToMove = false;
             boolean isGameOver = false;
             int x = 0;
             int finalScore = 0;
@@ -48,6 +50,13 @@ public class EvoGame extends Thread{
             while (!isGameOver) {
                 System.out.println("nächste Runde: " + x);
                 x++;
+                if (System.currentTimeMillis() > deadline) {
+                    System.out.println("Spiel abgebrochen: 5-Minuten-Limit überschritten (vermutlich Endlosschleife).");
+                    //fitness - 100 als strafe
+                    Ki1.fitness.addAndGet(-100);
+                    Ki2.fitness.addAndGet(-100);
+                    break;
+                }
                 List<Zug> possibleMoves = zuggenerator.getAllLegalMoves(this.board.getBoard(), isWhiteToMove);
                 if (possibleMoves.isEmpty()) {
                     System.out.println("No legal moves available!");
@@ -57,7 +66,7 @@ public class EvoGame extends Thread{
 
                 chosenMove = this.Ki.findBestMove(this.board, isWhiteToMove);
 
-                System.out.println("Move for " + (isWhiteToMove ? "White" : "Black") + ": " + chosenMove);
+                //System.out.println("Move for " + (isWhiteToMove ? "White" : "Black") + ": " + chosenMove);
                 isGameOver = board.move(chosenMove);
                 /**
                  System.out.println("blackMovesNext? " + board.blackMovesNext());
@@ -93,7 +102,7 @@ public class EvoGame extends Thread{
                     break;
                 }
 
-                this.board.printBoard();
+                //this.board.printBoard();
                 /**
                 System.out.println("Reached depth: " + ki.lastCompletedDepth + "\n");
                 System.out.println("Schwarz hat gerade gezogen? " + !board.blackMovesNext());
