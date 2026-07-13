@@ -12,6 +12,10 @@ public class AlphaBetaKI {
         this.zugsortierer = new Zugsortierer(maxDepth);
         this.bf = bf;
     }
+    public AlphaBetaKI() {
+        this.zugsortierer = new Zugsortierer(maxDepth);
+        this.bf = new BewertungsfunktionImpl();
+    }
 
     // Bewertungsfunktion
     public Bewertungsfunktion bf;
@@ -47,10 +51,6 @@ public class AlphaBetaKI {
     public boolean benchmarkMode = false;
     private long benchmarkTimeLimitMs;
 
-    public AlphaBetaKI() {
-        this.zugsortierer = new Zugsortierer(maxDepth);
-        this.bf = new BewertungsfunktionImpl();
-    }
 
     public Zug findBestMove(Board board, boolean isWhiteToMove) {
 
