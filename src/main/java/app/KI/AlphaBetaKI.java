@@ -17,7 +17,7 @@ public class AlphaBetaKI {
     public Bewertungsfunktion bf;
 
     // Suchparameter
-    public int maxDepth = 8;
+    public int maxDepth = 4;
 
     // Schalter für die Benchmark-Konfiguration
     public boolean useAlphaBeta = true;
@@ -27,7 +27,7 @@ public class AlphaBetaKI {
 
     private final Zuggenerator zuggenerator = new Zuggenerator();
     private Zugsortierer zugsortierer;
-    private final transpositionTable tt = new transpositionTable(22); // ~4 Mio. Slots
+    private final transpositionTable tt = new transpositionTable(22); // 22~4 Mio. Slots
 
     /**
      * Counts the moves over the period of a game, to adjust the time limit
@@ -469,11 +469,11 @@ public class AlphaBetaKI {
 
     private long getTimeForMove() {
         if (moveCounter <= 10) {
-            return 5000;
+            return 3000; //war 5
         } else if (moveCounter <= 50) {
-            return 8000;
+            return 5000; // war 8
         }
-        return 4000;
+        return 3000; // war 4
     }
 
     public void configBenchmark(long timeLimitMs, int maxDepth, boolean useAlphaBeta) {

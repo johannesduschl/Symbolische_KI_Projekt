@@ -1684,7 +1684,7 @@ public class EvoBF implements Bewertungsfunktion {
     public int getScore(Board board) {
         char[][] b = board.getBoard();
         int whitePST = whitePST(b);
-        int whiteMaterial = 1 * whiteMaterial();
+        int whiteMaterial = 1* whiteMaterial();
         int kingProgress = 1 * kingEscapeScore(b);
         int kingEdgeSecure = 1 * secureKingOnEdge(b);
         int winningThreat = 500 * threatensWin(board);

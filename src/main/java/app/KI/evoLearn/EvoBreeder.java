@@ -27,7 +27,7 @@ public class EvoBreeder {
     // und größere Sprünge, damit die Population nicht dauerhaft im positiven/negativen
     // Bereich "hängen bleibt", nur weil die Startwerte dort lagen)
     private static final double BIG_MUTATION_RATE = 0.02;
-    private static final int BIG_MUTATION_STRENGTH = 10;
+    private static final int BIG_MUTATION_STRENGTH = 6;
 
     // Mindestwert für Gewichte, die direkt Sieg-/Schach-Situationen bewerten.
     // Diese Gewichte werden sowohl in EvoBF.evaluate() (aktive Alpha-Beta-Suche)

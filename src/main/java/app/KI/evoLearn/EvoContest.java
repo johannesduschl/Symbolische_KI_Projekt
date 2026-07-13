@@ -2,10 +2,7 @@ package app.KI.evoLearn;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 public class EvoContest {
     //Logik zur Durchführung der Contests zwischen den KIs der aktuellen Pop um Winrate(Fitness) zu bestimmen
@@ -27,14 +24,19 @@ public class EvoContest {
 
             for (EvoKi ki1 : this.kisWeiß) {
                 for (EvoKi ki2 : this.kisSchwarz) {
-                    EvoGame game = new EvoGame(ki1, ki2);
-                    futures.add(executor.submit(game::startGame));
+                    futures.add(executor.submit(() -> {
+                        EvoGame game = new EvoGame(ki1, ki2);   // <- jetzt erst HIER, wenn der Task wirklich startet
+                        game.startGame();
+                    }));
                 }
             }
 
             for (Future<?> f : futures) {
                 try {
-                    f.get();
+                    f.get(5, TimeUnit.MINUTES);
+                } catch (TimeoutException e) {
+                    System.err.println("Spiel überschritt 5-Minuten-Limit, wird übersprungen: " + e.getMessage());
+                    f.cancel(true);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     throw new RuntimeException("Warten auf EvoGame wurde unterbrochen", e);

@@ -48,13 +48,19 @@ public class EvoGame extends Thread{
             int finalScore = 0;
 
             while (!isGameOver) {
-                System.out.println("nächste Runde: " + x);
+                if(x >= 200){
+                    System.out.println("Spiel über Zuglimit von 200, terminate strafe -10.000 fitness");
+                    Ki1.fitness.addAndGet(-10000);
+                    Ki2.fitness.addAndGet(-10000);
+                    break;
+                }
+                //System.out.println("nächste Runde: " + x);
                 x++;
                 if (System.currentTimeMillis() > deadline) {
                     System.out.println("Spiel abgebrochen: 5-Minuten-Limit überschritten (vermutlich Endlosschleife).");
                     //fitness - 100 als strafe
-                    Ki1.fitness.addAndGet(-100);
-                    Ki2.fitness.addAndGet(-100);
+                    Ki1.fitness.addAndGet(-3000);
+                    Ki2.fitness.addAndGet(-3000);
                     break;
                 }
                 List<Zug> possibleMoves = zuggenerator.getAllLegalMoves(this.board.getBoard(), isWhiteToMove);
@@ -98,7 +104,7 @@ public class EvoGame extends Thread{
                         Ki2.winrate.addAndGet(1);
                     }
                     Ki1.fitness.addAndGet(finalScore);
-                    Ki2.fitness.addAndGet(-finalScore);
+                    Ki2.fitness.addAndGet(finalScore);
                     break;
                 }
 
